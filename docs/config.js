@@ -8,7 +8,9 @@
  * O código de activação NÃO fica aqui: este ficheiro é público. Cada telemóvel
  * escreve-o uma vez no primeiro arranque e fica guardado no aparelho.
  */
-window.JATLOG_CONFIG = {
+/* `self` e nao `window`: o Service Worker tambem carrega este ficheiro
+   (importScripts) e la nao existe `window`. Numa pagina, self === window. */
+self.JATLOG_CONFIG = {
   ENDPOINT: 'https://script.google.com/macros/s/AKfycby8UglcSQTwm-joEEWqB4dJ8IoNUOrfuDJ-ChOCSpzQjn_q5-SCuUM_uNK0wFXPFn6-0w/exec',
   VERSAO: '1.0.0'
 };

@@ -89,11 +89,16 @@ var DB = (function () {
   function abrir() {
     return new Promise(function (ok, mau) {
       if (bd) return ok(bd);
-      var p = indexedDB.open('jatlog', 1);
+      // v2 acrescentou 'config': o Service Worker não consegue ler o
+      // localStorage, por isso o código e a senha têm de estar aqui.
+      var p = indexedDB.open('jatlog', 2);
       p.onupgradeneeded = function () {
         var d = p.result;
         if (!d.objectStoreNames.contains('envios')) {
           d.createObjectStore('envios', { keyPath: 'uuid' });
+        }
+        if (!d.objectStoreNames.contains('config')) {
+          d.createObjectStore('config', { keyPath: 'k' });
         }
       };
       p.onsuccess = function () { bd = p.result; ok(bd); };
@@ -116,12 +121,45 @@ var DB = (function () {
     });
   }
 
+  function comConfig(modo, fn) {
+    return abrir().then(function (d) {
+      return new Promise(function (ok, mau) {
+        var t = d.transaction('config', modo);
+        var r = fn(t.objectStore('config'));
+        t.oncomplete = function () { ok(r ? r.result : null); };
+        t.onerror = function () { mau(t.error); };
+        t.onabort = function () { mau(t.error); };
+      });
+    });
+  }
+
   return {
     guardar: function (e) { return comStore('readwrite', function (s) { return s.put(e); }); },
     apagar: function (id) { return comStore('readwrite', function (s) { return s.delete(id); }); },
-    todos: function () { return comStore('readonly', function (s) { return s.getAll(); }); }
+    todos: function () { return comStore('readonly', function (s) { return s.getAll(); }); },
+    definir: function (k, v) {
+      return comConfig('readwrite', function (s) { return s.put({ k: k, v: v }); });
+    }
   };
 })();
+
+/** Deixa ao Service Worker o que ele precisa para enviar sozinho. */
+function guardarConfigParaOSW() {
+  DB.definir('token', Def.get('token', '')).catch(function () {});
+  DB.definir('adminPw', Admin.pw()).catch(function () {});
+}
+
+/**
+ * Pede ao Android para enviar a fila mesmo com a aplicação fechada.
+ * Só existe no Chrome/Android — no iOS não há Background Sync, e por isso
+ * a regra continua a ser abrir a aplicação uma vez onde há rede.
+ */
+function pedirSincronizacaoEmSegundoPlano() {
+  if (!('serviceWorker' in navigator) || !('SyncManager' in window)) return;
+  navigator.serviceWorker.ready.then(function (reg) {
+    if (reg.sync) return reg.sync.register('jatlog-enviar');
+  }).catch(function () {});
+}
 
 /** Recarrega S.fila a partir do disco, por ordem de criação. */
 function lerFila() {
@@ -143,8 +181,10 @@ function comErro() {
 var Admin = {
   activo: function () { return Def.get('admin', '') === '1'; },
   pw: function () { return Def.get('adminPw', ''); },
-  entrar: function (pw) { Def.set('admin', '1'); Def.set('adminPw', pw); },
-  sair: function () { Def.del('admin'); Def.del('adminPw'); }
+  entrar: function (pw) {
+    Def.set('admin', '1'); Def.set('adminPw', pw); guardarConfigParaOSW();
+  },
+  sair: function () { Def.del('admin'); Def.del('adminPw'); guardarConfigParaOSW(); }
 };
 
 // ----------------------------------------------------------------- ajudantes
@@ -446,6 +486,7 @@ function enfileirar(item) {
     .then(lerFila)
     .then(function () {
       pintarBarra();
+      pedirSincronizacaoEmSegundoPlano();
       if (navigator.onLine) enviarFila();
     });
 }
@@ -1028,6 +1069,7 @@ function ligarEventos() {
     var v = $('inpCodigo').value.trim();
     if (!v) { aviso('avisoActivacao', 'Digite o código de activação.'); return; }
     Def.set('token', v);
+    guardarConfigParaOSW();
     aviso('avisoActivacao', '');
     irParaEntrada();
   };
@@ -1145,8 +1187,11 @@ function arrancar() {
     if (g) { try { S.master[k] = JSON.parse(g); } catch (e) {} }
   });
 
+  guardarConfigParaOSW();
+
   lerFila().then(function () {
     pintarBarra();
+    if (pendentes().length) pedirSincronizacaoEmSegundoPlano();
     if (navigator.onLine) enviarFila();
 
     if (!temCodigo()) { irParaActivacao(); return; }
