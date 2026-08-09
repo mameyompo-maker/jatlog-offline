@@ -64,7 +64,8 @@ var S = {
   ultimoGravado: null,
   regressar: 'ecraBusca',
   aEnviar: false,
-  semRede: false       // o último pedido não chegou ao servidor
+  semRede: false,      // o último pedido não chegou ao servidor
+  persistente: false   // o navegador prometeu não apagar os nossos dados
 };
 
 var $ = function (id) { return document.getElementById(id); };
@@ -1116,8 +1117,23 @@ function ligarEventos() {
 
 // ------------------------------------------------------------------ arranque
 
+/**
+ * Pede ao navegador para não apagar os nossos dados quando o telemóvel ficar
+ * com pouco espaço. Sem isto, a fila de envio é apagável como qualquer cache.
+ * O Chrome concede sozinho às aplicações instaladas no ecrã principal, e o
+ * Safari também. Não há prompt: ou é concedido em silêncio, ou negado.
+ */
+function pedirArmazenamentoPersistente() {
+  if (!navigator.storage || !navigator.storage.persist) return;
+  navigator.storage.persisted()
+    .then(function (ja) { return ja ? true : navigator.storage.persist(); })
+    .then(function (ok) { S.persistente = !!ok; })
+    .catch(function () {});
+}
+
 function arrancar() {
   ligarEventos();
+  pedirArmazenamentoPersistente();
 
   S.site = Def.get('site', 'lines');
   if (!LOCAIS[S.site]) S.site = 'lines';
