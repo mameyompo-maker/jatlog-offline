@@ -9,6 +9,6 @@
  * escreve-o uma vez no primeiro arranque e fica guardado no aparelho.
  */
 window.JATLOG_CONFIG = {
-  ENDPOINT: 'COLAR_AQUI_O_URL_DO_APPS_SCRIPT',
+  ENDPOINT: 'https://script.google.com/macros/s/AKfycby8UglcSQTwm-joEEWqB4dJ8IoNUOrfuDJ-ChOCSpzQjn_q5-SCuUM_uNK0wFXPFn6-0w/exec',
   VERSAO: '1.0.0'
 };
