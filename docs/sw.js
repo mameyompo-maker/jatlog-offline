@@ -14,7 +14,7 @@
 importScripts('./config.js');
 
 var CFG = self.JATLOG_CONFIG || {};
-var CACHE = 'jatlog-offline-v3';
+var CACHE = 'jatlog-offline-v4';
 var CACHE_FONTES = 'jatlog-fontes-v1';
 
 var FICHEIROS = [
@@ -22,6 +22,7 @@ var FICHEIROS = [
   './index.html',
   './app.js',
   './config.js',
+  './i18n.js',
   './styles.css',
   './manifest.webmanifest',
   './icon-192.png',
@@ -35,7 +36,7 @@ var HOSTS_FONTES = ['fonts.googleapis.com', 'fonts.gstatic.com'];
  * sendo do mesmo domínio: se a API for servida da mesma origem (acontece no
  * ambiente de teste), cachear as respostas congela os dados no ecrã. */
 var RAIZ = new URL('./', self.location).pathname;
-var NOMES = ['', 'index.html', 'app.js', 'config.js', 'styles.css',
+var NOMES = ['', 'index.html', 'app.js', 'config.js', 'i18n.js', 'styles.css',
              'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
              'icon-512-maskable.png'];
 

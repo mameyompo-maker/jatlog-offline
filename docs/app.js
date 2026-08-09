@@ -22,32 +22,18 @@ var GRAMAS_MIN = 5;       // abaixo disto também
 var MESES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-/* Acrescentar um local aqui (e no Codigo.gs) basta para ele aparecer no menu. */
+/* Acrescentar um local aqui (e no Codigo.gs, e em i18n.js) basta para ele
+ * aparecer no menu. Os nomes dos sítios são próprios, não se traduzem. */
 var LOCAIS = {
-  lines: {
-    rotulo: 'Tanheia (Linhas)', curto: 'Tanheia',
-    campo: 'Line Number', prefixo: 'L',
-    plural: 'linhas', unico: 'Linha única',
-    rotuloBusca: 'Número inicial da linha',
-    naoExiste: 'Linha {v} não existe no cadastro.',
-    jaRegistado: 'Esta linha já tem um registro neste mês. ' +
-                 'Um novo lançamento será somado ao histórico.'
-  },
-  blocks: {
-    rotulo: '7 de Abril (Blocos)', curto: '7 de Abril',
-    campo: 'Block', prefixo: '',
-    plural: 'blocos', unico: 'Bloco único',
-    rotuloBusca: 'Número inicial do bloco',
-    naoExiste: 'Bloco {v} não existe no cadastro.',
-    jaRegistado: 'Este bloco já tem um registro neste mês. ' +
-                 'Um novo lançamento será somado ao histórico.'
-  }
+  lines:  { rotulo: 'Tanheia (Linhas)',    curto: 'Tanheia',    campo: 'Line Number', prefixo: 'L' },
+  blocks: { rotulo: '7 de Abril (Blocos)', curto: '7 de Abril', campo: 'Block',       prefixo: ''  }
 };
 
 // ------------------------------------------------------------------- estado
 
 var S = {
   ecra: '',
+  idioma: 'pt',
   site: 'lines',
   nome: '',
   mes: '',
@@ -71,6 +57,72 @@ var S = {
 var $ = function (id) { return document.getElementById(id); };
 
 function local_() { return LOCAIS[S.site] || LOCAIS.lines; }
+
+// --------------------------------------------------------------- idiomas
+
+/** Texto na língua escolhida. {chave} nas frases é substituído por subs.chave. */
+function t(chave, subs) {
+  var tabela = TEXTOS[S.idioma] || TEXTOS.pt;
+  var s = tabela[chave];
+  if (s === undefined) s = (TEXTOS.pt[chave] !== undefined) ? TEXTOS.pt[chave] : chave;
+  if (!subs) return s;
+  return s.replace(/\{(\w+)\}/g, function (todo, k) {
+    return (subs[k] === undefined) ? todo : String(subs[k]);
+  });
+}
+
+/** Texto próprio do local actual (rótulo da busca, plural, etc.). */
+function tSitio(campo, subs) { return t('sitio.' + S.site + '.' + campo, subs); }
+
+function definirIdioma(cod) {
+  if (!TEXTOS[cod]) cod = 'pt';
+  S.idioma = cod;
+  Def.set('idioma', cod);
+  var info = IDIOMAS.filter(function (i) { return i.cod === cod; })[0];
+  // dizer a verdade ao navegador evita que ele ofereça traduzir por cima
+  document.documentElement.lang = (info && info.html) || cod;
+  aplicarIdioma();
+}
+
+/** Reescreve tudo o que está marcado no HTML e volta a desenhar o que é dinâmico. */
+function aplicarIdioma() {
+  var fixos = document.querySelectorAll('[data-t]');
+  for (var i = 0; i < fixos.length; i++) {
+    fixos[i].innerHTML = t(fixos[i].getAttribute('data-t'));
+  }
+  var dicas = document.querySelectorAll('[data-tph]');
+  for (var j = 0; j < dicas.length; j++) {
+    dicas[j].setAttribute('placeholder', t(dicas[j].getAttribute('data-tph')));
+  }
+  pintarBotoesIdioma();
+  redesenharEcra();
+}
+
+function pintarBotoesIdioma() {
+  var caixa = $('idiomas');
+  if (!caixa) return;
+  caixa.innerHTML = '';
+  IDIOMAS.forEach(function (i) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = i.rotulo;
+    b.className = (i.cod === S.idioma) ? 'activo' : '';
+    b.onclick = function () { definirIdioma(i.cod); };
+    caixa.appendChild(b);
+  });
+}
+
+/** Volta a montar o ecrã actual, para o texto dinâmico mudar de língua também. */
+function redesenharEcra() {
+  switch (S.ecra) {
+    case 'ecraLocal': irParaLocal(); break;
+    case 'ecraBusca': irParaBusca(); break;
+    case 'ecraCandidatos': irParaCandidatos(); break;
+    case 'ecraPeso': if (S.seleccionado) abrirPeso(S.seleccionado); break;
+    case 'ecraEditar': if (S.edicao) abrirEdicao(S.edicao); break;
+    default: pintarBarra();
+  }
+}
 
 // ----------------------------------------------------------- armazenamento
 
@@ -253,6 +305,9 @@ function mostrar(id) {
   var comHistorico = ['ecraBusca', 'ecraCandidatos', 'ecraPeso'];
   $('historico').hidden = comHistorico.indexOf(id) < 0;
 
+  // a escolha do idioma só aparece nos ecrãs de entrada
+  $('idiomas').hidden = ['ecraActivacao', 'ecraEntrada', 'ecraLocal'].indexOf(id) < 0;
+
   window.scrollTo(0, 0);
 }
 
@@ -275,12 +330,12 @@ function primeiroNumero(txt, prefixo) {
 }
 
 function descreverLinha(item) {
-  var L = local_();
-  var n = numerosDoCampo(item.campo, L.prefixo);
+  var n = numerosDoCampo(item.campo, local_().prefixo);
   if (n.length >= 2) {
-    return (n[n.length - 1] - n[0] + 1) + ' ' + L.plural + ' (' + n[0] + '-' + n[n.length - 1] + ')';
+    return (n[n.length - 1] - n[0] + 1) + ' ' + tSitio('plural') +
+           ' (' + n[0] + '-' + n[n.length - 1] + ')';
   }
-  return L.unico;
+  return tSitio('unico');
 }
 
 function ouTraco(v) {
@@ -363,20 +418,18 @@ function pintarBarra() {
 
   if (foraDeAlcance()) {
     b.hidden = false;
-    b.textContent = p
-      ? 'SEM CONEXÃO — ' + p + ' registro(s) guardado(s) no aparelho'
-      : 'SEM CONEXÃO — pode continuar a registar';
+    b.textContent = p ? t('rede.semRedeFila', { n: p }) : t('rede.semRede');
   } else if (S.aEnviar) {
     b.hidden = false;
     b.classList.add('enviando');
-    b.textContent = 'A enviar…';
+    b.textContent = t('rede.aEnviar');
   } else if (p) {
     b.hidden = false;
     b.classList.add('enviando');
-    b.textContent = p + ' registro(s) por enviar';
+    b.textContent = t('rede.porEnviar', { n: p });
   } else if (maus) {
     b.hidden = false;
-    b.textContent = maus + ' registro(s) recusado(s) pelo servidor';
+    b.textContent = t('rede.recusados', { n: maus });
   } else {
     b.hidden = true;
   }
@@ -470,8 +523,8 @@ function enviarLote(lote, token) {
           var r = porUuid[e.uuid];
           if (r && r.ok) bons++; else if (r) maus++;
         });
-        if (bons) brinde(bons === 1 ? '1 registro enviado' : bons + ' registros enviados');
-        if (maus) brinde(maus + ' registro(s) recusado(s)', true);
+        if (bons) brinde(t('brinde.enviados', { n: bons }));
+        if (maus) brinde(t('brinde.recusados', { n: maus }), true);
       });
     });
 }
@@ -589,8 +642,8 @@ function irParaEntrada() {
 
 function irParaLocal() {
   aviso('avisoLocal', '');
-  $('subLocal').innerHTML = 'Usuário: <b>' + esc(S.nome) + '</b>' +
-                            (Admin.activo() ? ' · administrador' : '');
+  $('subLocal').innerHTML = t(Admin.activo() ? 'local.usuarioAdmin' : 'local.usuario',
+                              { nome: esc(S.nome) });
 
   var sel = $('selLocal');
   sel.innerHTML = '';
@@ -629,7 +682,7 @@ function irParaLocal() {
 
 function irParaBusca() {
   aviso('avisoBusca', '');
-  $('rotuloBusca').textContent = local_().rotuloBusca;
+  $('rotuloBusca').textContent = tSitio('busca');
   $('inpBusca').value = '';
 
   var adm = Admin.activo();
@@ -653,9 +706,9 @@ function irParaBusca() {
 
   if (S.ultimoGravado) {
     var g = S.ultimoGravado;
-    aviso('avisoGravado', '<span class="tick">✓</span><b>' + esc(g.linha) + '</b> — ' +
-          esc(g.valor) + ' ' + esc(g.unidade) + ' salvo às ' + esc(g.hora) +
-          (g.local ? ' (no aparelho)' : ''));
+    aviso('avisoGravado', t(g.local ? 'busca.gravadoLocal' : 'busca.gravado', {
+      linha: esc(g.linha), valor: esc(g.valor), unidade: esc(g.unidade), hora: esc(g.hora)
+    }));
   } else {
     aviso('avisoGravado', '');
   }
@@ -670,10 +723,10 @@ function mostrarErrosDaFila() {
   var maus = comErro();
   if (!maus.length) return;
   var primeiro = maus[0];
-  aviso('avisoBusca', esc(maus.length) + ' registro(s) recusado(s) pelo servidor. ' +
-        'Primeiro erro: ' + esc(primeiro.erro || '') +
+  aviso('avisoBusca',
+        t('rede.erroFila', { n: maus.length, erro: esc(primeiro.erro || '') }) +
         ' <button class="btn ligacao" id="btnRetentar" style="display:inline;width:auto;' +
-        'margin:0 0 0 6px">Tentar de novo</button>');
+        'margin:0 0 0 6px">' + t('rede.tentarDeNovo') + '</button>');
   var b = $('btnRetentar');
   if (b) {
     b.onclick = function () {
@@ -690,7 +743,6 @@ function mostrarErrosDaFila() {
 }
 
 function buscar(valorBruto) {
-  var L = local_();
   var val = String(valorBruto || '').normalize('NFKC').trim();
   aviso('avisoBusca', '');
   if (!val) return;
@@ -698,20 +750,19 @@ function buscar(valorBruto) {
   aviso('avisoGravado', '');
 
   if (!/^\d+$/.test(val)) {
-    aviso('avisoBusca', 'Digite apenas números.');
+    aviso('avisoBusca', t('busca.soNumeros'));
     return;
   }
 
   var lista = S.master[S.site] || [];
   if (!lista.length) {
-    aviso('avisoBusca', 'O cadastro ainda não foi carregado neste aparelho. ' +
-                        'Ligue-se à internet uma vez para o descarregar.');
+    aviso('avisoBusca', t('busca.semCadastro'));
     return;
   }
 
   var alvo = parseInt(val, 10);
   var achados = lista.filter(function (it) {
-    return primeiroNumero(it.campo, L.prefixo) === alvo;
+    return primeiroNumero(it.campo, local_().prefixo) === alvo;
   });
 
   if (achados.length === 1) {
@@ -721,24 +772,25 @@ function buscar(valorBruto) {
     S.numeroBuscado = val;
     irParaCandidatos();
   } else {
-    aviso('avisoBusca', L.naoExiste.replace('{v}', esc(val)));
+    aviso('avisoBusca', tSitio('naoExiste', { v: esc(val) }));
   }
 }
 
 function irParaCandidatos() {
-  $('avisoCandidatos').innerHTML = 'O número <b>' + esc(S.numeroBuscado) + '</b> aparece em ' +
-    S.candidatos.length + ' registros. Escolha em qual deles você vai lançar o peso.';
+  $('avisoCandidatos').innerHTML = t('candidatos.aviso', {
+    numero: esc(S.numeroBuscado), n: S.candidatos.length
+  });
 
   var caixa = $('listaCandidatos');
   caixa.innerHTML = '';
   S.candidatos.forEach(function (it, i) {
-    var feito = jaRegistado(it.campo) ? '  •  JÁ REGISTRADO' : '';
+    var feito = jaRegistado(it.campo) ? '  •  ' + t('candidatos.jaRegistado') : '';
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'cartao';
     b.textContent = it.campo + feito + '\n' +
-                    descreverLinha(it) + '  ·  Saco ' + ouTraco(it.saco) + '\n' +
-                    ouTraco(it.variedade) + '  ·  ' + ouTraco(it.plantas) + ' plantas';
+                    descreverLinha(it) + '  ·  ' + t('candidatos.saco') + ' ' + ouTraco(it.saco) + '\n' +
+                    ouTraco(it.variedade) + '  ·  ' + ouTraco(it.plantas) + ' ' + t('candidatos.plantas');
     b.onclick = function () { abrirPeso(S.candidatos[i]); };
     caixa.appendChild(b);
   });
@@ -755,14 +807,15 @@ function abrirPeso(item) {
   aviso('avisoPeso', '');
 
   $('pesoLinha').textContent = item.campo;
-  $('pesoSub').innerHTML = esc(descreverLinha(item)) + ' &nbsp;·&nbsp; Saco ' + esc(ouTraco(item.saco));
+  $('pesoSub').innerHTML = esc(descreverLinha(item)) + ' &nbsp;·&nbsp; ' +
+                           t('peso.saco') + ' ' + esc(ouTraco(item.saco));
   $('metaMae').textContent = ouTraco(item.mae);
   $('metaVariedade').textContent = ouTraco(item.variedade);
   $('metaSaco').textContent = ouTraco(item.saco);
   $('metaPlantas').textContent = ouTraco(item.plantas);
 
   $('avisoJaRegistado').hidden = !jaRegistado(item.campo);
-  $('avisoJaRegistado').textContent = local_().jaRegistado;
+  $('avisoJaRegistado').textContent = tSitio('jaRegistado');
 
   $('inpPeso').value = '';
   pintarSegmento('segPeso', S.unidade);
@@ -788,19 +841,20 @@ function submeterPeso() {
   if (!$('inpPeso').value.trim()) return;
 
   if (!isFinite(peso)) {
-    aviso('avisoPeso', 'Valor inválido. Use apenas números, ex: 1.5');
+    aviso('avisoPeso', t('peso.invalido'));
     return;
   }
   if (peso <= 0) {
-    aviso('avisoPeso', 'O peso deve ser maior que zero.');
+    aviso('avisoPeso', t('peso.maiorQueZero'));
     return;
   }
 
   var g = gramas(peso, S.unidade);
   if (g > GRAMAS_MAX || g < GRAMAS_MIN) {
     S.porConfirmar = { peso: peso, unidade: S.unidade };
-    $('avisoConfirmar').innerHTML = 'O valor <b>' + peso.toFixed(2) + ' ' + S.unidade +
-      '</b> está fora da faixa esperada. Confirme se está correto antes de registrar.';
+    $('avisoConfirmar').innerHTML = t('confirmar.aviso', {
+      valor: peso.toFixed(2), unidade: S.unidade
+    });
     $('confirmarLinha').textContent = S.seleccionado.campo;
     $('confirmarValor').textContent = peso.toFixed(2) + ' ' + S.unidade;
     mostrar('ecraConfirmar');
@@ -828,10 +882,9 @@ function gravarPeso(peso, unidade) {
       valor: peso.toFixed(2),
       unidade: unidade,
       hora: ts.slice(11, 16),
-      local: !navigator.onLine
+      local: foraDeAlcance()
     };
-    brinde(navigator.onLine ? item.campo + ' registrado'
-                            : item.campo + ' guardado no aparelho');
+    brinde(t(foraDeAlcance() ? 'brinde.guardado' : 'brinde.registado', { linha: item.campo }));
     S.porConfirmar = null;
     irParaBusca();
   });
@@ -847,7 +900,7 @@ function pintarHistorico() {
   if (!lista.length) {
     var v = document.createElement('div');
     v.className = 'empty';
-    v.textContent = 'Nenhum registro em ' + S.mes + ' ainda.';
+    v.textContent = t('historico.vazio', { mes: S.mes });
     caixa.appendChild(v);
     return;
   }
@@ -856,16 +909,16 @@ function pintarHistorico() {
   var ultimos = lista.slice(-8).reverse();
   ultimos.forEach(function (r) {
     var carimbo = String(r.ts || '').slice(5, 16);
-    var selo = r.local ? '<span class="selo">POR ENVIAR</span>' : '';
+    var selo = r.local ? '<span class="selo">' + t('historico.porEnviar') + '</span>' : '';
 
     if (podeAlterar(r.user)) {
-      var quem = igual(r.user, S.nome) ? 'você' : r.user;
+      var quem = igual(r.user, S.nome) ? t('historico.voce') : r.user;
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'cartao' + (r.local ? ' porenviar' : '');
       b.innerHTML = esc(r.campo) + '    ' + esc(r.peso) + ' ' + esc(r.unidade) + selo +
                     '<span class="hs">' + esc(carimbo) + ' · ' + esc(quem) +
-                    ' · toque para corrigir</span>';
+                    ' · ' + t('historico.toque') + '</span>';
       b.onclick = function () { abrirEdicao(r); };
       caixa.appendChild(b);
     } else {
@@ -873,7 +926,7 @@ function pintarHistorico() {
       d.className = 'histrow';
       d.innerHTML = esc(r.campo) + ' &nbsp;&nbsp; ' + esc(r.peso) + ' ' + esc(r.unidade) + selo +
                     '<span class="hs">' + esc(carimbo) + ' · ' + esc(r.user) +
-                    ' · 🔒 só o autor ou o admin</span>';
+                    ' · ' + t('historico.trancado') + '</span>';
       caixa.appendChild(d);
     }
   });
@@ -885,11 +938,11 @@ function abrirEdicao(r) {
   S.unidadeEdicao = (r.unidade === 'g') ? 'g' : 'kg';
   aviso('avisoEditar', '');
 
-  $('cabecalhoEditar').innerHTML = 'Corrigindo o peso registrado para <b>' +
-                                   esc(r.campo) + '</b>. Ajuste o valor e salve.';
+  $('cabecalhoEditar').innerHTML = t('editar.cabecalho', { linha: esc(r.campo) });
   $('editarLinha').textContent = r.campo;
-  $('editarSub').textContent = 'Lançado em ' + String(r.ts || '').slice(5, 16) +
-                               ' por ' + ouTraco(r.user);
+  $('editarSub').textContent = t('editar.lancado', {
+    quando: String(r.ts || '').slice(5, 16), quem: ouTraco(r.user)
+  });
   $('inpEditar').value = r.peso;
   pintarSegmento('segEditar', S.unidadeEdicao);
 
@@ -914,10 +967,10 @@ function guardarEdicao() {
   if (!r) return;
 
   var peso = paraNumero($('inpEditar').value);
-  if (!isFinite(peso)) { aviso('avisoEditar', 'Valor inválido. Use apenas números, ex: 1.5'); return; }
-  if (peso <= 0) { aviso('avisoEditar', 'O peso deve ser maior que zero.'); return; }
+  if (!isFinite(peso)) { aviso('avisoEditar', t('peso.invalido')); return; }
+  if (peso <= 0) { aviso('avisoEditar', t('peso.maiorQueZero')); return; }
   if (!podeAlterar(r.user)) {
-    aviso('avisoEditar', 'Somente o autor do registro ou o administrador pode alterá-lo.');
+    aviso('avisoEditar', t('editar.semPermissao'));
     return;
   }
 
@@ -941,7 +994,7 @@ function guardarEdicao() {
   }
 
   accao.then(function () {
-    brinde(r.campo + ' atualizado');
+    brinde(t('brinde.actualizado', { linha: r.campo }));
     S.edicao = null;
     pintarBarra();
     voltarDaEdicao();
@@ -952,7 +1005,7 @@ function apagarRegisto() {
   var r = S.edicao;
   if (!r) return;
   if (!podeAlterar(r.user)) {
-    aviso('avisoEditar', 'Somente o autor do registro ou o administrador pode alterá-lo.');
+    aviso('avisoEditar', t('editar.semPermissao'));
     mostrar('ecraEditar');
     return;
   }
@@ -970,7 +1023,7 @@ function apagarRegisto() {
       });
 
   accao.then(function () {
-    brinde(r.campo + ' excluído');
+    brinde(t('brinde.apagado', { linha: r.campo }));
     S.edicao = null;
     pintarBarra();
     voltarDaEdicao();
@@ -1007,22 +1060,22 @@ function entrar() {
     if (navigator.onLine && configurado()) {
       pedirGet({ action: 'admin', pw: senha }).then(function (j) {
         if (!j.admin) {
-          aviso('avisoEntrada', 'Senha do administrador incorreta.');
+          aviso('avisoEntrada', t('entrada.senhaErrada'));
           return;
         }
         Admin.entrar(senha);
-        if (!nome) { aviso('avisoEntrada', 'Informe seu nome.'); irParaEntrada(); return; }
+        if (!nome) { aviso('avisoEntrada', t('entrada.faltaNome')); irParaEntrada(); return; }
         seguir();
       }).catch(function () {
-        aviso('avisoEntrada', 'Não foi possível verificar a senha agora. Tente com internet.');
+        aviso('avisoEntrada', t('entrada.semVerificar'));
       });
       return;
     }
     Admin.entrar(senha);
-    brinde('Sem rede: a senha será verificada no envio', true);
+    brinde(t('entrada.senhaDepois'), true);
   }
 
-  if (!nome) { aviso('avisoEntrada', 'Informe seu nome.'); return; }
+  if (!nome) { aviso('avisoEntrada', t('entrada.faltaNome')); return; }
   seguir();
 }
 
@@ -1039,15 +1092,14 @@ function continuarDoLocal() {
   S.ultimoGravado = null;
   S.edicao = null;
 
-  aviso('avisoLocal', 'A carregar o cadastro…');
+  aviso('avisoLocal', t('local.aCarregar'));
 
   carregarMaster(false).then(function () {
     aviso('avisoLocal', '');
     carregarRegistos(true);
     irParaBusca();
   }).catch(function () {
-    aviso('avisoLocal', 'Não foi possível descarregar o cadastro deste local e ainda não ' +
-                        'há cópia neste aparelho. Ligue-se à internet uma vez.');
+    aviso('avisoLocal', t('local.semCadastro'));
   });
 }
 
@@ -1067,7 +1119,7 @@ function ligarEventos() {
   // activação
   $('btnActivar').onclick = function () {
     var v = $('inpCodigo').value.trim();
-    if (!v) { aviso('avisoActivacao', 'Digite o código de activação.'); return; }
+    if (!v) { aviso('avisoActivacao', t('activacao.falta')); return; }
     Def.set('token', v);
     guardarConfigParaOSW();
     aviso('avisoActivacao', '');
@@ -1140,12 +1192,13 @@ function ligarEventos() {
   $('btnApagar').onclick = function () {
     var r = S.edicao;
     if (!r) return;
-    $('avisoApagarTexto').innerHTML = 'Excluir definitivamente o registro de <b>' +
-      esc(r.campo) + '</b> (' + esc(r.peso) + ' ' + esc(r.unidade) + ')? ' +
-      'Esta ação não pode ser desfeita.';
+    $('avisoApagarTexto').innerHTML = t('apagar.aviso', {
+      linha: esc(r.campo), valor: esc(r.peso), unidade: esc(r.unidade)
+    });
     $('apagarLinha').textContent = r.campo;
-    $('apagarSub').textContent = 'Lançado em ' + String(r.ts || '').slice(5, 16) +
-                                 ' por ' + ouTraco(r.user);
+    $('apagarSub').textContent = t('editar.lancado', {
+      quando: String(r.ts || '').slice(5, 16), quem: ouTraco(r.user)
+    });
     mostrar('ecraApagar');
   };
   $('btnApagarSim').onclick = apagarRegisto;
@@ -1177,6 +1230,7 @@ function arrancar() {
   ligarEventos();
   pedirArmazenamentoPersistente();
 
+  definirIdioma(Def.get('idioma', 'pt'));
   S.site = Def.get('site', 'lines');
   if (!LOCAIS[S.site]) S.site = 'lines';
   S.nome = Def.get('nome', '');
