@@ -1,5 +1,8 @@
 # JatLog offline
 
+**公開URL: https://mameyompo-maker.github.io/jatlog-offline/**
+(活性化コード `jatropha` / 管理者パスワード `JatRD2026`)
+
 モザンビークの圃場で、**圏外でも**収穫重量を登録できる PWA。
 現行の Streamlit 版 JatLog と**同じ操作画面・同じスプレッドシート**を使う。
 
