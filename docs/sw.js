@@ -11,7 +11,7 @@
  * o telemóvel fica sem rede.
  */
 
-var CACHE = 'jatlog-offline-v1';
+var CACHE = 'jatlog-offline-v2';
 var CACHE_FONTES = 'jatlog-fontes-v1';
 
 var FICHEIROS = [

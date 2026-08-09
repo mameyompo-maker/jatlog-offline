@@ -63,7 +63,8 @@ var S = {
   porConfirmar: null,  // {peso, unidade}
   ultimoGravado: null,
   regressar: 'ecraBusca',
-  aEnviar: false
+  aEnviar: false,
+  semRede: false       // o último pedido não chegou ao servidor
 };
 
 var $ = function (id) { return document.getElementById(id); };
@@ -301,13 +302,25 @@ function podeAlterar(autor) {
 
 // -------------------------------------------------------------- barra de rede
 
+/* navigator.onLine só diz se há ligação à rede local: dá "true" com wi-fi sem
+ * internet, e o Chromium volta a pô-lo a true depois de recarregar a página
+ * offline. Por isso contamos também com o que aconteceu ao último pedido. */
+function foraDeAlcance() { return !navigator.onLine || S.semRede; }
+
+/** Marca o resultado de um pedido e repinta a barra se o estado mudou. */
+function marcarRede(chegou) {
+  var antes = S.semRede;
+  S.semRede = !chegou;
+  if (antes !== S.semRede) pintarBarra();
+}
+
 function pintarBarra() {
   var b = $('barra');
   var p = pendentes().length;
   var maus = comErro().length;
   b.classList.remove('enviando', 'guardado');
 
-  if (!navigator.onLine) {
+  if (foraDeAlcance()) {
     b.hidden = false;
     b.textContent = p
       ? 'SEM CONEXÃO — ' + p + ' registro(s) guardado(s) no aparelho'
@@ -338,8 +351,10 @@ function pedirGet(params) {
   var q = ['token=' + encodeURIComponent(token)];
   for (var k in params) q.push(k + '=' + encodeURIComponent(params[k]));
 
+  // o segundo callback só apanha a rejeição do fetch, ou seja, falha de rede
   return fetch(CFG.ENDPOINT + '?' + q.join('&'), { redirect: 'follow' })
-    .then(function (r) { return r.json(); })
+    .then(function (r) { marcarRede(true); return r.json(); },
+          function (err) { marcarRede(false); throw err; })
     .then(function (j) {
       if (!j.ok) throw new Error(j.erro || 'Erro do servidor');
       return j;
@@ -393,7 +408,8 @@ function enviarLote(lote, token) {
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // evita o preflight CORS
     body: JSON.stringify(corpo),
     redirect: 'follow'
-  }).then(function (r) { return r.json(); })
+  }).then(function (r) { marcarRede(true); return r.json(); },
+          function (err) { marcarRede(false); throw err; })
     .then(function (resp) {
       if (!resp.ok) throw new Error(resp.erro || 'Erro do servidor');
 
@@ -993,6 +1009,16 @@ function continuarDoLocal() {
   });
 }
 
+/**
+ * Tenta outra vez de vez em quando. Se não há nada para enviar mas o último
+ * pedido falhou, faz uma leitura leve só para saber se a rede voltou — de
+ * outro modo a barra "SEM CONEXÃO" ficaria presa para sempre.
+ */
+function voltarATentar() {
+  if (pendentes().length) { enviarFila(); return; }
+  if (S.semRede && S.mes) carregarRegistos(true).catch(function () {});
+}
+
 // ------------------------------------------------------------------ ligações
 
 function ligarEventos() {
@@ -1083,9 +1109,9 @@ function ligarEventos() {
   $('btnApagarNao').onclick = function () { mostrar('ecraEditar'); };
 
   // rede
-  window.addEventListener('online', function () { pintarBarra(); enviarFila(); });
+  window.addEventListener('online', function () { pintarBarra(); voltarATentar(); });
   window.addEventListener('offline', pintarBarra);
-  setInterval(function () { if (pendentes().length) enviarFila(); }, INTERVALO_TENTATIVA);
+  setInterval(voltarATentar, INTERVALO_TENTATIVA);
 }
 
 // ------------------------------------------------------------------ arranque
