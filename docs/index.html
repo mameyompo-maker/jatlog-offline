@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>JatLog</title>
+
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#1F7A4C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JatLog">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" type="image/png" href="./icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+<!-- barra de rede / fila de envio -->
+<div id="barra" hidden></div>
+
+<main id="palco">
+
+  <!-- ---------------------------------------------------- 0. activação ---- -->
+  <section class="ecra" id="ecraActivacao" hidden>
+    <div class="login-head">
+      <div class="mark">JatLog</div>
+      <h1>Ativar o aparelho</h1>
+      <p>Digite o código de activação que o gestor lhe deu.
+         Só é preciso uma vez neste aparelho.</p>
+    </div>
+    <div class="painel">
+      <div class="banner error" id="avisoActivacao" hidden></div>
+      <label class="campo" for="inpCodigo">Código de activação</label>
+      <input type="text" id="inpCodigo" autocomplete="off" autocapitalize="off"
+             autocorrect="off" spellcheck="false" enterkeyhint="go">
+      <button class="btn principal" id="btnActivar">Ativar</button>
+    </div>
+    <div class="appfoot">Registro de colheita</div>
+  </section>
+
+  <!-- ------------------------------------------------------- 1. entrada ---- -->
+  <section class="ecra" id="ecraEntrada" hidden>
+    <div class="login-head">
+      <div class="mark">JatLog</div>
+      <h1>Registro de colheita</h1>
+      <p>Identifique-se para começar. O nome fica guardado até você trocar de usuário.</p>
+    </div>
+    <div class="painel">
+      <div class="banner error" id="avisoEntrada" hidden></div>
+
+      <div class="banner info" id="avisoAdminActivo" hidden>
+        Modo administrador ativo — você continuará como administrador.
+      </div>
+      <button class="btn ligacao" id="btnSairAdmin" hidden>Sair do modo administrador</button>
+
+      <label class="campo" for="inpNome">Nome de usuário</label>
+      <input type="text" id="inpNome" placeholder="Seu nome" autocomplete="name"
+             autocapitalize="words" enterkeyhint="go">
+
+      <details id="blocoAdmin">
+        <summary>Administrador</summary>
+        <label class="campo" for="inpSenha">Senha do administrador</label>
+        <input type="password" id="inpSenha" placeholder="Somente para o gestor"
+               autocomplete="off">
+      </details>
+
+      <button class="btn principal" id="btnComecar">Começar</button>
+    </div>
+    <div class="appfoot" id="rodapeEntrada">JatLog · offline</div>
+  </section>
+
+  <!-- ------------------------------------------------- 2. local e mês ---- -->
+  <section class="ecra" id="ecraLocal" hidden>
+    <div class="login-head">
+      <div class="mark">JatLog</div>
+      <h1>Escolha o local e o mês</h1>
+      <p id="subLocal"></p>
+    </div>
+    <div class="painel">
+      <div class="banner error" id="avisoLocal" hidden></div>
+
+      <label class="campo" for="selLocal">Local</label>
+      <select id="selLocal"></select>
+
+      <div class="duas">
+        <div>
+          <label class="campo" for="selMes">Mês</label>
+          <select id="selMes"></select>
+        </div>
+        <div>
+          <label class="campo" for="selAno">Ano</label>
+          <select id="selAno"></select>
+        </div>
+      </div>
+
+      <button class="btn principal" id="btnContinuar">Continuar</button>
+    </div>
+    <button class="btn ligacao" id="btnTrocarUsuario2">Trocar de usuário</button>
+    <div class="appfoot">JatLog · offline</div>
+  </section>
+
+  <!-- ------------------------------------------------ barra de contexto ---- -->
+  <div class="topbar" id="topo" hidden>
+    <div class="who">
+      <div class="name" id="topoNome"></div>
+      <div class="month" id="topoMes"></div>
+    </div>
+    <div class="counter">
+      <div class="num" id="topoNum">0</div>
+      <div class="lbl">registros</div>
+    </div>
+  </div>
+
+  <!-- --------------------------------------------------------- 3. busca ---- -->
+  <section class="ecra" id="ecraBusca" hidden>
+    <div id="linhaMesAdmin" hidden>
+      <label class="campo" for="selMesAdmin">Mês (administrador)</label>
+      <select id="selMesAdmin"></select>
+    </div>
+
+    <div class="banner error" id="avisoBusca" hidden></div>
+    <div class="banner ok" id="avisoGravado" hidden></div>
+
+    <div class="eyebrow" id="rotuloBusca">Número inicial da linha</div>
+    <input type="text" id="inpBusca" class="busca" placeholder="1"
+           inputmode="numeric" pattern="[0-9]*" enterkeyhint="search"
+           autocomplete="off">
+
+    <div class="banner info">Digite o número e toque em Enter para avançar.</div>
+
+    <div class="duas">
+      <button class="btn ligacao" id="btnMudarLocal">Mudar local ou mês</button>
+      <button class="btn ligacao" id="btnTrocarUsuario">Trocar de usuário</button>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------- 4. candidatos ---- -->
+  <section class="ecra" id="ecraCandidatos" hidden>
+    <div class="banner warn" id="avisoCandidatos"></div>
+    <div id="listaCandidatos"></div>
+    <button class="btn" id="btnOutroNumero">Buscar outro número</button>
+  </section>
+
+  <!-- ---------------------------------------------------------- 5. peso ---- -->
+  <section class="ecra" id="ecraPeso" hidden>
+    <div class="banner error" id="avisoPeso" hidden></div>
+    <div class="banner warn" id="avisoJaRegistado" hidden></div>
+
+    <div class="readout">
+      <div class="tag">Pesando</div>
+      <div class="line-code" id="pesoLinha"></div>
+      <div class="sub" id="pesoSub"></div>
+    </div>
+
+    <input type="text" id="inpPeso" class="mostrador" placeholder="0.00"
+           inputmode="decimal" enterkeyhint="done" autocomplete="off">
+
+    <div class="segmento" id="segPeso">
+      <button type="button" data-unidade="kg" class="activo">kg</button>
+      <button type="button" data-unidade="g">g</button>
+    </div>
+
+    <div class="duas">
+      <button class="btn principal" id="btnRegistar">Registrar</button>
+      <button class="btn cancelar" id="btnCancelarPeso">Cancelar</button>
+    </div>
+
+    <div class="meta">
+      <div class="cell"><div class="k">ID da mãe</div><div class="v" id="metaMae">-</div></div>
+      <div class="cell"><div class="k">Variedade</div><div class="v" id="metaVariedade">-</div></div>
+      <div class="cell"><div class="k">Saco</div><div class="v" id="metaSaco">-</div></div>
+      <div class="cell"><div class="k">Plantas</div><div class="v" id="metaPlantas">-</div></div>
+    </div>
+  </section>
+
+  <!-- ----------------------------------------------- 6. confirmar valor ---- -->
+  <section class="ecra" id="ecraConfirmar" hidden>
+    <div class="banner warn" id="avisoConfirmar"></div>
+    <div class="readout">
+      <div class="tag">Confirmar registro</div>
+      <div class="line-code" id="confirmarLinha"></div>
+      <div class="sub" id="confirmarValor"></div>
+    </div>
+    <div class="duas">
+      <button class="btn principal" id="btnRegistarAssim">Registrar assim</button>
+      <button class="btn cancelar" id="btnCorrigir">Corrigir</button>
+    </div>
+  </section>
+
+  <!-- -------------------------------------------------------- 7. editar ---- -->
+  <section class="ecra" id="ecraEditar" hidden>
+    <div class="banner error" id="avisoEditar" hidden></div>
+    <div class="banner warn" id="cabecalhoEditar"></div>
+
+    <div class="readout">
+      <div class="tag">Editando registro</div>
+      <div class="line-code" id="editarLinha"></div>
+      <div class="sub" id="editarSub"></div>
+    </div>
+
+    <input type="text" id="inpEditar" class="mostrador" inputmode="decimal"
+           enterkeyhint="done" autocomplete="off">
+
+    <div class="segmento" id="segEditar">
+      <button type="button" data-unidade="kg" class="activo">kg</button>
+      <button type="button" data-unidade="g">g</button>
+    </div>
+
+    <div class="duas">
+      <button class="btn principal" id="btnGuardarEdicao">Salvar</button>
+      <button class="btn cancelar" id="btnCancelarEdicao">Cancelar</button>
+    </div>
+
+    <button class="btn apagar" id="btnApagar">Excluir este registro</button>
+  </section>
+
+  <!-- -------------------------------------------------------- 8. apagar ---- -->
+  <section class="ecra" id="ecraApagar" hidden>
+    <div class="banner error" id="avisoApagarTexto"></div>
+    <div class="readout">
+      <div class="tag">Registro a excluir</div>
+      <div class="line-code" id="apagarLinha"></div>
+      <div class="sub" id="apagarSub"></div>
+    </div>
+    <div class="duas">
+      <button class="btn perigo" id="btnApagarSim">Sim, excluir</button>
+      <button class="btn cancelar" id="btnApagarNao">Não, voltar</button>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------- histórico ---- -->
+  <div id="historico" hidden>
+    <div class="eyebrow" style="margin-top:26px">Últimos registros</div>
+    <div id="listaHistorico"></div>
+  </div>
+
+</main>
+
+<div id="brinde" hidden></div>
+
+<script src="./config.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
