@@ -58,6 +58,7 @@ var TEXTOS = {
 
     'topo.registros': 'registros',
     'geral.trocarUsuario': 'Trocar de usuário',
+    'geral.menu': 'Menu (trocar de registro)',
 
     'busca.mesAdmin': 'Mês (administrador)',
     'busca.ajuda': 'Digite o número e toque em Enter para avançar.',
@@ -174,6 +175,7 @@ var TEXTOS = {
 
     'topo.registros': 'records',
     'geral.trocarUsuario': 'Switch user',
+    'geral.menu': 'Menu (switch record)',
 
     'busca.mesAdmin': 'Month (administrator)',
     'busca.ajuda': 'Type the number and press Enter to continue.',
@@ -290,6 +292,7 @@ var TEXTOS = {
 
     'topo.registros': '件',
     'geral.trocarUsuario': 'ユーザーを切り替える',
+    'geral.menu': 'メニュー(登録先を変える)',
 
     'busca.mesAdmin': '月(管理者)',
     'busca.ajuda': '番号を入力して Enter を押してください。',

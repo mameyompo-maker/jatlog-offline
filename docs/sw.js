@@ -1,33 +1,50 @@
-/* Service Worker do JatLog offline.
+/* Service Worker do JatLog (entrada comum + os dois módulos).
  *
  * Duas regras apenas:
  *   1. Os ficheiros da própria aplicação são servidos da cache (é isto que
  *      permite abrir sem rede). Actualizam-se em segundo plano.
- *   2. Tudo o resto — em especial o Apps Script — vai sempre à rede.
+ *   2. Tudo o resto — em especial os dois Apps Script — vai sempre à rede.
  *      NUNCA cachear as respostas da API: já aconteceu no India Rec e os
  *      dados deixaram de actualizar.
  *
  * As fontes do Google são cacheadas à parte para o desenho não mudar quando
  * o telemóvel fica sem rede.
+ *
+ * IMPORTANTE: subir CACHE sempre que se altera qualquer ficheiro em docs/,
+ * caso contrário os telemóveis continuam a usar a versão antiga.
  */
 
 importScripts('./config.js');
 
-var CFG = self.JATLOG_CONFIG || {};
-var CACHE = 'jatlog-offline-v5';
+var CFG_COLHEITA = self.JATLOG_CONFIG || {};
+var CFG_INDIA = self.INDIAREC_CONFIG || {};
+
+var CACHE = 'jatlog-v6';
 var CACHE_FONTES = 'jatlog-fontes-v1';
 
 var FICHEIROS = [
   './',
   './index.html',
-  './app.js',
+  './shell.js',
+  './shell_i18n.js',
   './config.js',
-  './i18n.js',
   './styles.css',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
-  './icon-512-maskable.png'
+  './icon-512-maskable.png',
+
+  './colheita/',
+  './colheita/index.html',
+  './colheita/app.js',
+  './colheita/i18n.js',
+
+  './india/',
+  './india/index.html',
+  './india/app.js',
+  './india/i18n.js',
+  './india/styles.css',
+  './india/plants.json'
 ];
 
 var HOSTS_FONTES = ['fonts.googleapis.com', 'fonts.gstatic.com'];
@@ -36,9 +53,7 @@ var HOSTS_FONTES = ['fonts.googleapis.com', 'fonts.gstatic.com'];
  * sendo do mesmo domínio: se a API for servida da mesma origem (acontece no
  * ambiente de teste), cachear as respostas congela os dados no ecrã. */
 var RAIZ = new URL('./', self.location).pathname;
-var NOMES = ['', 'index.html', 'app.js', 'config.js', 'i18n.js', 'styles.css',
-             'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
-             'icon-512-maskable.png'];
+var NOMES = FICHEIROS.map(function (f) { return f.replace(/^\.\//, ''); });
 
 function ehFicheiroDaApp(url) {
   if (url.search) return false;
@@ -70,24 +85,41 @@ self.addEventListener('activate', function (e) {
  * envia a fila mesmo com a aplicação fechada. No iOS isto não existe, por isso
  * lá continua a valer a regra de abrir a aplicação uma vez onde há rede.
  *
- * O código de activação não pode vir do localStorage (o Service Worker não lhe
- * chega), por isso a aplicação deixa-o na store 'config' do IndexedDB.
+ * Há duas filas, uma por módulo, em duas bases de dados diferentes — cada uma
+ * fala com o seu Apps Script e o formato dos registos não é o mesmo.
  *
- * Não faz mal que a página e o Service Worker enviem ao mesmo tempo: o servidor
- * despreza os UUID que já processou. */
+ * O código de activação não pode vir do localStorage (o Service Worker não lhe
+ * chega), por isso a entrada comum deixa-o na store 'config' da base 'jatlog'.
+ * Serve as duas filas: o nome da base é histórico, não quer dizer que só valha
+ * para a colheita.
+ *
+ * Não faz mal que a página e o Service Worker enviem ao mesmo tempo: os
+ * servidores desprezam os UUID que já processaram. */
 
 var LOTE_ENVIO = 25;
 
-function abrirBase() {
+function abrirBase(nome, versao, criar) {
   return new Promise(function (ok, mau) {
-    var p = indexedDB.open('jatlog', 2);
-    p.onupgradeneeded = function () {
-      var d = p.result;
-      if (!d.objectStoreNames.contains('envios')) d.createObjectStore('envios', { keyPath: 'uuid' });
-      if (!d.objectStoreNames.contains('config')) d.createObjectStore('config', { keyPath: 'k' });
-    };
+    var p = indexedDB.open(nome, versao);
+    p.onupgradeneeded = function () { criar(p.result); };
     p.onsuccess = function () { ok(p.result); };
     p.onerror = function () { mau(p.error); };
+  });
+}
+
+function baseColheita() {
+  return abrirBase('jatlog', 2, function (d) {
+    if (!d.objectStoreNames.contains('envios')) d.createObjectStore('envios', { keyPath: 'uuid' });
+    if (!d.objectStoreNames.contains('config')) d.createObjectStore('config', { keyPath: 'k' });
+  });
+}
+
+function baseIndia() {
+  return abrirBase('indiarec', 1, function (d) {
+    if (!d.objectStoreNames.contains('envios')) {
+      var s = d.createObjectStore('envios', { keyPath: 'uuid' });
+      s.createIndex('estado', 'estado');
+    }
   });
 }
 
@@ -106,49 +138,34 @@ function lerConfig(d, k) {
     .then(function (r) { return (r && r.v) || ''; });
 }
 
-function enviarFilaEmSegundoPlano() {
-  if (!CFG.ENDPOINT) return Promise.resolve();
-  var base;
-
-  return abrirBase().then(function (d) {
-    base = d;
-    return Promise.all([
-      lerConfig(d, 'token'),
-      lerConfig(d, 'adminPw'),
-      comLoja(d, 'envios', 'readonly', function (s) { return s.getAll(); })
-    ]);
-  }).then(function (r) {
-    var token = r[0], adminPw = r[1];
-    var fila = (r[2] || [])
-      .filter(function (e) { return e.estado === 'pendente'; })
-      .sort(function (a, b) { return a.criadoEm - b.criadoEm; });
-    if (!token || !fila.length) return;
-
-    var lotes = [];
-    for (var i = 0; i < fila.length; i += LOTE_ENVIO) lotes.push(fila.slice(i, i + LOTE_ENVIO));
-
-    return lotes.reduce(function (cadeia, lote) {
-      return cadeia.then(function () { return enviarLoteSW(base, lote, token, adminPw); });
-    }, Promise.resolve());
+/** Código de activação e senha do administrador, guardados pela entrada comum. */
+function credenciais() {
+  return baseColheita().then(function (d) {
+    return Promise.all([lerConfig(d, 'token'), lerConfig(d, 'adminPw')]);
   });
 }
 
-function enviarLoteSW(base, lote, token, adminPw) {
-  var corpo = {
-    token: token,
-    entries: lote.map(function (e) {
-      return {
-        uuid: e.uuid, tipo: e.tipo, site: e.site, month: e.month,
-        line: e.line, weight: e.weight, unit: e.unit,
-        recorder: e.recorder, tsLocal: e.tsLocal, alvo: e.alvo || null
-      };
-    })
-  };
-  if (adminPw) corpo.adminPassword = adminPw;
+function porLotes(fila, fn) {
+  var lotes = [];
+  for (var i = 0; i < fila.length; i += LOTE_ENVIO) lotes.push(fila.slice(i, i + LOTE_ENVIO));
+  return lotes.reduce(function (cadeia, lote) {
+    return cadeia.then(function () { return fn(lote); });
+  }, Promise.resolve());
+}
 
-  return fetch(CFG.ENDPOINT, {
+function pendentesDe(base) {
+  return comLoja(base, 'envios', 'readonly', function (s) { return s.getAll(); })
+    .then(function (l) {
+      return (l || [])
+        .filter(function (e) { return e.estado === 'pendente'; })
+        .sort(function (a, b) { return a.criadoEm - b.criadoEm; });
+    });
+}
+
+function postar(endpoint, corpo) {
+  return fetch(endpoint, {
     method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // evita o preflight CORS
     body: JSON.stringify(corpo),
     redirect: 'follow'
   }).then(function (r) { return r.json(); })
@@ -156,27 +173,125 @@ function enviarLoteSW(base, lote, token, adminPw) {
       if (!resp.ok) throw new Error(resp.erro || 'Erro do servidor');
       var porUuid = {};
       (resp.resultados || []).forEach(function (x) { porUuid[x.uuid] = x; });
-
-      return Promise.all(lote.map(function (e) {
-        var x = porUuid[e.uuid];
-        if (!x) return Promise.resolve();
-        if (x.ok) {
-          return comLoja(base, 'envios', 'readwrite', function (s) { return s.delete(e.uuid); });
-        }
-        e.estado = 'erro';
-        e.erro = x.erro || 'Erro desconhecido';
-        return comLoja(base, 'envios', 'readwrite', function (s) { return s.put(e); });
-      }));
+      return porUuid;
     });
 }
 
+// ------------------------------------------------------------- colheita
+
+function enviarColheitaEmSegundoPlano() {
+  if (!CFG_COLHEITA.ENDPOINT) return Promise.resolve();
+  var base;
+
+  return baseColheita().then(function (d) {
+    base = d;
+    return Promise.all([credenciais(), pendentesDe(d)]);
+  }).then(function (r) {
+    var token = r[0][0], adminPw = r[0][1], fila = r[1];
+    if (!token || !fila.length) return;
+
+    return porLotes(fila, function (lote) {
+      var corpo = {
+        token: token,
+        entries: lote.map(function (e) {
+          return {
+            uuid: e.uuid, tipo: e.tipo, site: e.site, month: e.month,
+            line: e.line, weight: e.weight, unit: e.unit,
+            recorder: e.recorder, tsLocal: e.tsLocal, alvo: e.alvo || null
+          };
+        })
+      };
+      if (adminPw) corpo.adminPassword = adminPw;
+
+      return postar(CFG_COLHEITA.ENDPOINT, corpo).then(function (porUuid) {
+        return Promise.all(lote.map(function (e) {
+          var x = porUuid[e.uuid];
+          if (!x) return Promise.resolve();
+          if (x.ok) {
+            return comLoja(base, 'envios', 'readwrite', function (s) { return s.delete(e.uuid); });
+          }
+          e.estado = 'erro';
+          e.erro = x.erro || 'Erro desconhecido';
+          return comLoja(base, 'envios', 'readwrite', function (s) { return s.put(e); });
+        }));
+      });
+    });
+  });
+}
+
+// ---------------------------------------------------------------- india
+
+function enviarIndiaEmSegundoPlano() {
+  if (!CFG_INDIA.ENDPOINT) return Promise.resolve();
+  var base;
+
+  return baseIndia().then(function (d) {
+    base = d;
+    return Promise.all([credenciais(), pendentesDe(d)]);
+  }).then(function (r) {
+    var token = r[0][0], adminPw = r[0][1], fila = r[1];
+    if (!token) return;
+
+    /* Correcções a registos de outra pessoa só passam com o administrador
+     * ligado; sem ele ficam à espera, exactamente como na página. */
+    if (!adminPw) fila = fila.filter(function (e) { return !e.precisaAdmin; });
+    if (!fila.length) return;
+
+    return porLotes(fila, function (lote) {
+      var corpo = {
+        token: token,
+        entries: lote.map(function (e) {
+          return {
+            uuid: e.uuid, tsLocal: e.tsLocal, ts: e.tsIso,
+            recorder: e.recorder, device: e.device,
+            mode: e.mode, ronda: e.ronda, substitui: e.substitui || '',
+            accao: e.accao || '',
+            seq: e.seq, pid: e.pid, row: e.row,
+            noFileira: e.noFileira, noFolha: e.noFolha, source: e.source,
+            values: e.values
+          };
+        })
+      };
+      if (adminPw) corpo.adminPassword = adminPw;
+
+      return postar(CFG_INDIA.ENDPOINT, corpo).then(function (porUuid) {
+        return Promise.all(lote.map(function (e) {
+          var x = porUuid[e.uuid];
+          if (!x) return Promise.resolve();
+          if (x.ok) {
+            /* Aqui os registos enviados ficam na base — é deles que sai o
+             * histórico do aparelho. Campo separado de propósito: `accao` é a
+             * intenção do aparelho e o progresso local depende dela. */
+            e.estado = 'enviado';
+            e.enviadoEm = Date.now();
+            e.celulas = x.celulas || [];
+            e.accaoServidor = x.accao || '';
+          } else {
+            e.estado = 'erro';
+            e.erro = x.erro || 'Erro desconhecido';
+          }
+          return comLoja(base, 'envios', 'readwrite', function (s) { return s.put(e); });
+        }));
+      });
+    });
+  });
+}
+
+function enviarTudoEmSegundoPlano() {
+  return Promise.all([
+    enviarColheitaEmSegundoPlano().catch(function () {}),
+    enviarIndiaEmSegundoPlano().catch(function () {})
+  ]);
+}
+
 self.addEventListener('sync', function (e) {
-  if (e.tag === 'jatlog-enviar') e.waitUntil(enviarFilaEmSegundoPlano());
+  if (e.tag === 'jatlog-enviar') e.waitUntil(enviarColheitaEmSegundoPlano());
+  if (e.tag === 'indiarec-enviar') e.waitUntil(enviarIndiaEmSegundoPlano());
 });
 
 // atalho para a própria página (e para os testes) mandarem tentar já
 self.addEventListener('message', function (e) {
-  if (e.data && e.data.tipo === 'enviar-agora') e.waitUntil(enviarFilaEmSegundoPlano());
+  if (e.data && e.data.tipo === 'enviar-agora') e.waitUntil(enviarTudoEmSegundoPlano());
 });
 
 self.addEventListener('fetch', function (e) {

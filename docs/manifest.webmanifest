@@ -1,7 +1,7 @@
 {
-  "name": "JatLog — Registro de Colheita",
+  "name": "JatLog — Registros de campo",
   "short_name": "JatLog",
-  "description": "Registo do peso da colheita de Jatropha, funciona sem rede.",
+  "description": "Peso da colheita e medições das plantas de Jatropha. Funciona sem rede.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

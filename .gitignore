@@ -1,4 +1,7 @@
 HANDOVER.md
+tests/out/
+tests/fotos/
+tests/sync/
 __pycache__/
 *.pyc
 .DS_Store

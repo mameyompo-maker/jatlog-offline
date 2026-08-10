@@ -497,6 +497,51 @@ input.busca::placeholder { color: #B9C6BE; font-weight: 400; }
 }
 #brinde.mau { background: var(--red); }
 
+/* ================= menu: o que se vai registar =================
+   Nome próprio de propósito: .cartao já é dos candidatos e do histórico
+   da colheita, e as duas folhas de estilo são a mesma. */
+.cartao-menu {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 18px 16px;
+  margin-top: 14px;
+}
+.cartao-menu:hover { border-color: var(--green); }
+.cartao-menu:active { transform: scale(.99); }
+.cartao-menu:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+
+.cartao-menu .cartao-t {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  color: var(--green-dark);
+}
+.cartao-menu .cartao-d {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.cartao-menu .cartao-fila {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--amber-soft);
+  border: 1px solid #E8CE9A;
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
 /* O espaçamento largo é pensado para maiúsculas latinas; em japonês faz o
    texto parecer partido. Só se aplica quando o documento está em japonês. */
 html[lang="ja"] .eyebrow,

@@ -1,10 +1,21 @@
-# JatLog offline
+# JatLog(現場記録アプリ)
 
 **公開URL: https://mameyompo-maker.github.io/jatlog-offline/**
 (活性化コード `jatropha` / 管理者パスワード `JatRD2026`)
 
-モザンビークの圃場で、**圏外でも**収穫重量を登録できる PWA。
-現行の Streamlit 版 JatLog と**同じ操作画面・同じスプレッドシート**を使う。
+モザンビークの圃場で、**圏外でも**記録できる PWA。2026-08-10 に、それまで
+別々のアプリだった **収穫重量(JatLog offline)** と **インドの測定(India Rec)** を
+1つに統合した。
+
+```
+活性化コード ─→ 名前(+管理者) ─→ ┌─ Colheita — peso     (ライン/ブロック別の重量)
+   (端末に1回)      (共通)         └─ Medições — India   (NBF(Tanheia)26 の測定)
+```
+
+**コードと名前を聞かれるのは入口で1回だけ**で、その後メニューで「何を登録するか」を
+選ぶ。管理者モード・表示言語・送信待ちの扱いも2つで共通。
+
+収穫重量の側は、現行の Streamlit 版 JatLog と**同じ操作画面・同じスプレッドシート**を使う。
 
 | | 現行 JatLog(Streamlit) | JatLog offline(これ) |
 |---|---|---|
@@ -18,14 +29,39 @@
 
 ## ファイル構成
 
+入口(shell)と2つのモジュールに分かれている。**1つの HTML に混ぜていないのは、
+2つのアプリが関数名も画面IDも大量に衝突していたため**(`S` / `t()` / `mostrar()` /
+`enviarFila()` / `ecraEntrada` …)。別ページにすれば、テスト済みのコードをほぼ
+そのまま使える。ホーム画面のアイコン・Service Worker・manifest は1つなので、
+現場から見れば1つのアプリ。
+
 | パス | 中身 |
 |---|---|
-| `docs/index.html` | 全画面のマークアップ |
-| `docs/styles.css` | 現行 Streamlit 版のデザインを移植したもの |
-| `docs/app.js` | 画面遷移・検索・送信キュー・権限 |
-| `docs/sw.js` | Service Worker(アプリ本体だけキャッシュ) |
-| `docs/config.js` | **ENDPOINT をここに書く** |
-| `apps_script/Codigo.gs` | サーバー側(GET: 台帳・履歴 / POST: 登録・修正・削除) |
+| `docs/index.html` | **入口**:活性化 → 名前(+管理者)→ メニュー |
+| `docs/shell.js` | 入口の中身。共有セッションと送信待ちの件数表示 |
+| `docs/shell_i18n.js` | 入口の文言(PT/EN/日本語) |
+| `docs/styles.css` | JatLog のデザイン。入口と `colheita/` で共有 |
+| `docs/config.js` | **2つの ENDPOINT をここに書く** |
+| `docs/sw.js` | Service Worker(1つ)。全ページのキャッシュと**2本のキューの自動送信** |
+| `docs/manifest.webmanifest` | アプリ名・アイコン(1つ) |
+| `docs/colheita/` | 収穫重量モジュール(`index.html` / `app.js` / `i18n.js`) |
+| `docs/india/` | インド測定モジュール(+ `styles.css` / `plants.json`) |
+| `apps_script/Codigo.gs` | 収穫側のサーバー(GET: 台帳・履歴 / POST: 登録・修正・削除) |
+| `tests/` | 統合テスト・各モジュールのE2E・バックグラウンド送信テスト |
+
+インドの測定側の Apps Script は **`india-rec` リポジトリの `apps_script/Codigo.gs`**
+のままで、**一切変更していない**。
+
+### 端末に残るデータの置き場所
+
+| | 収穫重量 | インド測定 |
+|---|---|---|
+| 送信キュー | IndexedDB `jatlog` | IndexedDB `indiarec` |
+| モジュール固有の設定 | `localStorage` `jatlog.*` | `localStorage` `indiarec.*` |
+| **共有**(コード・名前・言語・管理者) | \_\_\_\_ `localStorage` `jat.*` | \_\_\_\_(同じ) |
+
+⚠ 共有するキーの一覧は `shell.js` / `colheita/app.js` / `india/app.js` の
+`PARTILHADAS` に3か所書いてある。**増やすときは3つとも直す。**
 
 ## セットアップ
 
@@ -49,7 +85,15 @@
 
 ### 2. URL をアプリに設定
 
-`docs/config.js` の `ENDPOINT` を手順1の URL に差し替える。
+`docs/config.js` に **2つ**の ENDPOINT がある。
+
+- `JATLOG_CONFIG.ENDPOINT` … 手順1でデプロイした収穫側の URL
+- `INDIAREC_CONFIG.ENDPOINT` … インド測定側(`india-rec` リポジトリの Apps Script)の URL。
+  **既にデプロイ済みのものをそのまま使っている**ので、触る必要は無い
+
+⚠ 管理者パスワードは2つの Apps Script のスクリプトプロパティにそれぞれ入っている。
+入口の画面はどちらか一方が認めれば管理者として通す(両方に順に問い合わせる)。
+**片方だけ変えると、もう片方への書き込みが管理者権限で通らなくなる。**
 
 ### 3. GitHub Pages で配信
 
@@ -63,13 +107,20 @@ gh repo create jatlog-offline --public --source . --remote origin --push
 1. スマホのブラウザで Pages の URL を開く
 2. メニューから **「ホーム画面に追加」**(これをしないと圏外で起動しない)
 3. 起動 → `Código de activação` に `jatropha` を入力
-4. 名前 → 拠点と月 を選ぶ。ここで**台帳が端末に落ちる**(1回だけネットが要る)
+4. 名前を入れる → **メニューが出る**
+5. **両方のモジュールを1回ずつ開いておく**(ここで端末にデータが落ちる。ネットが要る)
+   - Colheita … 拠点と月を選ぶ → 台帳が落ちる。**使う拠点は両方とも開いておく**
+   - Medições … 開くだけで株一覧と進捗が落ちる
 
 以降は圏外でもホーム画面のアイコンから使える。
 
 ## 現場での使い方
 
-操作は現行 JatLog と同じ。番号を入れて Enter → 重量 → Registrar。
+起動すると「何を登録しますか?」のメニューが出るので、カードを選ぶ。
+モジュールの中からは **Menu(登録先を変える)** でいつでも戻れる。
+メニューには、それぞれ**送信待ちが何件あるか**が出る。
+
+収穫重量の操作は現行 JatLog と同じ。番号を入れて Enter → 重量 → Registrar。
 違うのは圏外のときの見え方だけ。
 
 - 画面の一番上に赤い帯 **SEM CONEXÃO — pode continuar a registar**
@@ -77,14 +128,16 @@ gh repo create jatlog-offline --public --source . --remote origin --push
 - 電波が戻ると自動で送信され、タグが消える。手動操作は要らない
 - 送信待ちのまま**アプリを閉じても消えない**(IndexedDB に残る)
 - **Android は、アプリを閉じたままでも電波が戻った時点で自動送信される**
-  (Background Sync。Service Worker が起きて送る)。
+  (Background Sync。Service Worker が起きて送る)。**2つのモジュールの両方**が
+  この仕組みを使う(タグは `jatlog-enviar` と `indiarec-enviar`)。
   **iOS にはこの仕組みが無い**ので、一日の終わりに電波のある場所でアプリを
   一度開いてもらう運用が必要
 
 ## 表示言語(PT / EN / 日本語)
 
-最初の画面(活性化・名前・拠点と月)の右上に **PT / EN / 日本語** のボタンがある。
-選ぶと即座に切り替わり、端末に記憶される。**既定はポルトガル語**(現場の言語)。
+入口の画面(活性化・名前・メニュー)と、各モジュールの最初の画面の右上に
+**PT / EN / 日本語** のボタンがある。どこで選んでも共通の設定が変わるので、
+**入口で1回選べばアプリ全体に効く**。既定はポルトガル語(現場の言語)。
 
 - 切り替えるのは表示だけ。**シートに保存される内容は言語に関係なく同じ**
 - 拠点名(Tanheia / 7 de Abril)は固有名詞なので翻訳しない
@@ -105,8 +158,9 @@ gh repo create jatlog-offline --public --source . --remote origin --push
 - **画面に出すときの記号は言語に従う**(ポルトガル語 `4,40` / 英語・日本語 `4.40`)
 - **シートに書く値は言語に関係なく常に `4.40`**(ピリオド)
 
-言語を足すときは `docs/i18n.js` に同じキーの塊を1つ増やし、`IDIOMAS` に1行足すだけ。
-コード側の変更は要らない。
+言語を足すときは文言ファイルに同じキーの塊を1つ増やし、`IDIOMAS` に1行足すだけ。
+コード側の変更は要らない。**文言ファイルは3つある**(`docs/shell_i18n.js` /
+`docs/colheita/i18n.js` / `docs/india/i18n.js`)ので、3つとも足すこと。
 
 ## 送信待ちのデータはいつ消えるのか
 
@@ -151,6 +205,23 @@ gh repo create jatlog-offline --public --source . --remote origin --push
 - 台帳から端末に載せるのは 5 列だけ:番号 / Sack Number / Variety /
   Total no.of plant / Mother Id
 
+## テスト
+
+`tests/` に一式。先にモックサーバーを起動してから流す(2つの Apps Script を
+どちらも模倣する)。
+
+```powershell
+Start-Process python -ArgumentList "tests\servidor.py","<docsの絶対パス>","8810" -WindowStyle Hidden
+python tests\teste.py            # 統合そのもの(入口・メニュー・共有セッション)  49項目
+python tests\teste_colheita.py   # 収穫モジュールの中身                            67項目
+python tests\teste_india.py      # 測定モジュールの中身                            66項目
+python tests\teste_sync.py       # アプリを閉じたままの自動送信(2本のキュー)      18項目
+```
+
+⚠ Playwright の「オフライン」は Service Worker には届かない(SW は別のネットワーク
+コンテキストを持つ)。圏外テスト中に SW が先に送ってしまうことがあるので、
+判定は「最後に1件ずつ届いていること」で行う。
+
 ## 制限事項
 
 - サーバーに拒否された記録(権限エラーなど)はキューに残り、検索画面に赤い帯で
@@ -158,3 +229,9 @@ gh repo create jatlog-offline --public --source . --remote origin --push
 - 管理者パスワードは、圏外でログインした場合その場では検証できない。
   送信時にサーバーが判定する(間違っていれば上記の赤い帯に出る)
 - 台帳を一度も落としていない拠点は、圏外では開けない
+- **2つのモジュールで見た目が違う**(収穫=明るい緑 / 測定=黒背景)。測定側の黒は
+  「直射日光下でのコントラスト」を狙った当初の設計。揃えるかどうかは未決定
+- 管理者が**他人の記録を開くと空のフォームが出ることがある**。サーバー上の値は
+  「Registos e correcções → Todos」を一度開くと端末に載る。統合前から同じ挙動
+  (アプリを開き直した直後も同じ)だが、管理者ログインが入口に移ったぶん
+  遭遇しやすくなっている

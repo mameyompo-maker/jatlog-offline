@@ -1,7 +1,8 @@
-/* JatLog offline — registo de colheita que funciona sem rede.
+/* JatLog — módulo da colheita: registo do peso que funciona sem rede.
  *
- * Fluxo (o mesmo da aplicação Streamlit):
- *   activação -> nome -> local + mês -> busca -> (candidatos) -> peso -> histórico
+ * A activação e o nome são pedidos no menu (../index.html), que é comum aos
+ * dois módulos. Aqui o fluxo começa já na escolha do local:
+ *   local + mês -> busca -> (candidatos) -> peso -> histórico
  *
  * Tudo o que o ecrã precisa está no aparelho: o cadastro (Master) fica em cache e
  * a busca corre localmente. Os registos vão para uma fila em IndexedDB e sobem
@@ -126,13 +127,20 @@ function redesenharEcra() {
 
 // ----------------------------------------------------------- armazenamento
 
+/* O que a entrada comum guarda vale para os dois módulos e vive com o prefixo
+ * 'jat.'; o resto (cadastro em cache, local, mês) é só deste módulo e fica em
+ * 'jatlog.'. Mexer nesta lista significa mexer também em india/app.js e em
+ * shell.js — as três têm de concordar. */
+var PARTILHADAS = { token: 1, nome: 1, idioma: 1, admin: 1, adminPw: 1, adminAte: 1 };
+function chaveDef(k) { return (PARTILHADAS[k] ? 'jat.' : 'jatlog.') + k; }
+
 var Def = {
   get: function (k, d) {
-    try { var v = localStorage.getItem('jatlog.' + k); return v === null ? d : v; }
+    try { var v = localStorage.getItem(chaveDef(k)); return v === null ? d : v; }
     catch (e) { return d; }
   },
-  set: function (k, v) { try { localStorage.setItem('jatlog.' + k, v); } catch (e) {} },
-  del: function (k) { try { localStorage.removeItem('jatlog.' + k); } catch (e) {} }
+  set: function (k, v) { try { localStorage.setItem(chaveDef(k), v); } catch (e) {} },
+  del: function (k) { try { localStorage.removeItem(chaveDef(k)); } catch (e) {} }
 };
 
 var DB = (function () {
@@ -230,13 +238,15 @@ function comErro() {
 
 // ------------------------------------------------------------ administrador
 
+/* Entra-se e sai-se do modo administrador no menu; aqui só se lê. O prazo é o
+ * mesmo que o menu escreve — sem ele, uma fila com correcções de outra pessoa
+ * ficaria presa se a permissão desaparecesse a meio. */
 var Admin = {
-  activo: function () { return Def.get('admin', '') === '1'; },
-  pw: function () { return Def.get('adminPw', ''); },
-  entrar: function (pw) {
-    Def.set('admin', '1'); Def.set('adminPw', pw); guardarConfigParaOSW();
+  activo: function () {
+    if (Def.get('admin', '') !== '1') return false;
+    return Date.now() <= Number(Def.get('adminAte', 0));
   },
-  sair: function () { Def.del('admin'); Def.del('adminPw'); guardarConfigParaOSW(); }
+  pw: function () { return Admin.activo() ? Def.get('adminPw', '') : ''; }
 };
 
 // ----------------------------------------------------------------- ajudantes
@@ -335,8 +345,8 @@ function mostrar(id) {
   var comHistorico = ['ecraBusca', 'ecraCandidatos', 'ecraPeso'];
   $('historico').hidden = comHistorico.indexOf(id) < 0;
 
-  // a escolha do idioma só aparece nos ecrãs de entrada
-  $('idiomas').hidden = ['ecraActivacao', 'ecraEntrada', 'ecraLocal'].indexOf(id) < 0;
+  // a escolha do idioma só aparece no ecrã de entrada deste módulo
+  $('idiomas').hidden = id !== 'ecraLocal';
 
   window.scrollTo(0, 0);
 }
@@ -650,24 +660,9 @@ function pintarTudo() {
   pintarBarra();
 }
 
-function irParaActivacao() {
-  aviso('avisoActivacao', '');
-  $('inpCodigo').value = '';
-  mostrar('ecraActivacao');
-  setTimeout(function () { $('inpCodigo').focus(); }, 150);
-}
-
-function irParaEntrada() {
-  aviso('avisoEntrada', '');
-  $('inpNome').value = '';
-  $('inpSenha').value = '';
-  $('blocoAdmin').open = false;
-  var adm = Admin.activo();
-  $('avisoAdminActivo').hidden = !adm;
-  $('btnSairAdmin').hidden = !adm;
-  $('blocoAdmin').hidden = adm;
-  mostrar('ecraEntrada');
-  setTimeout(function () { $('inpNome').focus(); }, 150);
+/** Volta ao menu comum. O nome e o código ficam; a fila também. */
+function irParaMenu() {
+  location.href = '../index.html';
 }
 
 function irParaLocal() {
@@ -1072,43 +1067,6 @@ function voltarDaEdicao() {
 
 // ------------------------------------------------------------------ entrada
 
-function entrar() {
-  var nome = $('inpNome').value.trim();
-  var senha = $('inpSenha').value.trim();
-  aviso('avisoEntrada', '');
-
-  var jaAdmin = Admin.activo();
-
-  function seguir() {
-    S.nome = nome;
-    Def.set('nome', nome);
-    irParaLocal();
-  }
-
-  if (!jaAdmin && senha) {
-    // com rede confirmamos já; sem rede aceitamos e o servidor decide no envio
-    if (navigator.onLine && configurado()) {
-      pedirGet({ action: 'admin', pw: senha }).then(function (j) {
-        if (!j.admin) {
-          aviso('avisoEntrada', t('entrada.senhaErrada'));
-          return;
-        }
-        Admin.entrar(senha);
-        if (!nome) { aviso('avisoEntrada', t('entrada.faltaNome')); irParaEntrada(); return; }
-        seguir();
-      }).catch(function () {
-        aviso('avisoEntrada', t('entrada.semVerificar'));
-      });
-      return;
-    }
-    Admin.entrar(senha);
-    brinde(t('entrada.senhaDepois'), true);
-  }
-
-  if (!nome) { aviso('avisoEntrada', t('entrada.faltaNome')); return; }
-  seguir();
-}
-
 function continuarDoLocal() {
   var site = $('selLocal').value;
   var mes = $('selMes').value + '-' + String($('selAno').value).slice(-2);
@@ -1146,35 +1104,16 @@ function voltarATentar() {
 // ------------------------------------------------------------------ ligações
 
 function ligarEventos() {
-  // activação
-  $('btnActivar').onclick = function () {
-    var v = $('inpCodigo').value.trim();
-    if (!v) { aviso('avisoActivacao', t('activacao.falta')); return; }
-    Def.set('token', v);
-    guardarConfigParaOSW();
-    aviso('avisoActivacao', '');
-    irParaEntrada();
-  };
-  $('inpCodigo').onkeydown = function (e) { if (e.key === 'Enter') $('btnActivar').click(); };
-
-  // entrada
-  $('btnComecar').onclick = entrar;
-  $('inpNome').onkeydown = function (e) { if (e.key === 'Enter') entrar(); };
-  $('inpSenha').onkeydown = function (e) { if (e.key === 'Enter') entrar(); };
-  $('btnSairAdmin').onclick = function () { Admin.sair(); irParaEntrada(); };
-
   // local e mês
   $('btnContinuar').onclick = continuarDoLocal;
-  $('btnTrocarUsuario2').onclick = function () { S.nome = ''; Def.del('nome'); irParaEntrada(); };
+  $('btnMenu2').onclick = irParaMenu;
 
   // busca
   $('inpBusca').onkeydown = function (e) {
     if (e.key === 'Enter') { buscar($('inpBusca').value); $('inpBusca').value = ''; }
   };
   $('btnMudarLocal').onclick = function () { S.ultimoGravado = null; irParaLocal(); };
-  $('btnTrocarUsuario').onclick = function () {
-    S.nome = ''; Def.del('nome'); S.ultimoGravado = null; irParaEntrada();
-  };
+  $('btnMenu').onclick = irParaMenu;
   $('selMesAdmin').onchange = function () {
     S.mes = $('selMesAdmin').value;
     Def.set('mes', S.mes);
@@ -1273,13 +1212,15 @@ function arrancar() {
 
   guardarConfigParaOSW();
 
+  /* Quem chega aqui sem ter passado pela entrada comum (um atalho antigo, por
+   * exemplo) é mandado para lá; é lá que se pede o código e o nome. */
+  if (!temCodigo() || !S.nome) { location.replace('../index.html'); return; }
+
   lerFila().then(function () {
     pintarBarra();
     if (pendentes().length) pedirSincronizacaoEmSegundoPlano();
     if (navigator.onLine) enviarFila();
 
-    if (!temCodigo()) { irParaActivacao(); return; }
-    if (!S.nome) { irParaEntrada(); return; }
     if (!S.mes) { irParaLocal(); return; }
 
     var g = Def.get(chaveLog(), '');
@@ -1290,9 +1231,12 @@ function arrancar() {
   });
 }
 
+/* Um único Service Worker para a aplicação toda, registado na raiz. Este
+ * módulo vive numa subpasta, por isso o âmbito é o pai — é o que permite abrir
+ * qualquer das páginas sem rede. */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function () {});
+    navigator.serviceWorker.register('../sw.js', { scope: '../' }).catch(function () {});
   });
 }
 
