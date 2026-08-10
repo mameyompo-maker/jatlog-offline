@@ -14,7 +14,7 @@
 importScripts('./config.js');
 
 var CFG = self.JATLOG_CONFIG || {};
-var CACHE = 'jatlog-offline-v4';
+var CACHE = 'jatlog-offline-v5';
 var CACHE_FONTES = 'jatlog-fontes-v1';
 
 var FICHEIROS = [

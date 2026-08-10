@@ -18,6 +18,10 @@ var IDIOMAS = [
 var TEXTOS = {
 
   pt: {
+    /* 'num.separador' é o sinal decimal que se mostra no ecrã. A leitura
+     * aceita sempre os dois — ver paraNumero() em app.js. */
+    'num.separador': ',',
+
     'app.rodape': 'JatLog · offline',
     'app.subtitulo': 'Registro de colheita',
 
@@ -72,7 +76,7 @@ var TEXTOS = {
     'peso.tag': 'Pesando',
     'peso.registar': 'Registrar',
     'peso.cancelar': 'Cancelar',
-    'peso.invalido': 'Valor inválido. Use apenas números, ex: 1.5',
+    'peso.invalido': 'Valor inválido. Use apenas números — tanto faz 1,5 como 1.5',
     'peso.maiorQueZero': 'O peso deve ser maior que zero.',
     'peso.mae': 'ID da mãe',
     'peso.variedade': 'Variedade',
@@ -132,6 +136,8 @@ var TEXTOS = {
   },
 
   en: {
+    'num.separador': '.',
+
     'app.rodape': 'JatLog · offline',
     'app.subtitulo': 'Harvest log',
 
@@ -186,7 +192,7 @@ var TEXTOS = {
     'peso.tag': 'Weighing',
     'peso.registar': 'Record',
     'peso.cancelar': 'Cancel',
-    'peso.invalido': 'Invalid value. Numbers only, e.g. 1.5',
+    'peso.invalido': 'Invalid value. Numbers only — either 1.5 or 1,5 works',
     'peso.maiorQueZero': 'The weight must be greater than zero.',
     'peso.mae': 'Mother ID',
     'peso.variedade': 'Variety',
@@ -246,6 +252,8 @@ var TEXTOS = {
   },
 
   ja: {
+    'num.separador': '.',
+
     'app.rodape': 'JatLog · オフライン',
     'app.subtitulo': '収穫記録',
 
@@ -300,7 +308,7 @@ var TEXTOS = {
     'peso.tag': '計量中',
     'peso.registar': '登録',
     'peso.cancelar': 'やめる',
-    'peso.invalido': '入力が正しくありません。数字だけを入れてください(例 1.5)',
+    'peso.invalido': '入力が正しくありません。数字だけを入れてください(1.5 でも 1,5 でも構いません)',
     'peso.maiorQueZero': '重量は0より大きい値にしてください。',
     'peso.mae': '母樹ID',
     'peso.variedade': '品種',

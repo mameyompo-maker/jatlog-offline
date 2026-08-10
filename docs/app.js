@@ -268,12 +268,42 @@ function igual(a, b) {
   return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 }
 
-/** Converte o texto escrito pelo utilizador num número (aceita vírgula). */
+/**
+ * Lê o número escrito pela pessoa, seja qual for o idioma do ecrã.
+ *
+ * Aceita sempre os dois sinais decimais: em português escreve-se 1,5 e em
+ * inglês 1.5, e no campo há quem tenha o teclado numa língua e a aplicação
+ * noutra. Regra: o último ponto ou vírgula é o sinal decimal; se o mesmo sinal
+ * aparecer mais do que uma vez, é separador de milhares (1.234.567).
+ * O NFKC trata dos algarismos e sinais de largura total dos teclados japoneses.
+ */
 function paraNumero(txt) {
   var s = String(txt === null || txt === undefined ? '' : txt)
-    .normalize('NFKC').trim().replace(',', '.');
+    .normalize('NFKC').replace(/[\s ']/g, '');
   if (!s) return NaN;
+
+  var p = s.lastIndexOf('.');
+  var v = s.lastIndexOf(',');
+  var corte = p > v ? p : v;
+
+  if (corte >= 0) {
+    var sinal = s.charAt(corte);
+    if (s.indexOf(sinal) !== corte) {
+      s = s.split('.').join('').split(',').join('');          // só milhares
+    } else {
+      s = s.slice(0, corte).split('.').join('').split(',').join('') + '.' + s.slice(corte + 1);
+    }
+  }
+
+  if (!/^[+-]?\d*\.?\d*$/.test(s) || !/\d/.test(s)) return NaN;
   return Number(s);
+}
+
+/** O mesmo número escrito com o sinal decimal do idioma escolhido. */
+function mostrarNumero(v) {
+  if (v === null || v === undefined || v === '') return '';
+  var s = String(v);
+  return t('num.separador') === ',' ? s.replace('.', ',') : s.replace(',', '.');
 }
 
 var tempoBrinde = null;
@@ -707,7 +737,7 @@ function irParaBusca() {
   if (S.ultimoGravado) {
     var g = S.ultimoGravado;
     aviso('avisoGravado', t(g.local ? 'busca.gravadoLocal' : 'busca.gravado', {
-      linha: esc(g.linha), valor: esc(g.valor), unidade: esc(g.unidade), hora: esc(g.hora)
+      linha: esc(g.linha), valor: esc(mostrarNumero(g.valor)), unidade: esc(g.unidade), hora: esc(g.hora)
     }));
   } else {
     aviso('avisoGravado', '');
@@ -853,10 +883,10 @@ function submeterPeso() {
   if (g > GRAMAS_MAX || g < GRAMAS_MIN) {
     S.porConfirmar = { peso: peso, unidade: S.unidade };
     $('avisoConfirmar').innerHTML = t('confirmar.aviso', {
-      valor: peso.toFixed(2), unidade: S.unidade
+      valor: mostrarNumero(peso.toFixed(2)), unidade: S.unidade
     });
     $('confirmarLinha').textContent = S.seleccionado.campo;
-    $('confirmarValor').textContent = peso.toFixed(2) + ' ' + S.unidade;
+    $('confirmarValor').textContent = mostrarNumero(peso.toFixed(2)) + ' ' + S.unidade;
     mostrar('ecraConfirmar');
     return;
   }
@@ -879,7 +909,7 @@ function gravarPeso(peso, unidade) {
   }).then(function () {
     S.ultimoGravado = {
       linha: item.campo,
-      valor: peso.toFixed(2),
+      valor: peso.toFixed(2),   // cru: quem mostra é que traduz o sinal decimal
       unidade: unidade,
       hora: ts.slice(11, 16),
       local: foraDeAlcance()
@@ -916,7 +946,7 @@ function pintarHistorico() {
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'cartao' + (r.local ? ' porenviar' : '');
-      b.innerHTML = esc(r.campo) + '    ' + esc(r.peso) + ' ' + esc(r.unidade) + selo +
+      b.innerHTML = esc(r.campo) + '    ' + esc(mostrarNumero(r.peso)) + ' ' + esc(r.unidade) + selo +
                     '<span class="hs">' + esc(carimbo) + ' · ' + esc(quem) +
                     ' · ' + t('historico.toque') + '</span>';
       b.onclick = function () { abrirEdicao(r); };
@@ -924,7 +954,7 @@ function pintarHistorico() {
     } else {
       var d = document.createElement('div');
       d.className = 'histrow';
-      d.innerHTML = esc(r.campo) + ' &nbsp;&nbsp; ' + esc(r.peso) + ' ' + esc(r.unidade) + selo +
+      d.innerHTML = esc(r.campo) + ' &nbsp;&nbsp; ' + esc(mostrarNumero(r.peso)) + ' ' + esc(r.unidade) + selo +
                     '<span class="hs">' + esc(carimbo) + ' · ' + esc(r.user) +
                     ' · ' + t('historico.trancado') + '</span>';
       caixa.appendChild(d);
@@ -943,7 +973,7 @@ function abrirEdicao(r) {
   $('editarSub').textContent = t('editar.lancado', {
     quando: String(r.ts || '').slice(5, 16), quem: ouTraco(r.user)
   });
-  $('inpEditar').value = r.peso;
+  $('inpEditar').value = mostrarNumero(r.peso);
   pintarSegmento('segEditar', S.unidadeEdicao);
 
   pintarTudo();
@@ -1193,7 +1223,7 @@ function ligarEventos() {
     var r = S.edicao;
     if (!r) return;
     $('avisoApagarTexto').innerHTML = t('apagar.aviso', {
-      linha: esc(r.campo), valor: esc(r.peso), unidade: esc(r.unidade)
+      linha: esc(r.campo), valor: esc(mostrarNumero(r.peso)), unidade: esc(r.unidade)
     });
     $('apagarLinha').textContent = r.campo;
     $('apagarSub').textContent = t('editar.lancado', {
