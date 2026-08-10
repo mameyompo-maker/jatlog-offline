@@ -139,7 +139,12 @@ gh repo create jatlog-offline --public --source . --remote origin --push
 モジュールの中からは **Menu(登録先を変える)** でいつでも戻れる。
 メニューには、それぞれ**送信待ちが何件あるか**が出る。
 
-収穫重量の操作は現行 JatLog と同じ。番号を入れて Enter → 重量 → Registrar。
+収穫重量では、**まず拠点を選ぶ**(Tanheia(Linhas)/ 7 de Abril(Blocos))。
+初期選択は無く、選ぶまで「Continuar」は押せない。**入るたびに毎回選ぶ**
+(前回の拠点が入ったまま始まると、7 de Abril で量ったものを Tanheia に
+入れてしまうため)。月は前回の値(無ければ今月)が入っているので、そのままでよい。
+
+そのあとの操作は現行 JatLog と同じ。番号を入れて Enter → 重量 → Registrar。
 違うのは圏外のときの見え方だけ。
 
 - 画面の一番上に赤い帯 **SEM CONEXÃO — pode continuar a registar**

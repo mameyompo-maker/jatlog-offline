@@ -86,6 +86,7 @@ with sync_playwright() as p:
     page.click("#cartaoColheita")
     page.wait_for_load_state("load")
     esperar(page, "ecraLocal")
+    page.click('.escolha-local[data-site="lines"]')
     page.click("#btnContinuar")
     check("S4 colheita pronta", esperar(page, "ecraBusca"), ecra(page))
     time.sleep(1.5)
@@ -176,6 +177,9 @@ with sync_playwright() as p:
           page.locator("#filaColheita").is_hidden() and page.locator("#filaIndia").is_hidden())
 
     page.goto(BASE + "/colheita/index.html", wait_until="load")
+    esperar(page, "ecraLocal")
+    page.click('.escolha-local[data-site="lines"]')
+    page.click("#btnContinuar")
     esperar(page, "ecraBusca")
     time.sleep(2)
     check("S16 fila da colheita vazia ao reabrir", page.evaluate("() => S.fila.length") == 0,

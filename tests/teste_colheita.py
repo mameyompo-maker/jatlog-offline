@@ -91,6 +91,9 @@ def entrar_como(page, nome, senha=None):
     esperar_ecra(page, "ecraMenu")
     page.click("#cartaoColheita")
     page.wait_for_load_state("load")
+    esperar_ecra(page, "ecraLocal")
+    page.click('.escolha-local[data-site="lines"]')
+    page.click("#btnContinuar")
     esperar_ecra(page, "ecraBusca")
 
 
@@ -129,8 +132,10 @@ with sync_playwright() as p:
     page.click("#cartaoColheita")
     page.wait_for_load_state("load")
     check("B2 vai para local e mês", esperar_ecra(page, "ecraLocal"), ecra_actual(page))
-    check("B3 local por omissão é Tanheia",
-          page.input_value("#selLocal") == "lines", page.input_value("#selLocal"))
+    check("B3 nenhum local vem marcado (é preciso escolher)",
+          page.locator(".escolha-local.activo").count() == 0 and
+          page.locator("#btnContinuar").is_disabled())
+    page.click('.escolha-local[data-site="lines"]')
     page.screenshot(path=os.path.join(OUT, "02_local.png"), full_page=True)
 
     mes_actual = page.input_value("#selMes")
@@ -274,7 +279,12 @@ with sync_playwright() as p:
     # ------------------------------------------------- H. arranque sem rede
     page.reload(wait_until="load")
     time.sleep(2.0)
-    check("H1 abre sem rede", ecra_actual(page) == "ecraBusca", ecra_actual(page))
+    # o local pede-se sempre à entrada, mesmo sem rede (o cadastro está em cache)
+    check("H1 abre sem rede, na escolha do local", ecra_actual(page) == "ecraLocal",
+          ecra_actual(page))
+    page.click('.escolha-local[data-site="lines"]')
+    page.click("#btnContinuar")
+    check("H1b entra na busca sem rede", esperar_ecra(page, "ecraBusca"), ecra_actual(page))
     check("H2 mantém o utilizador", "Op1" in page.inner_text("#topoNome"))
     page.fill("#inpBusca", "586")
     page.press("#inpBusca", "Enter")
@@ -340,6 +350,9 @@ with sync_playwright() as p:
     check("K2 admin entra", esperar_ecra(page, "ecraMenu"), ecra_actual(page))
     page.click("#cartaoColheita")
     page.wait_for_load_state("load")
+    esperar_ecra(page, "ecraLocal")
+    page.click('.escolha-local[data-site="lines"]')
+    page.click("#btnContinuar")
     esperar_ecra(page, "ecraBusca")
     check("K3 crachá ADMIN", "ADMIN" in page.inner_text("#topoNome"))
     check("K4 admin pode editar tudo",
@@ -356,6 +369,9 @@ with sync_playwright() as p:
     esperar_ecra(page, "ecraMenu")
     page.click("#cartaoColheita")
     page.wait_for_load_state("load")
+    esperar_ecra(page, "ecraLocal")
+    page.click('.escolha-local[data-site="lines"]')
+    page.click("#btnContinuar")
     esperar_ecra(page, "ecraBusca")
     check("K7 continua admin sem senha", "ADMIN" in page.inner_text("#topoNome"))
 
@@ -381,10 +397,15 @@ with sync_playwright() as p:
     esperar_ecra(page, "ecraMenu")
     page.click("#cartaoColheita")
     page.wait_for_load_state("load")
+    esperar_ecra(page, "ecraLocal")
+    page.click('.escolha-local[data-site="lines"]')
+    page.click("#btnContinuar")
     esperar_ecra(page, "ecraBusca")
     page.click("#btnMudarLocal")
     esperar_ecra(page, "ecraLocal")
-    page.select_option("#selLocal", "blocks")
+    check("L0 vindo de \"Mudar local\" o local actual vem marcado",
+          page.locator('.escolha-local[data-site="lines"].activo').count() == 1)
+    page.click('.escolha-local[data-site="blocks"]')
     page.click("#btnContinuar")
     esperar_ecra(page, "ecraBusca")
     check("L1 muda para 7 de Abril",

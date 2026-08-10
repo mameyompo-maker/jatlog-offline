@@ -129,7 +129,14 @@ with sync_playwright() as p:
     check("B1 cartao abre a colheita", "/colheita/" in page.url, page.url)
     check("B2 comeca no local e mes (nao pede nome nem codigo)",
           esperar_ecra(page, "ecraLocal"), ecra(page))
+    check("B2a nenhum local vem marcado de antemao",
+          page.locator(".escolha-local.activo").count() == 0)
+    check("B2b Continuar so abre depois de escolher",
+          page.locator("#btnContinuar").is_disabled())
 
+    page.click('.escolha-local[data-site="lines"]')
+    check("B2c o local escolhido fica marcado",
+          page.locator('.escolha-local[data-site="lines"].activo').count() == 1)
     page.click("#btnContinuar")
     check("B3 vai para a busca", esperar_ecra(page, "ecraBusca"), ecra(page))
     check("B4 barra de contexto mostra o nome da entrada comum",
@@ -180,7 +187,7 @@ with sync_playwright() as p:
 
     page.goto(BASE + "/colheita/index.html", wait_until="load")
     check("D3 entrar direito na colheita nao volta a pedir nada",
-          esperar_ecra(page, "ecraBusca") or esperar_ecra(page, "ecraLocal"), page.url)
+          esperar_ecra(page, "ecraLocal"), page.url)
 
     page.goto(BASE + "/india/index.html", wait_until="load")
     check("D4 entrar direito nas medicoes nao volta a pedir nada",
@@ -195,10 +202,9 @@ with sync_playwright() as p:
           page.inner_text("#ecraMenu")[:60])
 
     page.goto(BASE + "/colheita/index.html", wait_until="load")
-    esperar_ecra(page, "ecraBusca")
-    check("E2 colheita herda o japones",
-          "ライン" in page.inner_text("#rotuloBusca") or "収穫" in page.inner_text("body"),
-          page.inner_text("#rotuloBusca"))
+    esperar_ecra(page, "ecraLocal")
+    check("E2 colheita herda o japones", "拠点" in page.inner_text("#ecraLocal"),
+          page.inner_text("#ecraLocal")[:60])
 
     page.goto(BASE + "/india/index.html", wait_until="load")
     esperar_ecra(page, "ecraLevantamento")
@@ -216,7 +222,11 @@ with sync_playwright() as p:
     ctx.set_offline(True)
 
     page.goto(BASE + "/colheita/index.html", wait_until="load")
-    check("F1 colheita abre sem rede (service worker)", esperar_ecra(page, "ecraBusca"), ecra(page))
+    check("F1 colheita abre sem rede (service worker)", esperar_ecra(page, "ecraLocal"), ecra(page))
+    page.click('.escolha-local[data-site="lines"]')
+    page.click("#btnContinuar")
+    check("F1b entra na busca sem rede (cadastro em cache)",
+          esperar_ecra(page, "ecraBusca"), ecra(page))
     registar_peso(page, 2, 3)
     time.sleep(0.6)
     check("F2 fica por enviar", visivel(page, "#barra"), "")
@@ -239,6 +249,9 @@ with sync_playwright() as p:
 
     ctx.set_offline(False)
     page.goto(BASE + "/colheita/index.html", wait_until="load")
+    esperar_ecra(page, "ecraLocal")
+    page.click('.escolha-local[data-site="lines"]')
+    page.click("#btnContinuar")
     esperar_ecra(page, "ecraBusca")
     time.sleep(2.0)
     page.goto(BASE + "/india/index.html", wait_until="load")
@@ -273,6 +286,9 @@ with sync_playwright() as p:
           "administrador" in page.inner_text("#subMenu"), page.inner_text("#subMenu"))
 
     page.goto(BASE + "/colheita/index.html", wait_until="load")
+    esperar_ecra(page, "ecraLocal")
+    page.click('.escolha-local[data-site="lines"]')
+    page.click("#btnContinuar")
     esperar_ecra(page, "ecraBusca")
     check("G4 colheita reconhece o administrador", visivel(page, ".badge-adm"))
 

@@ -30,6 +30,8 @@ with sync_playwright() as p:
     pg.screenshot(path="fotos/pub_menu.png", full_page=True)
     pg.click("#cartaoColheita"); pg.wait_for_load_state("load"); time.sleep(3.0)
     check("P6 colheita abre no local e mes", ecra(pg) == "ecraLocal", ecra(pg))
+    check("P6a nenhum local vem marcado", pg.locator(".escolha-local.activo").count() == 0)
+    pg.click('.escolha-local[data-site="lines"]'); time.sleep(0.5)
     pg.click("#btnContinuar"); time.sleep(5.0)
     check("P7 o cadastro real desceu (chega a busca)", ecra(pg) == "ecraBusca", ecra(pg))
     check("P8 nome vindo da entrada comum", "Kaz" in pg.inner_text("#topoNome"), pg.inner_text("#topoNome"))

@@ -36,6 +36,7 @@ var S = {
   ecra: '',
   idioma: 'pt',
   site: 'lines',
+  escolha: null,       // o local marcado no ecrã de entrada, antes de confirmar
   nome: '',
   mes: '',
   master: {},          // site -> [{campo, saco, variedade, plantas, mae}]
@@ -670,14 +671,22 @@ function irParaLocal() {
   $('subLocal').innerHTML = t(Admin.activo() ? 'local.usuarioAdmin' : 'local.usuario',
                               { nome: esc(S.nome) });
 
-  var sel = $('selLocal');
-  sel.innerHTML = '';
+  /* Dois botões em vez de uma lista: o local tem de ser uma escolha à vista,
+   * não um valor que já lá estava. S.escolha só fica preenchido quando se
+   * carrega num deles (ou quando se vem do "Mudar local ou mês"). */
+  var caixa = $('escolhaLocal');
+  caixa.innerHTML = '';
   Object.keys(LOCAIS).forEach(function (k) {
-    var o = document.createElement('option');
-    o.value = k; o.textContent = LOCAIS[k].rotulo;
-    sel.appendChild(o);
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'escolha-local' + (S.escolha === k ? ' activo' : '');
+    b.setAttribute('data-site', k);
+    b.innerHTML = '<b>' + esc(LOCAIS[k].rotulo) + '</b>' +
+                  '<span>' + esc(t('local.registoPor', { o: t('sitio.' + k + '.plural') })) + '</span>';
+    b.onclick = function () { S.escolha = k; irParaLocal(); };
+    caixa.appendChild(b);
   });
-  sel.value = S.site;
+  $('btnContinuar').disabled = !S.escolha;
 
   var agora = new Date();
   var anos = [agora.getFullYear() - 1, agora.getFullYear(), agora.getFullYear() + 1];
@@ -1068,7 +1077,8 @@ function voltarDaEdicao() {
 // ------------------------------------------------------------------ entrada
 
 function continuarDoLocal() {
-  var site = $('selLocal').value;
+  var site = S.escolha;
+  if (!site || !LOCAIS[site]) { aviso('avisoLocal', t('local.faltaLocal')); return; }
   var mes = $('selMes').value + '-' + String($('selAno').value).slice(-2);
 
   S.site = site;
@@ -1112,7 +1122,14 @@ function ligarEventos() {
   $('inpBusca').onkeydown = function (e) {
     if (e.key === 'Enter') { buscar($('inpBusca').value); $('inpBusca').value = ''; }
   };
-  $('btnMudarLocal').onclick = function () { S.ultimoGravado = null; irParaLocal(); };
+  /* Aqui o local actual vem marcado: quem carrega neste botão costuma querer
+   * mudar o mês, e já sabe onde está. À entrada do módulo é que não há nada
+   * marcado. */
+  $('btnMudarLocal').onclick = function () {
+    S.ultimoGravado = null;
+    S.escolha = S.site;
+    irParaLocal();
+  };
   $('btnMenu').onclick = irParaMenu;
   $('selMesAdmin').onchange = function () {
     S.mes = $('selMesAdmin').value;
@@ -1221,13 +1238,12 @@ function arrancar() {
     if (pendentes().length) pedirSincronizacaoEmSegundoPlano();
     if (navigator.onLine) enviarFila();
 
-    if (!S.mes) { irParaLocal(); return; }
-
-    var g = Def.get(chaveLog(), '');
-    if (g) { try { S.registos = JSON.parse(g); } catch (e) {} }
-    irParaBusca();
-    carregarRegistos(true);
-    actualizarSeVazio(S.site);
+    /* Começa-se sempre pela escolha do local, sem nada marcado. Antes ficava o
+     * local da última vez e o ecrã seguia direito para a busca — era fácil
+     * lançar no Tanheia o que se tinha pesado no 7 de Abril. O mês continua a
+     * vir preenchido com o último (ou o corrente): esse não engana ninguém. */
+    S.escolha = null;
+    irParaLocal();
   });
 }
 

@@ -36,7 +36,11 @@ with sync_playwright() as p:
     pg.screenshot(path=os.path.join(OUT, "a_entrada.png"), full_page=True)
     pg.click("#btnComecar"); esperar(pg, "ecraMenu"); time.sleep(0.8)
     pg.click("#cartaoColheita"); pg.wait_for_load_state("load")
-    esperar(pg, "ecraLocal"); pg.click("#btnContinuar"); esperar(pg, "ecraBusca"); time.sleep(1.5)
+    esperar(pg, "ecraLocal"); time.sleep(0.6)
+    pg.screenshot(path=os.path.join(OUT, "a2_local.png"), full_page=True)
+    pg.click('.escolha-local[data-site="lines"]'); time.sleep(0.5)
+    pg.screenshot(path=os.path.join(OUT, "a3_local_escolhido.png"), full_page=True)
+    pg.click("#btnContinuar"); esperar(pg, "ecraBusca"); time.sleep(1.5)
 
     # um registo normal
     pg.fill("#inpBusca", "1"); pg.press("#inpBusca", "Enter"); esperar(pg, "ecraPeso"); time.sleep(0.8)

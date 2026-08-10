@@ -134,7 +134,7 @@ html, body {
 /* ================= painel de formulário ================= */
 .painel { display: block; }
 
-label.campo {
+label.campo, div.campo {
   display: block;
   font-size: 12px;
   font-weight: 600;
@@ -143,6 +143,33 @@ label.campo {
   color: var(--ink-soft);
   margin: 14px 0 6px;
 }
+
+/* ================= escolha do local ================= */
+/* Dois botões grandes em vez de uma lista: qual dos dois campos se está a
+   pesar tem de ser uma decisão visível, não um valor que já lá estava. */
+.escolhas-local { display: grid; gap: 10px; }
+.escolha-local {
+  display: block;
+  width: 100%;
+  text-align: left;
+  min-height: 66px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  cursor: pointer;
+}
+.escolha-local b { display: block; font-size: 17px; font-weight: 700; }
+.escolha-local span { display: block; margin-top: 3px; font-size: 13px; color: var(--ink-soft); }
+.escolha-local.activo {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--sobre-verde);
+}
+.escolha-local.activo span { color: var(--sobre-verde); opacity: .8; }
+.escolha-local:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
 
 input[type="text"], input[type="password"], select {
   width: 100%;
@@ -213,6 +240,8 @@ details#blocoAdmin > input { width: calc(100% - 28px); margin-bottom: 14px; }
 .btn:hover { border-color: var(--ink-soft); }
 .btn:active { transform: scale(.985); }
 .btn:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+.btn[disabled] { opacity: .45; cursor: default; }
+.btn[disabled]:active { transform: none; }
 
 .btn.principal {
   background: var(--green);
@@ -576,7 +605,8 @@ html[lang="ja"] .readout .tag,
 html[lang="ja"] .meta .k,
 html[lang="ja"] .selo,
 html[lang="ja"] .badge-adm,
-html[lang="ja"] label.campo {
+html[lang="ja"] label.campo,
+html[lang="ja"] div.campo {
   letter-spacing: .02em;
 }
 

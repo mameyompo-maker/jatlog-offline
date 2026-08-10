@@ -42,8 +42,10 @@
     <div class="painel">
       <div class="banner error" id="avisoLocal" hidden></div>
 
-      <label class="campo" for="selLocal" data-t="local.local"></label>
-      <select id="selLocal"></select>
+      <!-- O local escolhe-se sempre, sem nada pré-marcado: com um valor por
+           omissão era fácil registar em Tanheia o que se pesou no 7 de Abril. -->
+      <div class="campo" data-t="local.local"></div>
+      <div id="escolhaLocal" class="escolhas-local"></div>
 
       <div class="duas">
         <div>

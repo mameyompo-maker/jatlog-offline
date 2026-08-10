@@ -16,6 +16,7 @@ with sync_playwright() as p:
     pg.screenshot(path=os.path.join(OUT, "2_menu.png"), full_page=True)
     pg.click("#cartaoColheita"); pg.wait_for_load_state("load"); time.sleep(1.5)
     pg.screenshot(path=os.path.join(OUT, "3_colheita_local.png"), full_page=True)
+    pg.click('.escolha-local[data-site="lines"]'); time.sleep(0.4)
     pg.click("#btnContinuar"); time.sleep(2.0)
     pg.screenshot(path=os.path.join(OUT, "4_colheita_busca.png"), full_page=True)
     pg.goto(BASE + "/india/index.html", wait_until="load"); time.sleep(2.0)

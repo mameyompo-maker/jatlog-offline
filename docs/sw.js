@@ -19,7 +19,7 @@ importScripts('./config.js');
 var CFG_COLHEITA = self.JATLOG_CONFIG || {};
 var CFG_INDIA = self.INDIAREC_CONFIG || {};
 
-var CACHE = 'jatlog-v7';
+var CACHE = 'jatlog-v8';
 var CACHE_FONTES = 'jatlog-fontes-v1';
 
 var FICHEIROS = [
