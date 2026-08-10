@@ -1,5 +1,7 @@
 HANDOVER.md
 tests/out/
+tests/srv.log
+tests/srv.err
 tests/fotos/
 tests/sync/
 __pycache__/
