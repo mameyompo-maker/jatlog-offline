@@ -80,9 +80,11 @@ def registar_medicao(page, fileira, numero, valor):
     esperar_ecra(page, "ecraFormulario")
     page.fill("#campo_limboFoliar", str(valor))
     page.click("#btnEnviar")
+    # a confirmacao aparece sempre desde 2026-08-14, mesmo com tudo preenchido
     page.wait_for_selector("#dlgIncompleto[open]")
     page.click("#btnEnviarAssim")
-    esperar_ecra(page, "ecraPlanta")
+    # depois de gravar entra-se logo na planta seguinte da fileira
+    esperar_ecra(page, "ecraFormulario")
     page.wait_for_timeout(700)
 
 
@@ -169,8 +171,17 @@ with sync_playwright() as p:
     check("C5 gravada com o nome certo", india and india[0]["recorder"] == "Op1", india)
     check("C6 virgula decimal lida como 12.5",
           india and india[0]["values"].get("limboFoliar") == 12.5, india)
+    seguinte = "-%03d" % (int(india[0]["pid"][-3:]) + 1)
+    check("C6a gravar entra logo na planta seguinte da fileira",
+          seguinte in page.inner_text("#tituloForm"),
+          seguinte + " / " + page.inner_text("#tituloForm"))
+    check("C6b e diz de que linhagem se trata",
+          page.inner_text("#linhagemForm").strip() != "", page.inner_text("#linhagemForm"))
     page.screenshot(path=os.path.join(OUT, "03_india.png"), full_page=True)
 
+    # do formulario recua-se para a escolha da planta, e dai para o levantamento
+    page.click("#ligTrocarPlanta")
+    esperar_ecra(page, "ecraPlanta")
     page.locator('.ecra:not([hidden]) [data-voltar]').first.click()
     esperar_ecra(page, "ecraLevantamento")
     page.click("#ligMenu")

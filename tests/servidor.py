@@ -63,6 +63,7 @@ def estado_inicial():
         "audit": {"lines": [], "blocks": []},
         "india": [],
         "indiaUuids": set(),
+        "indiaMortas": set(),
         "falhar": False,
     }
 
@@ -193,11 +194,33 @@ def chave(modo, ronda, pid):
     return "%s|%s|%s" % (modo, ronda if modo == "crescimento" else "", pid)
 
 
+# lotes pela ordem da folha: o n.o de referencia e a posicao nesta lista
+LOTES = [("India #bag01", 30), ("India #bag02", 25), ("India #bag03", 25),
+         ("India #bag04", 35), ("India #bag05", 15), ("India #bag06", 25),
+         ("India #bag07", 25), ("India #bag09", 20), ("India #bag10", 25),
+         ("India #bag11", 15), ("India #bag12", 25), ("India #bag13", 35),
+         ("India #bag14", 25), ("India #bag15", 35), ("India#S-2A", 20),
+         ("India#S-2B", 15), ("India#S-4", 20)]
+
+
+def referencia(seq):
+    """(n.o de referencia, nome do lote, n.o dentro do lote) a partir do seq."""
+    acc = 0
+    for i, (nome, n) in enumerate(LOTES):
+        if seq <= acc + n:
+            return i + 1, nome, seq - acc
+        acc += n
+    return 0, "", 0
+
+
 def por_chave():
     """Ultimo registo valido de cada planta/levantamento/ronda."""
     out = {}
     for r in E["india"]:
         if not r["estado"].startswith("OK"):
+            continue
+        # marcas da planta: ficam no log mas nao sao registos de levantamento
+        if r["accao"] in ("Planta morta", "Planta viva"):
             continue
         k = chave(r["mode"], r.get("ronda", ""), r["pid"])
         if r["accao"] == "Eliminação":
@@ -222,8 +245,22 @@ def aplicar_india(ent, admin):
     modo = ent.get("mode")
     ronda = ent.get("ronda", "")
     pid = ent.get("pid", "")
+    pedida = ent.get("accao", "")
+
+    # marca da planta (morta/viva): nao e registo e nao depende do dono
+    if pedida in ("morta", "viva"):
+        if pedida == "morta":
+            E["indiaMortas"].add(seq)
+        else:
+            E["indiaMortas"].discard(seq)
+        rotulo = "Planta morta" if pedida == "morta" else "Planta viva"
+        E["indiaUuids"].add(uid)
+        E["india"].append(dict(ent, accao=rotulo, estado="OK"))
+        return {"uuid": uid, "ok": True, "linha": 2 + seq,
+                "accao": rotulo, "celulas": []}
+
     anterior = por_chave().get(chave(modo, ronda, pid))
-    eliminar = ent.get("accao") == "eliminar"
+    eliminar = pedida == "eliminar"
     accao = "Eliminação" if eliminar else ("Correcção" if anterior else "Registo")
 
     if eliminar and not anterior:
@@ -231,13 +268,7 @@ def aplicar_india(ent, admin):
         E["india"].append(dict(ent, accao="Eliminação", estado="ERRO: " + erro))
         return {"uuid": uid, "ok": False, "erro": erro}
 
-    if anterior and not admin:
-        dono = anterior["recorder"]
-        if dono and dono != ent.get("recorder", ""):
-            erro = ("Esta planta foi registada por %s. "
-                    "Só essa pessoa (ou um administrador) a pode corrigir." % dono)
-            E["india"].append(dict(ent, accao=accao, estado="ERRO: " + erro))
-            return {"uuid": uid, "ok": False, "erro": erro}
+    # desde 2026-08-12 nao ha recusa por causa de quem registou
 
     if eliminar:
         E["indiaUuids"].add(uid)
@@ -253,7 +284,8 @@ def aplicar_india(ent, admin):
             col = (BASE_CRESC + i) if modo == "crescimento" else (BASE_DESCR + i)
             celulas.append("%s%d" % (letra(col), 2 + seq))
 
-    if not celulas:
+    # uma observacao sozinha ja chega para gravar
+    if not celulas and not str(ent.get("notas", "")).strip():
         return {"uuid": uid, "ok": False, "erro": "Nenhum valor preenchido."}
 
     E["indiaUuids"].add(uid)
@@ -376,16 +408,22 @@ class H(SimpleHTTPRequestHandler):
                 feitas.sort()
                 return self._json({"ok": True, "hora": "2026-08-10 12:00:00", "mode": modo,
                                    "ronda": ronda, "feitas": feitas,
+                                   "mortas": sorted(E["indiaMortas"]),
                                    "rondas": ["5 month after planting (20260511)"]})
 
             if accao == "historico":
                 regs = list(por_chave().values())
                 regs.reverse()
-                return self._json({"ok": True, "hora": "2026-08-10 12:00:00", "registos": [
-                    {"uuid": r["uuid"], "ts": r["tsLocal"], "recorder": r["dono"],
-                     "ultimo": r["recorder"], "accao": r["accao"], "mode": r["mode"],
-                     "ronda": r.get("ronda", ""), "pid": r["pid"]}
-                    for r in regs[:200]]})
+                saida = []
+                for r in regs[:200]:
+                    ref, lote, noLote = referencia(int(r["pid"][-3:]))
+                    saida.append(
+                        {"uuid": r["uuid"], "ts": r["tsLocal"], "recorder": r["dono"],
+                         "ultimo": r["recorder"], "accao": r["accao"], "mode": r["mode"],
+                         "ronda": r.get("ronda", ""), "pid": r["pid"],
+                         "ref": ref, "lote": lote, "noLote": noLote,
+                         "row": r.get("row", ""), "noFileira": r.get("noFileira", "")})
+                return self._json({"ok": True, "hora": "2026-08-10 12:00:00", "registos": saida})
 
             if accao == "registo":
                 for r in reversed(E["india"]):
@@ -393,6 +431,7 @@ class H(SimpleHTTPRequestHandler):
                         return self._json({"ok": True, "registo": {
                             "uuid": r["uuid"], "ts": r["tsLocal"], "recorder": r["recorder"],
                             "mode": r["mode"], "ronda": r.get("ronda", ""), "pid": r["pid"],
+                            "notas": r.get("notas", ""),
                             "values": r["values"]}})
                 return self._json({"ok": False, "erro": "Registo não encontrado."})
 

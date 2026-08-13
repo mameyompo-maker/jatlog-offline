@@ -19,7 +19,7 @@ importScripts('./config.js');
 var CFG_COLHEITA = self.JATLOG_CONFIG || {};
 var CFG_INDIA = self.INDIAREC_CONFIG || {};
 
-var CACHE = 'jatlog-v8';
+var CACHE = 'jatlog-v9';
 var CACHE_FONTES = 'jatlog-fontes-v1';
 
 var FICHEIROS = [
@@ -145,6 +145,15 @@ function credenciais() {
   });
 }
 
+/* Com 100 registos à espera, o telemóvel fica um minuto a dizer "A enviar…"
+ * sem mostrar se está a andar. Cada lote avisa as páginas abertas, que põem a
+ * conta na barra. A página da colheita não escuta estas mensagens e ignora-as. */
+function avisarPaginas(dados) {
+  return self.clients.matchAll({ includeUncontrolled: true }).then(function (cs) {
+    cs.forEach(function (c) { c.postMessage(dados); });
+  }).catch(function () {});
+}
+
 function porLotes(fila, fn) {
   var lotes = [];
   for (var i = 0; i < fila.length; i += LOTE_ENVIO) lotes.push(fila.slice(i, i + LOTE_ENVIO));
@@ -230,13 +239,15 @@ function enviarIndiaEmSegundoPlano() {
     return Promise.all([credenciais(), pendentesDe(d)]);
   }).then(function (r) {
     var token = r[0][0], adminPw = r[0][1], fila = r[1];
-    if (!token) return;
+    if (!token || !fila.length) return;
 
-    /* Correcções a registos de outra pessoa só passam com o administrador
-     * ligado; sem ele ficam à espera, exactamente como na página. */
-    if (!adminPw) fila = fila.filter(function (e) { return !e.precisaAdmin; });
-    if (!fila.length) return;
+    /* Já não se retém nada à espera do modo administrador. Até 2026-08-12 as
+     * correcções a registos de outra pessoa ficavam no telemóvel sem nunca
+     * subirem, e desde então o servidor aceita-as de qualquer maneira.
+     * ⚠ Há registos antigos na fila que ainda trazem `precisaAdmin: true`; se
+     * o filtro voltasse, esses ficavam presos para sempre. */
 
+    var enviados = 0;
     return porLotes(fila, function (lote) {
       var corpo = {
         token: token,
@@ -248,6 +259,9 @@ function enviarIndiaEmSegundoPlano() {
             accao: e.accao || '',
             seq: e.seq, pid: e.pid, row: e.row,
             noFileira: e.noFileira, noFolha: e.noFolha, source: e.source,
+            /* Campo de 2026-08-12. Os registos que já estavam na fila não o
+             * têm — daí o valor por omissão em vez de o assumir presente. */
+            notas: e.notas || '',
             values: e.values
           };
         })
@@ -266,13 +280,20 @@ function enviarIndiaEmSegundoPlano() {
             e.enviadoEm = Date.now();
             e.celulas = x.celulas || [];
             e.accaoServidor = x.accao || '';
+            enviados++;
           } else {
             e.estado = 'erro';
             e.erro = x.erro || 'Erro desconhecido';
           }
           return comLoja(base, 'envios', 'readwrite', function (s) { return s.put(e); });
         }));
+        /* Cada lote é gravado antes de o seguinte começar: se a rede cair a
+         * meio dos 100, o que já passou fica marcado e só o resto volta. */
+      }).then(function () {
+        return avisarPaginas({ tipo: 'fila', enviados: enviados, total: fila.length });
       });
+    }).then(function () {
+      return avisarPaginas({ tipo: 'fila', fim: true, enviados: enviados, total: fila.length });
     });
   });
 }

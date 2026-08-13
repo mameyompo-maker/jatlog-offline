@@ -156,6 +156,33 @@ gh repo create jatlog-offline --public --source . --remote origin --push
   この仕組みを使う(タグは `jatlog-enviar` と `indiarec-enviar`)。
   **iOS にはこの仕組みが無い**ので、一日の終わりに電波のある場所でアプリを
   一度開いてもらう運用が必要
+- 送信中は上の帯に **`A enviar… 25 de 100`** と進み具合が出る。25件ずつ送り、
+  1束ごとに「送信済み」を確定するので、100件の途中で電波が切れてもそこまでは残る
+
+### インド測定の使い方(2026-08-14 に作り直した)
+
+**Crescimento(生育)** か **Descritores(形質)** を選び、**列(r01〜r16)を押して
+番号を入れる**と株が決まる。列を押した時点で番号には **1** が入っているので、
+1株目はそのまま「Continuar」でよい。
+
+株が決まると、いちばん大きい行に**系統**が出る。データシートと圃場の地図が
+系統ごとに作られているため:
+
+```
+2 (India #bag02)  n.º 15      ← 系統2番の15株目
+NBF(Tanheia)26-045
+Fileira r02, n.º 10  ·  ← n.º 1 à direita
+```
+
+- 系統の**先頭の株**には `início da linhagem` の印が出る(数え間違いが起きやすい)
+- **保存すると同じ列の次の株の入力画面に直行する。** 列の最後で株選択に戻る。
+  株を変えたいときは**入力画面の見出しをタップ**
+- 保存前に**必ず確認画面**が出る。「この株には果実がない、ということでよいですか」
+  のように**対象(果実・種子・雄花・雌花・葉)の単位で先に聞き**、
+  個々の空欄項目は下の折りたたみの中に入っている
+- 各入力欄の下に**自由記述の備考欄**がある。備考だけでも保存できる
+- **枯れている株**は株選択画面の右側の印から登録する。枯死株は「次の未登録」から飛ばされる
+- 記録の修正・削除は**誰でもできる**(2026-08-12 に開放)。追跡は `Log` 側で担保
 
 ## 表示言語(PT / EN / 日本語)
 
@@ -236,11 +263,18 @@ gh repo create jatlog-offline --public --source . --remote origin --push
 
 ```powershell
 Start-Process python -ArgumentList "tests\servidor.py","<docsの絶対パス>","8810" -WindowStyle Hidden
-python tests\teste.py            # 統合そのもの(入口・メニュー・共有セッション)  49項目
-python tests\teste_colheita.py   # 収穫モジュールの中身                            67項目
-python tests\teste_india.py      # 測定モジュールの中身                            66項目
+python tests\teste.py            # 統合そのもの(入口・メニュー・共有セッション)  55項目
+python tests\teste_colheita.py   # 収穫モジュールの中身                            69項目
+python tests\teste_india.py      # 測定モジュールの中身                            24節
 python tests\teste_sync.py       # アプリを閉じたままの自動送信(2本のキュー)      18項目
 ```
+
+`teste_india.py` は India Rec 単独版の `tests/teste.py` の移植版。あちらを直したら
+`ferramentas/portar_teste.py` でこちらへ持ってくる(置換が1回ずつ当たらなければ
+止まるようにしてある)。とくに次の2節は落とさないこと:
+
+- **[22]** 旧版が作った送信待ち(`precisaAdmin: true` 付き)がちゃんと出ていくか
+- **[23]** Service Worker **だけ**を叩いて記録がサーバーに届くか
 
 ⚠ Playwright の「オフライン」は Service Worker には届かない(SW は別のネットワーク
 コンテキストを持つ)。圏外テスト中に SW が先に送ってしまうことがあるので、
