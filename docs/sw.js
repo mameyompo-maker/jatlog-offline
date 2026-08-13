@@ -19,7 +19,7 @@ importScripts('./config.js');
 var CFG_COLHEITA = self.JATLOG_CONFIG || {};
 var CFG_INDIA = self.INDIAREC_CONFIG || {};
 
-var CACHE = 'jatlog-v9';
+var CACHE = 'jatlog-v10';
 var CACHE_FONTES = 'jatlog-fontes-v1';
 
 var FICHEIROS = [
@@ -162,6 +162,21 @@ function porLotes(fila, fn) {
   }, Promise.resolve());
 }
 
+/**
+ * Desiste da tentativa, dizendo porquê às páginas abertas e REJEITANDO.
+ *
+ * ⚠ A rejeição não é um detalhe. O Android dá o evento de sincronização por
+ * cumprido assim que a promessa resolve e deita o registo fora; a fila fica
+ * então à espera de alguém abrir a aplicação — exactamente o que não queremos.
+ * Até 2026-08-14 isto resolvia em silêncio quando faltava o código de
+ * activação, e uma tentativa dessas gastava a única oportunidade de reenvio.
+ */
+function desistir(motivo, enviados, total) {
+  return avisarPaginas({
+    tipo: 'fila', fim: true, enviados: enviados, total: total, erro: motivo
+  }).then(function () { throw new Error(motivo); });
+}
+
 function pendentesDe(base) {
   return comLoja(base, 'envios', 'readonly', function (s) { return s.getAll(); })
     .then(function (l) {
@@ -197,7 +212,8 @@ function enviarColheitaEmSegundoPlano() {
     return Promise.all([credenciais(), pendentesDe(d)]);
   }).then(function (r) {
     var token = r[0][0], adminPw = r[0][1], fila = r[1];
-    if (!token || !fila.length) return;
+    if (!fila.length) return;
+    if (!token) return desistir('sem código de activação', 0, fila.length);
 
     return porLotes(fila, function (lote) {
       var corpo = {
@@ -224,6 +240,14 @@ function enviarColheitaEmSegundoPlano() {
           return comLoja(base, 'envios', 'readwrite', function (s) { return s.put(e); });
         }));
       });
+    }).then(function () {
+      /* Os que o servidor recusou ficam marcados 'erro' e já não contam: não se
+       * insiste com esses. Sobrar pendentes quer dizer que nem foram tentados. */
+      return pendentesDe(base).then(function (sobram) {
+        if (sobram.length) throw new Error('ficaram ' + sobram.length + ' por enviar');
+      });
+    }, function (e) {
+      return desistir((e && e.message) || 'falhou o envio', 0, fila.length);
     });
   });
 }
@@ -239,7 +263,8 @@ function enviarIndiaEmSegundoPlano() {
     return Promise.all([credenciais(), pendentesDe(d)]);
   }).then(function (r) {
     var token = r[0][0], adminPw = r[0][1], fila = r[1];
-    if (!token || !fila.length) return;
+    if (!fila.length) return;
+    if (!token) return desistir('sem código de activação', 0, fila.length);
 
     /* Já não se retém nada à espera do modo administrador. Até 2026-08-12 as
      * correcções a registos de outra pessoa ficavam no telemóvel sem nunca
@@ -293,7 +318,13 @@ function enviarIndiaEmSegundoPlano() {
         return avisarPaginas({ tipo: 'fila', enviados: enviados, total: fila.length });
       });
     }).then(function () {
-      return avisarPaginas({ tipo: 'fila', fim: true, enviados: enviados, total: fila.length });
+      return pendentesDe(base).then(function (sobram) {
+        if (sobram.length) return desistir('ficaram ' + sobram.length + ' por enviar',
+                                           enviados, fila.length);
+        return avisarPaginas({ tipo: 'fila', fim: true, enviados: enviados, total: fila.length });
+      });
+    }, function (e) {
+      return desistir((e && e.message) || 'falhou o envio', enviados, fila.length);
     });
   });
 }

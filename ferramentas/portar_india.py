@@ -18,7 +18,7 @@ import sys
 IR = r'c:\Users\kazdr\OneDrive - 河村研究室\Claude_general\projects\jatmed_field_app'
 JL = r'c:\Users\kazdr\OneDrive - 河村研究室\Claude_general\projects\jatlog_offline'
 # Commit do India Rec de onde se traz a versao nova.
-COMMIT = 'cff4ef3'
+COMMIT = 'HEAD'
 
 falhas = []
 

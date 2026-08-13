@@ -158,6 +158,10 @@ gh repo create jatlog-offline --public --source . --remote origin --push
   一度開いてもらう運用が必要
 - 送信中は上の帯に **`A enviar… 25 de 100`** と進み具合が出る。25件ずつ送り、
   1束ごとに「送信済み」を確定するので、100件の途中で電波が切れてもそこまでは残る
+- **送れなかったときは理由が画面に出る**(履歴画面の送信ボタンの下)。
+  例: `Não subiu às 15:32 — o código de activação não é aceite.`
+  アプリを閉じている間の失敗も、次に開いたときにここで読める。
+  **「送信待ちが減らない」と言われたら、まずこの行を読んでもらう**
 
 ### インド測定の使い方(2026-08-14 に作り直した)
 
@@ -265,7 +269,7 @@ Fileira r02, n.º 10  ·  ← n.º 1 à direita
 Start-Process python -ArgumentList "tests\servidor.py","<docsの絶対パス>","8810" -WindowStyle Hidden
 python tests\teste.py            # 統合そのもの(入口・メニュー・共有セッション)  55項目
 python tests\teste_colheita.py   # 収穫モジュールの中身                            69項目
-python tests\teste_india.py      # 測定モジュールの中身                            24節
+python tests\teste_india.py      # 測定モジュールの中身                            25節
 python tests\teste_sync.py       # アプリを閉じたままの自動送信(2本のキュー)      18項目
 ```
 
@@ -275,6 +279,8 @@ python tests\teste_sync.py       # アプリを閉じたままの自動送信(2�
 
 - **[22]** 旧版が作った送信待ち(`precisaAdmin: true` 付き)がちゃんと出ていくか
 - **[23]** Service Worker **だけ**を叩いて記録がサーバーに届くか
+- **[24]** わざと違う活性化コードにして、画面が**コードのせいだと言うか**
+  (2026-08-13 の事故そのもの)
 
 ⚠ Playwright の「オフライン」は Service Worker には届かない(SW は別のネットワーク
 コンテキストを持つ)。圏外テスト中に SW が先に送ってしまうことがあるので、
