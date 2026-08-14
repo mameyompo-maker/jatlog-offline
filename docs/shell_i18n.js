@@ -9,7 +9,7 @@
  */
 
 var IDIOMAS = [
-  { cod: 'pt', rotulo: 'PT', html: 'pt-BR' },
+  { cod: 'pt', rotulo: 'PT', html: 'pt-PT' },
   { cod: 'en', rotulo: 'EN', html: 'en' },
   { cod: 'ja', rotulo: '日本語', html: 'ja' }
 ];
@@ -18,45 +18,45 @@ var TEXTOS = {
 
   pt: {
     'app.rodape': 'JatLog · offline',
-    'app.subtitulo': 'Registros de campo',
+    'app.subtitulo': 'Registos de campo',
 
-    'activacao.titulo': 'Ativar o aparelho',
+    'activacao.titulo': 'Activar o aparelho',
     'activacao.texto': 'Digite o código de activação que o gestor lhe deu. Só é preciso uma vez neste aparelho.',
     'activacao.campo': 'Código de activação',
-    'activacao.botao': 'Ativar',
+    'activacao.botao': 'Activar',
     'activacao.falta': 'Digite o código de activação.',
     'activacao.aVerificar': 'A confirmar o código com o servidor…',
-    'activacao.recusado': 'O servidor não aceita este código. Peça o código certo ao gestor — sem ele nada do que registrar consegue subir.',
-    'activacao.recusadoNum': 'O servidor de {modulos} não aceita este código. Peça o código certo ao gestor — os registros desse módulo não conseguem subir.',
+    'activacao.recusado': 'O servidor não aceita este código. Peça o código certo ao gestor — sem ele nada do que registar consegue subir.',
+    'activacao.recusadoNum': 'O servidor de {modulos} não aceita este código. Peça o código certo ao gestor — os registos desse módulo não conseguem subir.',
     'activacao.semRede': 'Sem ligação: o código ficou guardado, mas ainda não foi confirmado. Vai ser confirmado sozinho quando houver rede.',
 
     'entrada.titulo': 'Identifique-se',
-    'entrada.texto': 'O nome fica guardado até você trocar de usuário, e vale para os dois registros.',
-    'entrada.adminActivo': 'Modo administrador ativo — você continuará como administrador.',
+    'entrada.texto': 'O nome fica guardado até trocar de utilizador, e vale para os dois registos.',
+    'entrada.adminActivo': 'Modo administrador activo — continua como administrador.',
     'entrada.sairAdmin': 'Sair do modo administrador',
-    'entrada.nome': 'Nome de usuário',
-    'entrada.nomePlaceholder': 'Seu nome',
+    'entrada.nome': 'Nome de utilizador',
+    'entrada.nomePlaceholder': 'O seu nome',
     'entrada.admin': 'Administrador',
     'entrada.senha': 'Senha do administrador',
-    'entrada.senhaPlaceholder': 'Somente para o gestor',
+    'entrada.senhaPlaceholder': 'Só para o gestor',
     'entrada.botao': 'Começar',
-    'entrada.faltaNome': 'Informe seu nome.',
-    'entrada.senhaErrada': 'Senha do administrador incorreta.',
+    'entrada.faltaNome': 'Escreva o seu nome.',
+    'entrada.senhaErrada': 'Senha do administrador incorrecta.',
     'entrada.semVerificar': 'Não foi possível verificar a senha agora. Tente com internet.',
     'entrada.senhaDepois': 'Sem rede: a senha será verificada no envio',
 
-    'menu.titulo': 'O que você vai registrar?',
-    'menu.usuario': 'Usuário: <b>{nome}</b>',
-    'menu.usuarioAdmin': 'Usuário: <b>{nome}</b> · administrador',
+    'menu.titulo': 'O que vai registar?',
+    'menu.usuario': 'Utilizador: <b>{nome}</b>',
+    'menu.usuarioAdmin': 'Utilizador: <b>{nome}</b> · administrador',
     'menu.colheita': 'Colheita — peso',
     'menu.colheitaDesc': 'Peso das sementes por linha (Tanheia) ou por bloco (7 de Abril).',
     'menu.india': 'Medições — India',
     'menu.indiaDesc': 'Crescimento e descritores das plantas de NBF (Tanheia) 26.',
     'menu.porEnviar': '{n} por enviar',
-    'menu.desactivar': 'Desativar este aparelho',
-    'menu.confirmarDesactivar': 'Apagar o código de activação deste aparelho? Os registros por enviar não se perdem.',
+    'menu.desactivar': 'Desactivar este aparelho',
+    'menu.confirmarDesactivar': 'Apagar o código de activação deste aparelho? Os registos por enviar não se perdem.',
 
-    'geral.trocarUsuario': 'Trocar de usuário'
+    'geral.trocarUsuario': 'Trocar de utilizador'
   },
 
   en: {

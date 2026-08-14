@@ -225,7 +225,7 @@ with sync_playwright() as p:
     ir_menu(page)
     page.locator('#idiomas button:has-text("PT")').click()
     time.sleep(0.4)
-    check("E4 volta ao portugues", "registrar" in page.inner_text("#ecraMenu").lower(),
+    check("E4 volta ao portugues", "registar" in page.inner_text("#ecraMenu").lower(),
           page.inner_text("#ecraMenu")[:60])
 
     # ============================================== F. sem rede

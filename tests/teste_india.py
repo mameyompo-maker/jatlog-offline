@@ -276,7 +276,7 @@ def main():
         pag.fill("#inpSenha", "errada")
         pag.click("#btnComecar")
         pag.wait_for_timeout(1200)
-        ok("incorreta" in pag.inner_text("#avisoEntrada").lower(), "recusa a palavra-passe errada")
+        ok("incorrecta" in pag.inner_text("#avisoEntrada").lower(), "recusa a palavra-passe errada")
 
         pag.fill("#inpSenha", ADMIN_PW)
         pag.click("#btnComecar")

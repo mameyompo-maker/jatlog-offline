@@ -253,12 +253,12 @@ with sync_playwright() as p:
     ctx.set_offline(True)
     time.sleep(0.6)
     check("G1 barra avisa sem conexão",
-          "SEM CONEXÃO" in page.inner_text("#barra"), page.inner_text("#barra"))
+          "SEM LIGAÇÃO" in page.inner_text("#barra"), page.inner_text("#barra"))
 
     registar(page, 1, 2.5)
     registar(page, 3, 3.5)
     check("G2 dois registos ficam na fila",
-          "2 registro(s) guardado" in page.inner_text("#barra"), page.inner_text("#barra"))
+          "2 registo(s) guardado" in page.inner_text("#barra"), page.inner_text("#barra"))
     check("G3 aparecem no histórico com selo",
           page.locator("#listaHistorico .selo").count() == 2,
           page.locator("#listaHistorico .selo").count())
@@ -274,7 +274,7 @@ with sync_playwright() as p:
     page.click("#btnGuardarEdicao")
     esperar_ecra(page, "ecraBusca")
     check("G6 correcção offline não cria envio extra",
-          "2 registro(s) guardado" in page.inner_text("#barra"), page.inner_text("#barra"))
+          "2 registo(s) guardado" in page.inner_text("#barra"), page.inner_text("#barra"))
 
     # ------------------------------------------------- H. arranque sem rede
     page.reload(wait_until="load")
@@ -293,11 +293,11 @@ with sync_playwright() as p:
     page.click("#btnOutroNumero")
     esperar_ecra(page, "ecraBusca")
     check("H4 fila sobreviveu ao recarregamento",
-          "2 registro" in page.inner_text("#barra"), page.inner_text("#barra"))
+          "2 registo" in page.inner_text("#barra"), page.inner_text("#barra"))
     # o Chromium volta a pôr navigator.onLine a true depois de recarregar
     # offline; a barra tem de perceber isso pelo pedido que falhou
     check("H5 barra sabe que não há rede, apesar do navigator.onLine",
-          "SEM CONEXÃO" in page.inner_text("#barra"), page.inner_text("#barra"))
+          "SEM LIGAÇÃO" in page.inner_text("#barra"), page.inner_text("#barra"))
     check("H6 navigator.onLine está mesmo a mentir",
           page.evaluate("() => navigator.onLine") is True)
     page.screenshot(path=os.path.join(OUT, "08_offline_reload.png"), full_page=True)
@@ -343,7 +343,7 @@ with sync_playwright() as p:
     page.click("#btnComecar")
     time.sleep(1.2)
     check("K1 senha errada é recusada",
-          "incorreta" in page.inner_text("#avisoEntrada"), page.inner_text("#avisoEntrada"))
+          "incorrecta" in page.inner_text("#avisoEntrada"), page.inner_text("#avisoEntrada"))
 
     page.fill("#inpSenha", "JatRD2026")
     page.click("#btnComecar")
