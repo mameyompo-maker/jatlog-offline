@@ -1,4 +1,11 @@
-/* JatMed — interface de campo. Alvos grandes, contraste alto (uso ao sol). */
+/* JatLog, módulo das medições — interface de campo.
+ * Alvos grandes, contraste alto (uso ao sol).
+ *
+ * Os valores aqui são os mesmos da folha da entrada e da colheita
+ * (../styles.css), só com outros nomes — este ficheiro nasceu noutra aplicação.
+ * A correspondência é: --painel = --card, --txt = --ink, --acento = --green.
+ * Mexer numa cor aqui obriga a ver a outra folha.
+ */
 
 :root {
   --bg: #12140f;
@@ -12,8 +19,20 @@
   --aviso: #f9a825;
   --erro: #e53935;
   --ok: #43a047;
-  --r: 14px;
   --toque: 56px;
+
+  /* Duas medidas de canto, iguais às da outra folha: comandos 12, caixas 16. */
+  --r-ctl: 12px;
+  --r-card: 16px;
+  /* Superfície dos comandos secundários. */
+  --quiet: #232719;
+  /* Contorno do que se pode tocar: 3:1 contra o fundo, para se ver ao sol.
+     --linha continua a valer so para divisorias e caixas. */
+  --linha-forte: #5F6752;
+  /* A mesma letra dos outros ecrãs: os dois módulos são a mesma aplicação e
+     estavam a usar tipos diferentes. O Service Worker guarda o ficheiro da
+     fonte numa cache própria, por isso continua a ler-se sem rede. */
+  --font-ui: 'IBM Plex Sans', 'IBM Plex Sans JP', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -27,7 +46,7 @@ html, body {
   padding: 0;
   background: var(--bg);
   color: var(--txt);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-ui);
   font-size: 17px;
   line-height: 1.45;
   overscroll-behavior-y: contain;
@@ -104,7 +123,7 @@ main { padding: 16px 14px 96px; max-width: 640px; margin: 0 auto; }
   min-height: 38px;
   padding: 7px 13px;
   background: var(--painel);
-  border: 1px solid var(--linha);
+  border: 1px solid var(--linha-forte);
   border-radius: 999px;
   color: var(--txt2);
   font-size: 13px;
@@ -133,7 +152,7 @@ html[lang="ja"] .grupo > h3 { text-transform: none; }
   .ecra { animation: none; }
 }
 
-h1 { font-size: 22px; margin: 4px 0 18px; }
+h1 { font-size: 24px; margin: 4px 0 18px; }
 h2 { font-size: 18px; margin: 26px 0 10px; color: var(--txt); }
 .sub { color: var(--txt2); font-size: 14px; margin: -6px 0 18px; }
 
@@ -149,54 +168,118 @@ input[type="text"], input[type="number"] {
   font-size: 19px;
   color: var(--txt);
   background: var(--painel);
-  border: 2px solid var(--linha);
-  border-radius: var(--r);
+  border: 2px solid var(--linha-forte);
+  border-radius: var(--r-ctl);
 }
 input:focus { outline: none; border-color: var(--acento); }
 input.invalido { border-color: var(--erro); }
 
+/* Três níveis e só três, iguais aos da outra folha:
+ *   .btn             cheio de verde  — o que se vem fazer a este ecrã
+ *   .btn.secundario  contornado      — a alternativa de igual peso
+ *   .ligacao         superfície baixa — ir para outro sítio, ou o caso raro
+ */
 .btn {
   display: block;
   width: 100%;
   min-height: var(--toque);
-  margin-top: 14px;
+  margin-top: 12px;
   padding: 14px;
-  font-size: 18px;
+  font-family: var(--font-ui);
+  font-size: 17px;
   font-weight: 700;
   color: #10210a;
   background: var(--acento);
-  border: none;
-  border-radius: var(--r);
+  border: 2px solid var(--acento);
+  border-radius: var(--r-ctl);
   cursor: pointer;
 }
-.btn:active { background: var(--acento-esc); }
-.btn[disabled] { opacity: .45; }
-.btn.secundario { background: var(--painel2); color: var(--txt); border: 2px solid var(--linha); }
-.btn.perigo { background: var(--erro); color: #fff; }
+.btn:active { background: var(--acento-esc); border-color: var(--acento-esc); }
+.btn:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
+.btn.secundario { background: transparent; color: var(--txt); border-color: var(--linha-forte); }
+.btn.secundario:active { background: var(--painel2); }
+.btn.perigo { background: var(--erro); border-color: var(--erro); color: #fff; }
 
+/* Desactivado nao pode ser "o mesmo a 45%": a opacidade apagava o verde e a
+   letra por igual e o rotulo ficava da cor do proprio botao. Aqui perde a cor
+   e ganha o tom de coisa inerte.
+   ⚠ Depois das variantes e nomeando-as: mesma especificidade, ganha a de baixo. */
+.btn[disabled],
+.btn.secundario[disabled],
+.btn.perigo[disabled] {
+  background: var(--painel2);
+  border-color: var(--linha);
+  color: var(--txt2);
+  cursor: default;
+}
+
+/* Era texto sublinhado a fazer de botão: sem área de toque a sério, alinhado à
+   esquerda e a boiar por baixo do conteúdo. Agora é um comando com corpo,
+   discreto pelo tom e não pelo tamanho. */
 .ligacao {
   display: block;
-  width: fit-content;
-  margin-top: 14px;
-  color: var(--txt2);
+  width: 100%;
+  min-height: 48px;
+  margin-top: 8px;
+  padding: 12px 14px;
+  font-family: var(--font-ui);
   font-size: 15px;
-  text-decoration: underline;
+  font-weight: 600;
+  text-align: center;
+  color: var(--txt2);
+  background: var(--quiet);
+  border: 1px solid var(--linha-forte);
+  border-radius: var(--r-ctl);
+  text-decoration: none;
   cursor: pointer;
-  background: none;
-  border: none;
-  padding: 8px 0;
 }
+.ligacao:active { background: var(--painel2); color: var(--txt); }
+.ligacao:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
 
-/* Marcar uma planta como morta é o caso raro: encosta-se à direita e fica
-   pequeno, para não competir com o que se faz a cada planta. */
+/* Voltar não é uma escolha entre outras: é a saída. Fica sem superfície, com a
+   seta a dizer o que faz, por baixo das ligações que levam a algum lado. */
+.ligacao[data-voltar],
+#ligTrocarPlanta {
+  background: transparent;
+  border-color: transparent;
+}
+.ligacao[data-voltar]:active,
+#ligTrocarPlanta:active { background: var(--painel); }
+.ligacao[data-voltar]::before,
+#ligTrocarPlanta::before { content: "←"; margin-right: 8px; }
+
+/* Um grupo de comandos no fim do ecrã, debaixo de um fio: lê-se de uma vez, em
+   vez de três ligações soltas com um palmo entre elas. */
+.accoes {
+  display: grid;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--linha);
+}
+.accoes > .ligacao, .accoes > .btn { margin-top: 0; }
+/* o aviso do ultimo envio tambem mora aqui dentro: sem isto trazia 14px seus */
+.accoes > .aviso { margin: 0; }
+
+/* Saltar para a próxima e marcar planta morta são o caso raro: ficam ao lado do
+   número, pequenos, sem roubar o sítio ao que se faz a cada planta. */
 .cantoDireito { display: flex; justify-content: flex-end; }
 .ligacao.discreta {
-  margin-top: 8px;
-  padding: 6px 0;
-  font-size: 13px;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 0;
+  padding: 6px 10px;
+  font-size: 14px;
+  font-weight: 600;
   color: #8b9280;
+  background: transparent;
+  border-color: var(--linha-forte);
 }
-.ligacao.discreta.activo { color: var(--aviso); font-weight: 700; }
+.ligacao.discreta.activo {
+  color: var(--aviso);
+  border-color: var(--aviso);
+  font-weight: 700;
+}
 
 textarea {
   width: 100%;
@@ -207,8 +290,8 @@ textarea {
   line-height: 1.4;
   color: var(--txt);
   background: var(--painel);
-  border: 2px solid var(--linha);
-  border-radius: var(--r);
+  border: 2px solid var(--linha-forte);
+  border-radius: var(--r-ctl);
   resize: vertical;
 }
 textarea:focus { outline: none; border-color: var(--acento); }
@@ -222,8 +305,8 @@ textarea:focus { outline: none; border-color: var(--acento); }
   margin-top: 14px;
   padding: 18px;
   background: var(--painel);
-  border: 2px solid var(--linha);
-  border-radius: var(--r);
+  border: 2px solid var(--linha-forte);
+  border-radius: var(--r-card);
   color: var(--txt);
   cursor: pointer;
 }
@@ -235,8 +318,13 @@ textarea:focus { outline: none; border-color: var(--acento); }
 
 /* O ecrã da planta tem de caber todo sem rolar: 16 fileiras, o número, o
    cartão da planta e o teclado. Daí as oito colunas e as medidas curtas. */
-.ecra.compacto { padding-bottom: 132px; }
-.ecra.compacto .linhaTopo { margin: 0 0 8px; font-size: 13px; }
+/* Espaço reservado para a barra fixa do fundo. A barra mede 117px (botão 56 +
+   Voltar 36 + folgas + o fio); os 3px que faltam para 120 chegam, porque a
+   barra é opaca — o conteúdo pode acabar encostado a ela sem se ver nada por
+   baixo. Este ecrã tem de caber inteiro sem rolar e cada pixel conta
+   (teste_india [16] mede-o). Se a barra mudar de altura, este número muda. */
+.ecra.compacto { padding-bottom: 120px; }
+.ecra.compacto .linhaTopo { margin: 0 0 8px; font-size: 15px; color: var(--txt); font-weight: 600; }
 
 .grelhaFileiras {
   display: grid;
@@ -251,8 +339,8 @@ textarea:focus { outline: none; border-color: var(--acento); }
   line-height: 1.1;
   color: var(--txt);
   background: var(--painel);
-  border: 2px solid var(--linha);
-  border-radius: 10px;
+  border: 2px solid var(--linha-forte);
+  border-radius: var(--r-ctl);
   cursor: pointer;
 }
 .grelhaFileiras button.activo {
@@ -264,13 +352,16 @@ textarea:focus { outline: none; border-color: var(--acento); }
 
 /* O número e o que está ao lado dele (saltar / planta morta) numa linha só. */
 .linhaNumero { display: flex; align-items: stretch; gap: 10px; margin: 8px 0; }
+/* As duas ligacoes ao lado do numero tinham 34px, larguras diferentes e o lado
+   esquerdo aos dentes. Esticadas, ficam alinhadas e com alvo a serio; a altura
+   que isso custa vem do teclado (52 -> 48px). */
 .linhaNumero .ladoDireito {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: stretch;
   justify-content: center;
-  gap: 2px;
+  gap: 6px;
 }
 
 #visorNumero {
@@ -281,8 +372,8 @@ textarea:focus { outline: none; border-color: var(--acento); }
   font-weight: 700;
   letter-spacing: 2px;
   background: var(--painel);
-  border: 2px solid var(--linha);
-  border-radius: 10px;
+  border: 2px solid var(--linha-forte);
+  border-radius: var(--r-ctl);
   min-height: 52px;
 }
 /* Sem número, a caixa mostra a etiqueta ("N.º na fileira") em vez de um traço. */
@@ -302,17 +393,17 @@ textarea:focus { outline: none; border-color: var(--acento); }
   gap: 7px;
 }
 .teclado button {
-  min-height: 52px;
+  min-height: 48px;
   font-size: 24px;
   font-weight: 700;
   color: var(--txt);
   background: var(--painel2);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--r-ctl);
   cursor: pointer;
 }
 .teclado button:active { background: var(--acento-esc); }
-.teclado button.aux { font-size: 15px; background: var(--painel); border: 2px solid var(--linha); }
+.teclado button.aux { font-size: 15px; background: var(--painel); border: 2px solid var(--linha-forte); }
 
 /* Cartão da planta. A linhagem é a linha grande: a folha de dados e o mapa do
    talhão estão organizados por linhagem, por isso é isso que quem anda pela
@@ -322,7 +413,7 @@ textarea:focus { outline: none; border-color: var(--acento); }
   padding: 9px 12px;
   background: var(--painel);
   border-left: 4px solid var(--acento);
-  border-radius: 8px;
+  border-radius: var(--r-ctl);
   font-size: 13px;
 }
 #resolvidoPlanta.erro { border-left-color: var(--erro); color: #ff8a80; }
@@ -335,13 +426,16 @@ textarea:focus { outline: none; border-color: var(--acento); }
   line-height: 1.2;
 }
 .linhagem b { margin-left: 8px; color: var(--txt); }
+/* "inicio da linhagem" e uma informacao, nao um alerta: a ambar lia-se como
+   "atencao, alguma coisa esta mal". E nao tinha altura nenhuma. */
 .inicioLote {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--aviso);
-  border: 1px solid var(--aviso);
+  padding: 2px 8px;
+  vertical-align: 2px;
+  color: var(--txt2);
+  border: 1px solid var(--linha-forte);
   border-radius: 999px;
-  padding: 0 7px;
   margin-left: 6px;
   white-space: nowrap;
 }
@@ -368,18 +462,33 @@ textarea:focus { outline: none; border-color: var(--acento); }
   margin: 0 0 6px;
   padding: 10px 12px;
   background: var(--painel);
-  border: 2px solid var(--linha);
-  border-radius: var(--r);
+  border: 2px solid var(--linha-forte);
+  border-radius: var(--r-card);
   color: var(--txt);
   cursor: pointer;
 }
+/* "tocar para trocar de planta" era mais um sublinhado. Agora é uma etiqueta
+   com contorno — vê-se que o cabeçalho inteiro é o botão. */
+/* A pastilha tinha forma de botao mas nao e um botao: quem toca nela acerta no
+   cartao inteiro. Volta a ser dica, e o cartao mostra o chevron. */
+.cabecalhoPlanta { position: relative; padding-right: 34px; }
+.cabecalhoPlanta::after {
+  content: "\203A";
+  position: absolute;
+  right: 14px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--txt2);
+  font-size: 26px;
+  line-height: 1;
+}
 .cabecalhoPlanta .trocar {
   display: block;
-  margin-top: 2px;
+  margin-top: 4px;
   color: var(--txt2);
-  font-size: 12px;
-  text-decoration: underline;
+  font-size: 13px;
+  text-decoration: none;
 }
+.cabecalhoPlanta:active { border-color: var(--acento); }
 
 /* ------------------------------------------------------ escolhas por botao */
 
@@ -394,8 +503,8 @@ textarea:focus { outline: none; border-color: var(--acento); }
   min-height: 66px;
   padding: 12px 14px;
   background: var(--painel);
-  border: 3px solid var(--linha);
-  border-radius: var(--r);
+  border: 3px solid var(--linha-forte);
+  border-radius: var(--r-ctl);
   color: var(--txt);
   font-size: 16px;
   font-weight: 600;
@@ -407,7 +516,7 @@ textarea:focus { outline: none; border-color: var(--acento); }
 
 .amostra {
   width: 42px; height: 42px; flex: none;
-  border-radius: 10px;
+  border-radius: var(--r-ctl);
   border: 2px solid rgba(255, 255, 255, .35);
 }
 .amostra.verdeClaro  { background: #9ccc65; }
@@ -428,7 +537,7 @@ textarea:focus { outline: none; border-color: var(--acento); }
   padding: 14px;
   background: rgba(255, 255, 255, .03);
   border: 1px solid var(--linha);
-  border-radius: var(--r);
+  border-radius: var(--r-card);
 }
 .grupo > h3 {
   margin: 0 0 6px;
@@ -460,39 +569,49 @@ textarea:focus { outline: none; border-color: var(--acento); }
   font-size: 20px;
   color: var(--acento);
   background: var(--painel);
-  border: 2px solid var(--linha);
-  border-radius: var(--r);
+  border: 2px solid var(--linha-forte);
+  border-radius: var(--r-ctl);
 }
 .seguinte:active { background: var(--linha); }
 .seguinte.ultimo { color: #10210a; background: var(--acento); border-color: var(--acento); }
 
+/* A barra do fundo tinha um gradiente que se ia desvanecendo: o conteúdo
+   passava por baixo do botão e via-se meio texto atrás dele. Agora é uma
+   superfície opaca com um fio em cima — o botão assenta em vez de flutuar.
+   ⚠ A altura desta barra não pode crescer sem se acertarem à mão os dois
+   números que a acompanham: .ecra.compacto (124px) e #brinde (92px). */
 .barraFundo {
   position: fixed;
   left: 0; right: 0; bottom: 0;
   z-index: 40;
-  padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
-  background: linear-gradient(to top, var(--bg) 72%, transparent);
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-top: 1px solid var(--linha);
+  box-shadow: 0 -10px 24px rgba(0, 0, 0, .5);
 }
 .barraFundo .btn { margin: 0 auto; max-width: 612px; }
 
 /* ------------------------------------------------------------------- outros */
 
+/* Caixa com contorno e texto da cor do estado, como na outra folha. A barra so
+   a esquerda ja quer dizer outra coisa aqui: e o cartao da planta. */
 .aviso {
   margin: 14px 0;
   padding: 13px 15px;
   background: #4a3c0c;
-  border-left: 4px solid var(--aviso);
-  border-radius: 8px;
+  border: 1px solid #6b5a1f;
+  border-radius: var(--r-ctl);
+  color: #f7dd9a;
   font-size: 15px;
 }
-.aviso.erro { background: #4a1414; border-left-color: var(--erro); }
-.aviso.ok { background: #17400f; border-left-color: var(--ok); }
+.aviso.erro { background: #4a1414; border-color: #7a2b28; color: #ffb4ae; }
+.aviso.ok { background: #17400f; border-color: #3e8a2c; color: #cfe8b4; }
 
 .listaEnvios { list-style: none; padding: 0; margin: 10px 0 0; }
 .listaEnvios li {
   display: flex; align-items: center; gap: 10px;
   padding: 11px 13px; margin-bottom: 8px;
-  background: var(--painel); border-radius: 10px; font-size: 14px;
+  background: var(--painel); border-radius: var(--r-ctl); font-size: 14px;
 }
 .listaEnvios .marca { font-size: 17px; flex: none; }
 .listaEnvios .quando { margin-left: auto; color: var(--txt2); font-size: 12px; }
@@ -504,7 +623,7 @@ dialog {
   background: var(--painel);
   color: var(--txt);
   border: 1px solid var(--linha);
-  border-radius: var(--r);
+  border-radius: var(--r-card);
 }
 dialog::backdrop { background: rgba(0, 0, 0, .68); }
 dialog h3 { margin: 0 0 10px; font-size: 19px; }
@@ -518,7 +637,7 @@ dialog ul { margin: 10px 0; padding-left: 20px; color: var(--aviso); font-size: 
   margin: 0 0 12px;
   padding: 10px 12px;
   background: var(--painel2);
-  border-radius: 10px;
+  border-radius: var(--r-ctl);
 }
 
 /* "Não há fruto nesta planta?" — a pergunta que quem está no campo responde
@@ -528,7 +647,7 @@ dialog ul { margin: 10px 0; padding-left: 20px; color: var(--aviso); font-size: 
   padding: 10px 12px;
   background: #4a3c0c;
   border-left: 4px solid var(--aviso);
-  border-radius: 8px;
+  border-radius: var(--r-ctl);
   font-size: 15px;
   font-weight: 600;
 }
@@ -548,8 +667,20 @@ dialog ul { margin: 10px 0; padding-left: 20px; color: var(--aviso); font-size: 
 #detalheVazios summary { color: var(--txt2); font-size: 14px; cursor: pointer; padding: 6px 0; }
 .notaDialogo { color: var(--txt2); font-size: 13px; margin: 10px 0 0; }
 
-/* O "Voltar" da barra de baixo do ecrã da planta. */
-.ligacao.centrado { margin: 6px auto 0; }
+/* O "Voltar" da barra de baixo do ecrã da planta. Fica compacto de propósito:
+   se crescer, a barra cresce, e o ecrã da planta deixa de caber sem rolar
+   (teste_india [16] mede exactamente isso). */
+/* ⚠ `width: fit-content` e não `auto`: isto é um bloco, e num bloco `auto`
+   ocupa a largura toda. Com `auto` ficava aqui uma faixa invisível de ponta a
+   ponta, logo por baixo do "Continuar" — um polegar que falhasse o botão
+   voltava atrás e perdia a fileira e o número acabados de marcar. */
+.ligacao.centrado {
+  width: fit-content;
+  min-height: 36px;
+  margin: 4px auto 0;
+  padding: 7px 14px;
+  font-size: 14px;
+}
 
 #brinde {
   position: fixed;
@@ -592,7 +723,7 @@ dialog ul { margin: 10px 0; padding-left: 20px; color: var(--aviso); font-size: 
   margin: 6px 0 18px;
   padding: 16px;
   background: var(--painel);
-  border-radius: var(--r);
+  border-radius: var(--r-card);
   text-align: center;
 }
 .resumo .grande { font-size: 34px; font-weight: 800; line-height: 1.1; }
@@ -606,7 +737,7 @@ dialog ul { margin: 10px 0; padding-left: 20px; color: var(--aviso); font-size: 
   padding: 11px 13px;
   margin-bottom: 8px;
   background: var(--painel);
-  border-radius: 10px;
+  border-radius: var(--r-ctl);
 }
 .linhaFileira .nome { font-weight: 700; width: 26px; flex: none; text-align: right; }
 .linhaFileira .lote { font-size: 12px; color: var(--txt2); width: 92px; flex: none; }
@@ -632,14 +763,15 @@ dialog ul { margin: 10px 0; padding-left: 20px; color: var(--aviso); font-size: 
   flex: 1;
   min-height: 44px;
   background: var(--painel);
-  border: 2px solid var(--linha);
-  border-radius: var(--r);
+  border: 2px solid var(--linha-forte);
+  border-radius: var(--r-ctl);
   color: var(--txt2);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
 }
-.aba.activo { border-color: var(--acento); color: var(--txt); }
+/* escolhido = cheio, como em todo o lado. So as abas ficavam so com contorno. */
+.aba.activo { background: var(--acento); border-color: var(--acento); color: #10210a; }
 
 .listaEnvios li.tocavel { cursor: pointer; }
 .listaEnvios li.tocavel:active { background: var(--painel2); }
@@ -652,7 +784,7 @@ details#blocoAdmin {
   padding: 0 14px;
   background: var(--painel);
   border: 1px solid var(--linha);
-  border-radius: var(--r);
+  border-radius: var(--r-card);
 }
 details#blocoAdmin summary {
   padding: 14px 0;
@@ -687,19 +819,28 @@ details#blocoAdmin[open] { padding-bottom: 16px; }
 
 /* Planta morta, a partir do formulário. Discreto — é o caso raro — mas com
    área de toque a sério, porque se usa com o telemóvel numa mão. */
+/* Era um tracejado, que numa interface quer dizer "por preencher" e não
+   "toque aqui". É um interruptor: apagado tem a forma de todos os outros
+   comandos discretos, ligado acende a âmbar como o resto dos avisos. */
+/* Um interruptor tem de dizer que esta desligado, nao so que esta ligado. */
+.mortaForm::before { content: "\2610\00a0\00a0"; }
+.mortaForm.activo::before { content: "\2611\00a0\00a0"; }
 .mortaForm {
   display: block;
   width: 100%;
-  margin: 0 0 10px;
-  padding: 10px;
+  min-height: 48px;
+  margin: 0 0 12px;
+  padding: 11px 14px;
   text-align: center;
-  border: 1px dashed var(--linha);
-  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--linha-forte);
+  border-radius: var(--r-ctl);
   color: var(--txt2);
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 600;
 }
 .mortaForm.activo {
-  border-style: solid;
+  background: #3a2f0a;
   border-color: var(--aviso);
   color: var(--aviso);
   font-weight: 700;

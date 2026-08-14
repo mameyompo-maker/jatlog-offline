@@ -30,8 +30,27 @@
   --panel:       #0B0D09;
   --digit:       #B6E88A;
   --shadow:      0 1px 2px rgba(0,0,0,.35), 0 6px 20px rgba(0,0,0,.30);
-  --font-ui:    'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* O IBM Plex Sans nao tem japones: sem os nomes a seguir, o japones caia no
+     que o sistema escolhesse e as duas escritas ficavam com pesos diferentes
+     na mesma linha. Estas familias sao as do proprio aparelho, nao se descarregam. */
+  --font-ui:    'IBM Plex Sans', 'IBM Plex Sans JP', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono:  'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Duas medidas de canto e não seis: os controlos são 12, as caixas que os
+     contêm são 16. Chegar a duas foi o que tirou o ar de remendo. */
+  --r-ctl:  12px;
+  --r-card: 16px;
+  /* Superfície dos comandos secundários: nem vazio nem painel, para se ver que
+     se pode tocar sem competir com o botão principal. */
+  --quiet:  #232719;
+  /* O contorno do que se pode tocar. --line (1.8:1 contra o fundo) chega para
+     um fio de separacao, mas ao sol nao chega para dizer "isto e um comando":
+     este esta nos 3:1 que as normas pedem para o limite de um controlo.
+     Manter os dois separados e o que faz os comandos saltar e as divisorias
+     ficarem quietas. */
+  --line-forte: #5F6752;
+  /* Contorno do que destroi. Vermelho apagado: le-se como aviso sem gritar. */
+  --red-linha:  #6B2A26;
 }
 
 /* Uma classe nunca deve vencer o atributo hidden (erro já cometido no India Rec). */
@@ -86,7 +105,7 @@ html, body {
 }
 .idiomas button {
   min-height: 38px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-forte);
   background: var(--card);
   color: var(--ink-soft);
   font-family: var(--font-ui);
@@ -123,12 +142,12 @@ html, body {
 
 .appfoot {
   margin-top: 26px;
+  font-size: 12px;
   text-align: center;
   font-family: var(--font-mono);
-  font-size: 10px;
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--ink-fraco);
+  color: var(--ink-soft);
 }
 
 /* ================= painel de formulário ================= */
@@ -155,8 +174,8 @@ label.campo, div.campo {
   min-height: 66px;
   padding: 14px 16px;
   background: var(--card);
-  border: 2px solid var(--line);
-  border-radius: 14px;
+  border: 2px solid var(--line-forte);
+  border-radius: var(--r-card);
   color: var(--ink);
   font-family: var(--font-ui);
   cursor: pointer;
@@ -174,10 +193,11 @@ label.campo, div.campo {
 input[type="text"], input[type="password"], select {
   width: 100%;
   background: var(--card);
-  border: 2px solid var(--line);
-  border-radius: 12px;
+  border: 2px solid var(--line-forte);
+  border-radius: var(--r-ctl);
   font-family: var(--font-ui);
-  font-size: 16px;
+  font-size: 17px;
+  min-height: 56px;
   padding: 12px 14px;
   color: var(--ink);
   appearance: none;
@@ -207,7 +227,7 @@ select option { background: var(--card); color: var(--ink); }
 details#blocoAdmin {
   margin-top: 14px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--r-ctl);
   background: var(--card2);
   overflow: hidden;
 }
@@ -220,62 +240,149 @@ details#blocoAdmin summary {
 details#blocoAdmin > *:not(summary) { margin-left: 14px; margin-right: 14px; }
 details#blocoAdmin > input { width: calc(100% - 28px); margin-bottom: 14px; }
 
-/* ================= botões ================= */
+/* ================= botões =================
+ *
+ * Três níveis, e só três:
+ *
+ *   principal  cheio de verde   — o que se vem fazer a este ecrã (um só)
+ *   .btn       contornado       — a alternativa de igual peso (Corrigir, Cancelar)
+ *   .ligacao   superfície baixa — ir para outro sítio, ou o caso raro
+ *
+ * O que havia antes era um texto sublinhado a fazer de botão. Sublinhado quer
+ * dizer "ligação de página" em todo o lado menos aqui, não tinha área de toque
+ * e ficava a boiar no meio do ecrã. Agora é um comando com corpo, discreto pelo
+ * tom e não pelo tamanho — o dedo continua a ter 48px onde acertar.
+ */
 .btn {
   display: block;
   width: 100%;
-  margin-top: 14px;
-  border-radius: 12px;
+  margin-top: 12px;
+  border-radius: var(--r-ctl);
   font-family: var(--font-ui);
-  font-size: 15px;
-  font-weight: 600;
-  min-height: 54px;
+  font-size: 17px;
+  font-weight: 700;
+  min-height: 56px;
   padding: 10px 16px;
-  border: 2px solid var(--line);
-  background: var(--card2);
+  border: 2px solid var(--line-forte);
+  background: transparent;
   color: var(--ink);
   cursor: pointer;
-  transition: transform .08s ease, background .15s ease;
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
 }
-.btn:hover { border-color: var(--ink-soft); }
-.btn:active { transform: scale(.985); }
+.btn:active { transform: scale(.985); background: var(--card2); }
 .btn:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
-.btn[disabled] { opacity: .45; cursor: default; }
-.btn[disabled]:active { transform: none; }
 
 .btn.principal {
   background: var(--green);
   border-color: var(--green);
   color: var(--sobre-verde);
-  font-weight: 700;
 }
-.btn.principal:hover { background: var(--green-dark); border-color: var(--green-dark); }
+.btn.principal:active { background: var(--green-dark); border-color: var(--green-dark); }
 
-.btn.cancelar { background: var(--red-soft); border-color: var(--red); color: #FFB4AE; }
-.btn.cancelar:hover { background: var(--red); color: #fff; }
+/* Cancelar e Corrigir desfazem uma intenção — não apagam nada. Estavam de
+   vermelho, a gritar tanto como o botão que apaga mesmo, e a seguir ao verde
+   o ecrã ficava aos semáforos. O vermelho passou a valer só para o que
+   destrói. Hoje é igual ao .btn simples — o mesmo papel, o mesmo aspecto. */
+.btn.cancelar { background: transparent; border-color: var(--line-forte); color: var(--ink); }
 
 .btn.perigo { background: var(--red); border-color: var(--red); color: #fff; }
-.btn.perigo:hover { background: #B71C1C; border-color: #B71C1C; }
+.btn.perigo:active { background: #B71C1C; border-color: #B71C1C; }
 
 .btn.ligacao {
-  background: transparent;
-  border: none;
+  background: var(--quiet);
+  border: 1px solid var(--line-forte);
   color: var(--ink-soft);
-  font-size: 13px;
-  font-weight: 500;
-  min-height: 38px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  font-size: 15px;
+  font-weight: 600;
+  min-height: 48px;
+  margin-top: 8px;
+  padding: 12px 14px;
+  text-decoration: none;
 }
+.btn.ligacao:active { background: var(--card2); color: var(--ink); }
+
+/* Apagar mora com as ligações — mesma forma, mesmo peso — e distingue-se só
+   pela cor. Continua a passar por uma confirmação antes de fazer alguma coisa. */
 .btn.apagar {
   background: transparent;
-  border: none;
+  border: 1px solid var(--red-linha);
   color: #FF8A80;
+  font-size: 15px;
+  font-weight: 600;
+  min-height: 48px;
+  margin-top: 8px;
+  padding: 12px 14px;
+  text-decoration: none;
+}
+.btn.apagar:active { background: var(--red-soft); border-color: var(--red); }
+
+/* Desactivado não pode ser "o mesmo a 45%": a opacidade apagava o verde e a
+   letra por igual, e o rótulo do Continuar ficava exactamente da cor do fundo
+   do próprio botão — ilegível, e ainda por cima verde, isto é, com ar de estar
+   pronto a carregar. Aqui perde a cor e ganha o tom de coisa inerte.
+   ⚠ Tem de vir DEPOIS das variantes e nomeá-las uma a uma: `.btn.principal`
+   tem a mesma especificidade que `.btn[disabled]`, por isso a regra que estiver
+   mais abaixo é a que pinta. Já aconteceu — o botão desligado voltou a verde. */
+.btn[disabled],
+.btn.principal[disabled],
+.btn.cancelar[disabled],
+.btn.perigo[disabled],
+.btn.ligacao[disabled],
+.btn.apagar[disabled] {
+  background: var(--card2);
+  border-color: var(--line);
+  color: var(--ink-soft);
+  cursor: default;
+}
+.btn[disabled]:active { transform: none; background: var(--card2); }
+
+/* ⚠ O rato não existe no campo, mas o :hover existe no Android: depois de um
+   toque o browser mantém o elemento em hover até se tocar noutro sítio. Sem
+   esta barreira, o último botão premido ficava aceso e um grupo que devia
+   ler-se como um bloco aparecia com um dos seus desirmanado. */
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover { border-color: var(--ink-soft); }
+  .btn.principal:hover { background: var(--green-dark); border-color: var(--green-dark); }
+  .btn.cancelar:hover { background: var(--card2); border-color: var(--ink-soft); }
+  .btn.perigo:hover { background: #B71C1C; border-color: #B71C1C; }
+  .btn.ligacao:hover { background: var(--card2); border-color: var(--ink-fraco); color: var(--ink); }
+  .btn.apagar:hover { background: var(--red-soft); border-color: var(--red); }
+  .btn[disabled]:hover { border-color: var(--line); }
+  .cartao:active { border-color: var(--green); background: var(--card2); }
+    .escolha-local:hover { border-color: var(--ink-soft); }
+}
+
+/* Os comandos do fundo do ecrã vivem juntos, debaixo de um fio. Três ligações
+   soltas com 40px de intervalo pareciam três decisões independentes; num bloco
+   só, lêem-se de uma vez e o ecrã acaba onde deve acabar.
+   O fio está no grupo e não no primeiro botão de propósito: o primeiro pode
+   estar [hidden] (o botão de administrador), e um fio preso a ele desapareceria
+   com ele. */
+.accoes {
+  display: grid;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.accoes > .btn { margin-top: 0; }
+
+/* Na busca o grupo não fecha o ecrã: por baixo dele ainda vem o histórico do
+   mês. O fio fica, mas mais perto, para não anunciar um fim que não é fim. */
+#ecraBusca .accoes { margin-top: 18px; padding-top: 14px; }
+
+/* O único .btn que não é uma faixa: vive dentro do aviso da busca, ao lado do
+   texto ("não subiu — tentar de novo"). O display/width vêm de um style inline
+   posto pelo JS (colheita/app.js), aqui só se acerta a forma. */
+#btnRetentar {
+  background: transparent;
+  border-color: currentColor;
+  color: inherit;
+  min-height: 34px;
+  padding: 4px 12px;
   font-size: 13px;
-  font-weight: 500;
-  min-height: 38px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  border-radius: 999px;
+  vertical-align: 1px;
 }
 
 /* ================= barra de contexto ================= */
@@ -286,7 +393,7 @@ details#blocoAdmin > input { width: calc(100% - 28px); margin-bottom: 14px; }
   gap: 12px;
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--r-card);
   padding: 12px 14px;
   margin-bottom: 12px;
   box-shadow: var(--shadow);
@@ -330,7 +437,7 @@ details#blocoAdmin > input { width: calc(100% - 28px); margin-bottom: 14px; }
   font-variant-numeric: tabular-nums;
 }
 .counter .lbl {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--ink-soft);
@@ -352,7 +459,7 @@ details#blocoAdmin > input { width: calc(100% - 28px); margin-bottom: 14px; }
 .readout {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--r-card);
   padding: 14px 16px;
   margin-bottom: 10px;
   box-shadow: var(--shadow);
@@ -381,7 +488,7 @@ input.mostrador {
   background: var(--panel);
   color: var(--digit);
   border: 2px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--r-card);
   font-family: var(--font-mono);
   font-size: 40px;
   font-weight: 700;
@@ -391,19 +498,19 @@ input.mostrador {
   caret-color: var(--digit);
 }
 input.mostrador:focus { box-shadow: none; }
-input.mostrador::placeholder { color: #46543A; font-weight: 400; }
+input.mostrador::placeholder { color: var(--ink-fraco); font-weight: 400; }
 
 /* a caixa grande da busca */
 input.busca {
   border: 2px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--r-card);
   font-family: var(--font-mono);
   font-size: 34px;
   font-weight: 700;
   text-align: center;
   padding: 16px 14px;
 }
-input.busca::placeholder { color: #5E6A52; font-weight: 400; }
+input.busca::placeholder { color: var(--ink-fraco); font-weight: 400; }
 
 /* ================= segmento kg / g ================= */
 .segmento {
@@ -411,27 +518,27 @@ input.busca::placeholder { color: #5E6A52; font-weight: 400; }
   grid-template-columns: 1fr 1fr;
   gap: 6px;
   background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  border: 1px solid var(--line-forte);
+  border-radius: var(--r-ctl);
   padding: 5px;
   margin-top: 10px;
 }
 .segmento button {
   background: transparent;
+  border-radius: var(--r-ctl);
   border: none;
   color: var(--ink-soft);
   font-family: var(--font-mono);
   font-size: 15px;
   font-weight: 600;
   min-height: 44px;
-  border-radius: 8px;
   cursor: pointer;
 }
 .segmento button.activo { background: var(--green); color: var(--sobre-verde); font-weight: 700; }
 
 /* ================= banners ================= */
 .banner {
-  border-radius: 12px;
+  border-radius: var(--r-ctl);
   padding: 12px 14px;
   font-size: 13.5px;
   line-height: 1.5;
@@ -443,7 +550,8 @@ input.busca::placeholder { color: #5E6A52; font-weight: 400; }
 .banner.error { background: var(--red-soft);   border-color: #7A2B28; color: #FFB4AE; }
 /* a ajuda fica ao lado da caixa de busca o tempo todo: mais apagada que as
    outras, para não competir com o número que se está a escrever */
-.banner.info  { background: #1B2A15; border-color: #33452A; color: #B8C8A6; }
+.banner.info  { background: transparent; border-color: transparent; color: var(--ink-soft);
+                font-size: 13px; padding: 6px 2px 0; margin-bottom: 10px; }
 .banner.ok {
   background: var(--green-soft);
   border-color: #3E8A2C;
@@ -459,12 +567,12 @@ input.busca::placeholder { color: #5E6A52; font-weight: 400; }
   gap: 1px;
   background: var(--line);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--r-card);
   overflow: hidden;
   margin-top: 14px;
 }
 .meta .cell { background: var(--card); padding: 11px 13px; }
-.meta .k { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+.meta .k { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
 .meta .v {
   font-family: var(--font-mono);
   font-size: 16px;
@@ -478,8 +586,8 @@ input.busca::placeholder { color: #5E6A52; font-weight: 400; }
   display: block;
   width: 100%;
   text-align: left;
-  border: 2px solid var(--line);
-  border-radius: 12px;
+  border: 2px solid var(--line-forte);
+  border-radius: var(--r-ctl);
   background: var(--card);
   font-family: var(--font-mono);
   font-size: 13px;
@@ -489,7 +597,7 @@ input.busca::placeholder { color: #5E6A52; font-weight: 400; }
   margin-bottom: 6px;
   white-space: pre-line;
 }
-.cartao:hover { border-color: var(--green); background: var(--card2); }
+.cartao:active { border-color: var(--green); background: var(--card2); }
 .cartao:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
 
 #listaCandidatos .cartao { min-height: 84px; padding: 14px 16px; }
@@ -498,7 +606,7 @@ input.busca::placeholder { color: #5E6A52; font-weight: 400; }
 /* registos de outra pessoa: cartão estático, sem toque */
 .histrow {
   border: 2px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--r-ctl);
   background: #191C14;
   padding: 10px 14px;
   margin-bottom: 6px;
@@ -524,8 +632,9 @@ input.busca::placeholder { color: #5E6A52; font-weight: 400; }
 }
 
 .empty {
-  border: 1px dashed var(--line);
-  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: var(--r-ctl);
   padding: 22px 14px;
   text-align: center;
   color: var(--ink-soft);
@@ -560,13 +669,14 @@ input.busca::placeholder { color: #5E6A52; font-weight: 400; }
   text-decoration: none;
   color: inherit;
   background: var(--card);
-  border: 2px solid var(--line);
-  border-radius: 14px;
+  border: 2px solid var(--line-forte);
+  border-radius: var(--r-card);
   box-shadow: var(--shadow);
   padding: 18px 16px;
   margin-top: 14px;
 }
-.cartao-menu:hover { border-color: var(--green); }
+.cartao-menu { border-color: var(--green-dark); }
+.cartao-menu .cartao-t { color: var(--green); }
 .cartao-menu:active { border-color: var(--green); transform: scale(.99); }
 .cartao-menu:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
 
@@ -597,6 +707,20 @@ input.busca::placeholder { color: #5E6A52; font-weight: 400; }
 
 /* O espaçamento largo é pensado para maiúsculas latinas; em japonês faz o
    texto parecer partido. Só se aplica quando o documento está em japonês. */
+html[lang="ja"] .login-head h1,
+html[lang="ja"] .cartao-menu .cartao-t { letter-spacing: 0; }
+/* O japonês respira mais do que o alfabeto latino: 1.22 corta as kanas ao meio. */
+html[lang="ja"] .login-head h1 { line-height: 1.45; }
+html[lang="ja"] .login-head p,
+html[lang="ja"] .cartao-menu .cartao-d { line-height: 1.75; }
+/* O IBM Plex Mono não tem katakana: "オフライン" caía noutra letra, e ainda por
+   cima em maiúsculas com entreletra larga. */
+html[lang="ja"] .appfoot {
+  font-family: var(--font-ui);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 html[lang="ja"] .eyebrow,
 html[lang="ja"] .topbar .who .month,
 html[lang="ja"] .counter .lbl,

@@ -752,7 +752,10 @@ function pintarAvisoEnvio() {
   if (!u) { el.hidden = true; return; }
 
   el.hidden = false;
-  el.className = 'aviso' + (u.erro ? ' erro' : '');
+  // "tudo subiu" estava a sair em âmbar, a cor dos avisos: uma boa notícia
+  // pintada de aviso faz olhar duas vezes para nada. Só o texto muda de
+  // sentido, a classe é que não mudava.
+  el.className = 'aviso ' + (u.erro ? 'erro' : 'ok');
   var quando = horaCurta(u.hora);
   el.textContent = u.erro
     ? t('rede.falhouAs', { hora: quando, motivo: traduzirErro(u.erro) })

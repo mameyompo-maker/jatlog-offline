@@ -6,6 +6,16 @@
 <meta name="theme-color" content="#12140f">
 <title>JatLog — Medições India</title>
 <link rel="manifest" href="../manifest.webmanifest">
+<!-- A mesma letra dos outros ecrãs. O Service Worker guarda as fontes numa cache
+     própria (jatlog-fontes), por isso sem rede continua a ler-se.
+     ⚠ O endereço tem de ser LETRA POR LETRA igual ao de ../index.html e
+     ../colheita/index.html — a cache é indexada pelo pedido, e um endereço só
+     com o Plex Sans seria outra entrada, que num telemóvel sem rede nunca
+     estaria lá. Daí pedir também o Mono, que aqui não se usa.
+     Se mesmo assim faltar, a folha de estilo cai para a letra do sistema. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <link rel="icon" href="../icon-192.png">
 <link rel="apple-touch-icon" href="../icon-192.png">
@@ -48,9 +58,11 @@
     <span class="minitexto" data-texto="descritores"></span>
   </button>
 
-  <button class="ligacao" id="ligProgresso" data-t="lev.progresso"></button>
-  <button class="ligacao" id="ligHistorico" data-t="lev.registos"></button>
-  <button class="ligacao" id="ligMenu" data-t="geral.menu"></button>
+  <div class="accoes">
+    <button class="ligacao" id="ligProgresso" data-t="lev.progresso"></button>
+    <button class="ligacao" id="ligHistorico" data-t="lev.registos"></button>
+    <button class="ligacao" id="ligMenu" data-t="geral.menu"></button>
+  </div>
 </section>
 
 <!-- ----------------------------------------------------------- 3. ronda ---- -->
@@ -65,7 +77,9 @@
   <div class="aviso" data-t="ronda.aviso"></div>
 
   <button class="btn" id="btnRonda" data-t="entrada.continuar"></button>
-  <button class="ligacao" data-voltar="ecraLevantamento" data-t="geral.voltar"></button>
+  <div class="accoes">
+    <button class="ligacao" data-voltar="ecraLevantamento" data-t="geral.voltar"></button>
+  </div>
 </section>
 
 <!-- ---------------------------------------------------------- 4. planta ----
@@ -125,8 +139,12 @@
 
   <div id="camposForm"></div>
 
-  <button class="ligacao" id="ligTrocarPlanta" data-t="geral.voltar"></button>
-  <button class="btn perigo" id="btnEliminar" data-t="form.eliminar" hidden></button>
+  <!-- A ordem é a de sempre: Voltar primeiro, Eliminar depois. Trocá-la punha o
+       botão destrutivo no sítio onde a mão já sabia encontrar o Voltar. -->
+  <div class="accoes">
+    <button class="ligacao" id="ligTrocarPlanta" data-t="geral.voltar"></button>
+    <button class="btn perigo" id="btnEliminar" data-t="form.eliminar" hidden></button>
+  </div>
 
   <div class="barraFundo">
     <button class="btn" id="btnEnviar"></button>
@@ -139,8 +157,10 @@
   <p class="sub" id="subProgresso"></p>
   <div id="totalProgresso"></div>
   <div id="listaFileiras"></div>
-  <button class="btn secundario" id="btnActualizarProgresso" data-t="prog.actualizar"></button>
-  <button class="ligacao" data-voltar="ecraLevantamento" data-t="geral.voltar"></button>
+  <div class="accoes">
+    <button class="btn secundario" id="btnActualizarProgresso" data-t="prog.actualizar"></button>
+    <button class="ligacao" data-voltar="ecraLevantamento" data-t="geral.voltar"></button>
+  </div>
 </section>
 
 <!-- -------------------------------------------------------- 7. histórico ---- -->
@@ -162,13 +182,15 @@
 
   <ul class="listaEnvios" id="listaHistorico"></ul>
 
-  <button class="btn secundario" id="btnForcarEnvio" data-t="hist.forcar"></button>
+  <div class="accoes">
+    <button class="btn secundario" id="btnForcarEnvio" data-t="hist.forcar"></button>
 
-  <!-- Porque falhou o último envio. Sem isto, uma fila que não sobe não diz
-       nada a quem está no campo — foi o que aconteceu a 13 de Agosto. -->
-  <div class="aviso" id="avisoEnvio" hidden></div>
+    <!-- Porque falhou o último envio. Sem isto, uma fila que não sobe não diz
+         nada a quem está no campo — foi o que aconteceu a 13 de Agosto. -->
+    <div class="aviso" id="avisoEnvio" hidden></div>
 
-  <button class="ligacao" data-voltar="ecraLevantamento" data-t="geral.voltar"></button>
+    <button class="ligacao" data-voltar="ecraLevantamento" data-t="geral.voltar"></button>
+  </div>
 </section>
 
 </main>
