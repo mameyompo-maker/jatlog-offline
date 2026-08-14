@@ -174,8 +174,8 @@ app = trocar(app, "try { navigator.serviceWorker.controller.postMessage({ tipo: 
 app = trocar(app, """function irParaEntrada() {
   $('inpNome').value = Def.get('nome', '');
   pintarAdmin();
-  reiniciarPilha();
   mostrar('ecraEntrada');
+  reiniciarPilha();
 }""", """/** Volta ao menu comum. O nome e o código ficam; a fila também. */
 function irParaMenu() {
   location.href = '../index.html';

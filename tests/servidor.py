@@ -220,10 +220,10 @@ def por_chave():
         if not r["estado"].startswith("OK"):
             continue
         # marcas da planta: ficam no log mas nao sao registos de levantamento
-        if r["accao"] in ("Planta morta", "Planta viva"):
+        if r["accao"] in ("Dead plant", "Live plant"):
             continue
         k = chave(r["mode"], r.get("ronda", ""), r["pid"])
-        if r["accao"] == "Eliminação":
+        if r["accao"] == "Deletion":
             out.pop(k, None)
             continue
         ja = out.get(k)
@@ -253,7 +253,7 @@ def aplicar_india(ent, admin):
             E["indiaMortas"].add(seq)
         else:
             E["indiaMortas"].discard(seq)
-        rotulo = "Planta morta" if pedida == "morta" else "Planta viva"
+        rotulo = "Dead plant" if pedida == "morta" else "Live plant"
         E["indiaUuids"].add(uid)
         E["india"].append(dict(ent, accao=rotulo, estado="OK"))
         return {"uuid": uid, "ok": True, "linha": 2 + seq,
@@ -261,20 +261,20 @@ def aplicar_india(ent, admin):
 
     anterior = por_chave().get(chave(modo, ronda, pid))
     eliminar = pedida == "eliminar"
-    accao = "Eliminação" if eliminar else ("Correcção" if anterior else "Registo")
+    accao = "Deletion" if eliminar else ("Correction" if anterior else "Record")
 
     if eliminar and not anterior:
         erro = "Não há nenhum registo desta planta para eliminar."
-        E["india"].append(dict(ent, accao="Eliminação", estado="ERRO: " + erro))
+        E["india"].append(dict(ent, accao="Deletion", estado="ERROR: " + erro))
         return {"uuid": uid, "ok": False, "erro": erro}
 
     # desde 2026-08-12 nao ha recusa por causa de quem registou
 
     if eliminar:
         E["indiaUuids"].add(uid)
-        E["india"].append(dict(ent, accao="Eliminação", estado="OK"))
+        E["india"].append(dict(ent, accao="Deletion", estado="OK"))
         return {"uuid": uid, "ok": True, "linha": 2 + seq,
-                "accao": "Eliminação", "celulas": []}
+                "accao": "Deletion", "celulas": []}
 
     chaves = COLS_CRESC if modo == "crescimento" else COLS_DESCR
     vals = ent.get("values", {})
@@ -346,7 +346,7 @@ class H(SimpleHTTPRequestHandler):
             with TRAVA:
                 E["india"].append({
                     "uuid": "semeado-1", "tsLocal": "01/08/2026 08:00:00",
-                    "recorder": q.get("quem", "Outra Pessoa"), "accao": "Registo",
+                    "recorder": q.get("quem", "Outra Pessoa"), "accao": "Record",
                     "mode": q.get("mode", "descritores"), "ronda": q.get("ronda", ""),
                     "pid": q.get("pid", "NBF(Tanheia)26-100"),
                     "values": {"limboFoliar": 9.9}, "estado": "OK",
