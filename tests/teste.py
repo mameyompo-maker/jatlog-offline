@@ -313,6 +313,56 @@ with sync_playwright() as p:
     check("G6 sair do administrador vale para os dois",
           "administrador" not in page.inner_text("#subMenu"), page.inner_text("#subMenu"))
 
+    # ============================================== I. codigo de activacao
+    # O codigo e confirmado no servidor logo na activacao. Sem isto, um codigo
+    # mal escrito so se nota quando os registos ja estao parados na fila --
+    # foi o que aconteceu a 13/08/2026 com treze registos.
+    print("\n[I] codigo de activacao")
+    page.evaluate("localStorage.removeItem('jat.token')")
+    page.goto(BASE + "/index.html", wait_until="load")
+    esperar_ecra(page, "ecraActivacao")
+
+    page.fill("#inpCodigo", "jatrofa")
+    page.click("#btnActivar")
+    time.sleep(1.5)
+    check("I1 codigo errado nao passa da activacao", ecra(page) == "ecraActivacao", ecra(page))
+    check("I2 e diz porque", visivel(page, "#avisoActivacao"))
+    check("I3 codigo errado nao fica guardado",
+          not page.evaluate("localStorage.getItem('jat.token')"),
+          page.evaluate("localStorage.getItem('jat.token')"))
+
+    # servidor em baixo nao e codigo errado: guarda-se e confirma-se depois
+    api("/__falhar?on=1")
+    page.fill("#inpCodigo", "jatropha")
+    page.click("#btnActivar")
+    check("I4 sem resposta do servidor deixa entrar na mesma",
+          esperar_ecra(page, "ecraEntrada"), ecra(page))
+    check("I5 e fica marcado por confirmar",
+          page.evaluate("localStorage.getItem('jat.tokenPorVerificar')") == "1")
+
+    api("/__falhar?on=0")
+    page.goto(BASE + "/index.html", wait_until="load")
+    time.sleep(2.0)
+    check("I6 com rede confirma-se sozinho",
+          not page.evaluate("localStorage.getItem('jat.tokenPorVerificar')"),
+          page.evaluate("localStorage.getItem('jat.tokenPorVerificar')"))
+
+    # um aparelho que ja anda com o codigo errado tem de ser apanhado no arranque
+    page.evaluate("localStorage.setItem('jat.token','jatrofa')")
+    page.goto(BASE + "/index.html", wait_until="load")
+    time.sleep(2.0)
+    check("I7 codigo errado ja guardado volta a pedir activacao",
+          ecra(page) == "ecraActivacao", ecra(page))
+    check("I8 e explica-se tambem ai", visivel(page, "#avisoActivacao"))
+
+    page.fill("#inpCodigo", "jatropha")
+    page.click("#btnActivar")
+    esperar_ecra(page, "ecraEntrada")
+    page.fill("#inpNome", "Op1")
+    page.click("#btnComecar")
+    check("I9 o codigo certo volta a deixar entrar",
+          esperar_ecra(page, "ecraMenu"), ecra(page))
+
     # ============================================== H. atalhos antigos
     print("\n[H] quem chega sem passar pela entrada")
     page.evaluate("localStorage.removeItem('jat.nome')")
@@ -330,9 +380,11 @@ with sync_playwright() as p:
           page.evaluate("location.pathname") == "/index.html",
           page.evaluate("location.pathname"))
 
-    # os erros de rede da fase sem rede (F) sao propositados
+    # os erros de rede sao propositados: da fase sem rede (F) e do servidor
+    # posto em baixo de proposito em (I)
     reais = [e for e in erros if "ERR_INTERNET_DISCONNECTED" not in e
-             and "Failed to fetch" not in e]
+             and "Failed to fetch" not in e
+             and "500 (Internal Server Error)" not in e]
     check("H3 sem erros de JavaScript", not reais, reais[:3])
 
     nav.close()

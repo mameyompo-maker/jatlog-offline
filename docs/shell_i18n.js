@@ -25,6 +25,10 @@ var TEXTOS = {
     'activacao.campo': 'Código de activação',
     'activacao.botao': 'Ativar',
     'activacao.falta': 'Digite o código de activação.',
+    'activacao.aVerificar': 'A confirmar o código com o servidor…',
+    'activacao.recusado': 'O servidor não aceita este código. Peça o código certo ao gestor — sem ele nada do que registrar consegue subir.',
+    'activacao.recusadoNum': 'O servidor de {modulos} não aceita este código. Peça o código certo ao gestor — os registros desse módulo não conseguem subir.',
+    'activacao.semRede': 'Sem ligação: o código ficou guardado, mas ainda não foi confirmado. Vai ser confirmado sozinho quando houver rede.',
 
     'entrada.titulo': 'Identifique-se',
     'entrada.texto': 'O nome fica guardado até você trocar de usuário, e vale para os dois registros.',
@@ -64,6 +68,10 @@ var TEXTOS = {
     'activacao.campo': 'Activation code',
     'activacao.botao': 'Activate',
     'activacao.falta': 'Enter the activation code.',
+    'activacao.aVerificar': 'Checking the code with the server…',
+    'activacao.recusado': 'The server does not accept this code. Ask your manager for the right one — without it nothing you record can be uploaded.',
+    'activacao.recusadoNum': 'The {modulos} server does not accept this code. Ask your manager for the right one — records from that module cannot be uploaded.',
+    'activacao.semRede': 'No connection: the code was saved but not confirmed yet. It will be confirmed by itself once there is network.',
 
     'entrada.titulo': 'Who are you?',
     'entrada.texto': 'Your name stays until you switch user, and it is used by both records.',
@@ -103,6 +111,10 @@ var TEXTOS = {
     'activacao.campo': 'アクティベーションコード',
     'activacao.botao': '有効にする',
     'activacao.falta': 'アクティベーションコードを入力してください。',
+    'activacao.aVerificar': 'サーバーでコードを確認しています…',
+    'activacao.recusado': 'このコードはサーバーに受け付けられません。正しいコードを管理者に確認してください。このままでは登録したものが一つも送信できません。',
+    'activacao.recusadoNum': '{modulos}のサーバーがこのコードを受け付けません。正しいコードを管理者に確認してください。この項目の登録は送信できません。',
+    'activacao.semRede': '圏外です。コードは保存しましたが、まだ確認できていません。電波が戻れば自動で確認します。',
 
     'entrada.titulo': '名前を入れてください',
     'entrada.texto': '名前はユーザーを切り替えるまで保持され、2つの登録の両方で使われます。',

@@ -213,6 +213,97 @@ function pedirGet(endpoint, params) {
     .then(function (r) { return r.json(); });
 }
 
+/* ------------------------------------------------- código de activação
+ *
+ * O código não é uma senha: é o que cada envio leva consigo. Se estiver mal
+ * escrito, a aplicação funciona toda — regista, guarda, mostra a fila — e o
+ * servidor recusa tudo em silêncio. Foi o que aconteceu a 13/08/2026: treze
+ * registos ficaram parados um dia inteiro por causa de uma letra.
+ *
+ * Por isso pergunta-se ao servidor logo na activação, e não só no primeiro
+ * envio. Usa-se 'action=admin' com a senha vazia porque é a única pergunta que
+ * os dois scripts respondem sem abrir a folha de cálculo: aqui só interessa
+ * saber se o código passou a porta, e a resposta é sempre {ok:false} quando não
+ * passou.
+ *
+ * Distinguir "código errado" de "servidor fora do ar" é o ponto delicado: um
+ * erro de HTTP ou uma resposta que não é JSON não dizem nada sobre o código, e
+ * tratá-los como recusa deixaria o aparelho preso no ecrã de activação sem
+ * motivo. Nesses casos devolve-se 'sem-resposta'.
+ */
+
+var MODULOS = [
+  { chave: 'colheita', endpoint: CFG_COLHEITA.ENDPOINT, nome: 'menu.colheita' },
+  { chave: 'india', endpoint: CFG_INDIA.ENDPOINT, nome: 'menu.india' }
+];
+
+function provarCodigo(endpoint, codigo) {
+  if (!endpoint) return Promise.resolve('aceite');
+  var url = endpoint + '?token=' + encodeURIComponent(codigo) + '&action=admin&pw=';
+  return fetch(url, { redirect: 'follow' })
+    .then(function (r) {
+      // avaria do servidor não é código errado: não sabemos, logo não julgamos
+      if (!r.ok) throw new Error('servidor ' + r.status);
+      return r.json();
+    })
+    .then(function (j) { return (j && j.ok) ? 'aceite' : 'recusado'; });
+}
+
+/**
+ * Pergunta aos dois scripts. Devolve {estado, modulos} onde estado é
+ * 'aceite' | 'recusado' | 'sem-resposta'. Basta um recusar para ser recusa:
+ * um código que só serve metade da aplicação deixa a outra metade a acumular
+ * registos que nunca sobem — exactamente o que se quer evitar.
+ */
+function verificarCodigo(codigo) {
+  return Promise.all(MODULOS.map(function (m) {
+    return provarCodigo(m.endpoint, codigo)
+      .catch(function () { return 'sem-resposta'; })
+      .then(function (r) { return { modulo: m, resultado: r }; });
+  })).then(function (rs) {
+    var maus = rs.filter(function (r) { return r.resultado === 'recusado'; });
+    var mudos = rs.filter(function (r) { return r.resultado === 'sem-resposta'; });
+    if (maus.length) {
+      return {
+        estado: 'recusado',
+        todos: maus.length === rs.length,
+        modulos: maus.map(function (r) { return t(r.modulo.nome); }).join(' / ')
+      };
+    }
+    if (mudos.length) return { estado: 'sem-resposta' };
+    return { estado: 'aceite' };
+  });
+}
+
+function textoRecusa(r) {
+  return r.todos ? t('activacao.recusado') : t('activacao.recusadoNum', { modulos: r.modulos });
+}
+
+function guardarCodigo(codigo, porConfirmar) {
+  Def.set('token', codigo);
+  if (porConfirmar) Def.set('tokenPorVerificar', '1');
+  else Def.del('tokenPorVerificar');
+  guardarConfigParaOSW();
+}
+
+/**
+ * Confirma em segundo plano o código já guardado, a cada arranque da entrada.
+ * Corre também nos aparelhos activados antes desta verificação existir — são
+ * precisamente os que podem ter um código errado sem ninguém saber. Só se age
+ * quando o servidor recusa mesmo; sem rede fica para a próxima vez.
+ */
+function confirmarCodigoGuardado() {
+  var codigo = Def.get('token', '');
+  if (!codigo) return;
+  verificarCodigo(codigo).then(function (r) {
+    if (r.estado === 'aceite') { Def.del('tokenPorVerificar'); return; }
+    if (r.estado !== 'recusado') return;
+    Def.set('tokenPorVerificar', '1');
+    irParaActivacao();
+    aviso('avisoActivacao', textoRecusa(r));
+  }).catch(function () {});
+}
+
 /**
  * A senha é a mesma nos dois scripts, mas cada um tem a sua propriedade. Basta
  * um deles reconhecer para se entrar em modo administrador — o outro decide
@@ -232,6 +323,8 @@ function verificarAdmin(pw) {
 
 function irParaActivacao() {
   aviso('avisoActivacao', '');
+  $('estadoActivacao').hidden = true;
+  $('btnActivar').disabled = false;
   $('inpCodigo').value = '';
   mostrar('ecraActivacao');
   setTimeout(function () { $('inpCodigo').focus(); }, 150);
@@ -317,12 +410,27 @@ function entrar() {
 
 function ligarEventos() {
   $('btnActivar').onclick = function () {
+    var botao = $('btnActivar');
+    if (botao.disabled) return;
     var v = $('inpCodigo').value.trim();
     if (!v) { aviso('avisoActivacao', t('activacao.falta')); return; }
-    Def.set('token', v);
-    guardarConfigParaOSW();
+
     aviso('avisoActivacao', '');
-    irParaEntrada();
+    $('estadoActivacao').hidden = false;
+    botao.disabled = true;
+
+    verificarCodigo(v).then(function (r) {
+      botao.disabled = false;
+      $('estadoActivacao').hidden = true;
+
+      // um código recusado não se guarda: o aparelho não sai daqui
+      if (r.estado === 'recusado') { aviso('avisoActivacao', textoRecusa(r)); return; }
+
+      // sem resposta guarda-se na mesma — ninguém fica parado por falta de rede
+      guardarCodigo(v, r.estado !== 'aceite');
+      if (r.estado !== 'aceite') brinde(t('activacao.semRede'), true);
+      irParaEntrada();
+    });
   };
   $('inpCodigo').onkeydown = function (e) { if (e.key === 'Enter') $('btnActivar').click(); };
 
@@ -338,6 +446,7 @@ function ligarEventos() {
   $('btnDesactivar').onclick = function () {
     if (!confirm(t('menu.confirmarDesactivar'))) return;
     Def.del('token');
+    Def.del('tokenPorVerificar');
     guardarConfigParaOSW();
     irParaActivacao();
   };
@@ -360,8 +469,12 @@ function arrancar() {
   guardarConfigParaOSW();
 
   if (!Def.get('token', '')) { irParaActivacao(); return; }
-  if (!S.nome) { irParaEntrada(); return; }
-  irParaMenu();
+
+  if (!S.nome) irParaEntrada();
+  else irParaMenu();
+
+  // não trava o arranque: se o servidor recusar, o ecrã muda sozinho a seguir
+  confirmarCodigoGuardado();
 }
 
 /* O Service Worker é um só para a aplicação toda (âmbito './'), por isso
