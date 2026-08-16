@@ -62,7 +62,7 @@ var TEXTOS = {
     'lev.contagemPc': '{n} de {total} plantas ({pc}%)',
     // REMOVER-RAMOS-TEMP
     'lev.ramos': 'Só ramos (temporário)',
-    'ramos.aviso': 'Escolha a mesma ronda que já tem altura e copa. Só o n.º de ramos é gravado — os outros campos ficam como estão.',
+    'ramos.aviso': 'Escolha exactamente a mesma ronda que já tem altura e copa gravadas. Só o n.º de ramos é gravado — os outros campos ficam como estão. Se o nome não bater certo com o que já está na folha, cria-se um bloco de colunas novo só para o Branch, separado da medição antiga.',
 
     'ronda.titulo': 'Ronda do levantamento',
     'ronda.texto': 'Identifica esta campanha de medição. Fica gravado no aparelho — só precisa de mudar quando começar uma ronda nova.',
@@ -286,7 +286,7 @@ var TEXTOS = {
     'lev.contagemPc': '{n} of {total} plants ({pc}%)',
     // REMOVER-RAMOS-TEMP
     'lev.ramos': 'Branches only (temporary)',
-    'ramos.aviso': 'Pick the same round that already has height and canopy. Only the branch count gets saved — the other fields are left as they are.',
+    'ramos.aviso': 'Pick the exact same round that already has height and canopy recorded. Only the branch count gets saved — the other fields are left as they are. If the name does not match what is already in the sheet, a new block of columns gets created just for the Branch value, separate from the earlier measurement.',
 
     'ronda.titulo': 'Survey round',
     'ronda.texto': 'This names the measurement campaign. It stays on the phone — you only change it when a new round starts.',
@@ -506,7 +506,7 @@ var TEXTOS = {
     'lev.contagemPc': '{total} 株中 {n} 株({pc}%)',
     // REMOVER-RAMOS-TEMP
     'lev.ramos': '枝数だけ(一時的)',
-    'ramos.aviso': '樹高・樹冠がすでに記録されている回を選んでください。保存されるのは枝の数だけで、他の項目はそのままです。',
+    'ramos.aviso': '樹高・樹冠がすでに記録されている回と、まったく同じ名前を選んでください。保存されるのは枝の数だけで、他の項目はそのままです。名前がシート上の表記と一致しないと、その測定とは別に、枝の数だけのための新しい列のかたまりが作られてしまいます。',
 
     'ronda.titulo': '調査回',
     'ronda.texto': 'この測定キャンペーンの名前です。端末に保存されるので、新しい調査回を始めるときだけ変えてください。',

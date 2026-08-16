@@ -154,6 +154,16 @@ function tituloLev(modo) {
   if (modo === 'crescimento' && S.somenteRamos) return t('lev.ramos');
   return t('lev.' + modo);
 }
+// REMOVER-RAMOS-TEMP: só se escreve na coluna do Branch, não no bloco todo
+function colunasDe(modo) {
+  return (modo === 'crescimento' && S.somenteRamos) ? 'J' : LEVANTAMENTOS[modo].colunas;
+}
+/* REMOVER-RAMOS-TEMP: o aviso da ronda fala em "sete colunas novas", que não
+ * bate com um formulário que só grava o Branch numa ronda já existente. */
+function pintarAvisoRonda() {
+  var el = $('avisoRonda');
+  if (el) el.textContent = S.somenteRamos ? t('ramos.aviso') : t('ronda.aviso');
+}
 function rotuloCampo(c) { return t('campo.' + c.chave); }
 function rotuloOpcao(tipo, chave) { return t((tipo === 'cor' ? 'cor.' : 'habito.') + chave); }
 
@@ -364,10 +374,11 @@ function redesenharEcra() {
     var bruto = campo.dataset.bruto || '';
     if (bruto) campo.value = nomeRonda(bruto);
     desenharRondasConhecidas();
+    pintarAvisoRonda();   // REMOVER-RAMOS-TEMP
   }
   if (S.ecra === 'ecraPlanta') {
     $('subPlanta').textContent = t('planta.sub', {
-      titulo: tituloLev(S.modo), colunas: LEVANTAMENTOS[S.modo].colunas
+      titulo: tituloLev(S.modo), colunas: colunasDe(S.modo)
     });
     desenharFileiras();
     resolverPlanta();
@@ -2089,9 +2100,7 @@ function irParaLevantamento() {
 
 function abrirEcraPlanta() {
   $('subPlanta').textContent = t('planta.sub', {
-    titulo: tituloLev(S.modo),
-    // REMOVER-RAMOS-TEMP: só se escreve na coluna do Branch, não no bloco todo
-    colunas: (S.modo === 'crescimento' && S.somenteRamos) ? 'J' : LEVANTAMENTOS[S.modo].colunas
+    titulo: tituloLev(S.modo), colunas: colunasDe(S.modo)
   });
   desenharFileiras();
   resolverPlanta();
@@ -2181,6 +2190,7 @@ function ligarEventos() {
           $('inpRonda').value = nomeRonda(Def.get('ronda', ''));
           $('inpRonda').dataset.bruto = Def.get('ronda', '');
           desenharRondasConhecidas();
+          pintarAvisoRonda();   // REMOVER-RAMOS-TEMP
           mostrar('ecraRonda');
         } else {
           abrirEcraPlanta();
@@ -2202,8 +2212,8 @@ function ligarEventos() {
     $('inpRonda').value = nomeRonda(Def.get('ronda', ''));
     $('inpRonda').dataset.bruto = Def.get('ronda', '');
     desenharRondasConhecidas();
+    pintarAvisoRonda();   // REMOVER-RAMOS-TEMP: substitui o aviso "7 colunas novas"
     mostrar('ecraRonda');
-    brinde(t('ramos.aviso'));
   };
 
   $('btnRonda').onclick = function () {

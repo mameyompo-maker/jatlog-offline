@@ -79,7 +79,10 @@
   <input type="text" id="inpRonda" autocomplete="off" data-tph="ronda.exemplo">
   <div id="rondasConhecidas"></div>
 
-  <div class="aviso" data-t="ronda.aviso"></div>
+  <!-- REMOVER-RAMOS-TEMP: no modo "só ramos" o texto muda (pintarAvisoRonda) —
+       o aviso normal fala em "7 colunas novas", que não bate com um formulário
+       que só grava o Branch. -->
+  <div class="aviso" id="avisoRonda" data-t="ronda.aviso"></div>
 
   <button class="btn" id="btnRonda" data-t="entrada.continuar"></button>
   <div class="accoes">

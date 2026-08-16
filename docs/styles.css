@@ -199,6 +199,10 @@ input[type="text"], input[type="password"], select {
   font-size: 17px;
   min-height: 56px;
   padding: 12px 14px;
+  /* Sem isto o texto fica encostado ao topo da caixa (a caixa é mais alta
+     que uma linha e o input não centra sozinho) — mesma correcção do
+     india/styles.css: 56 − 2×borda(2px) − 2×padding vertical(12px) = 28px. */
+  line-height: 28px;
   color: var(--ink);
   appearance: none;
   -webkit-appearance: none;

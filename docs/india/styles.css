@@ -165,6 +165,11 @@ input[type="text"], input[type="number"] {
   width: 100%;
   min-height: var(--toque);
   padding: 12px 14px;
+  /* Um input não centra o texto sozinho quando a caixa é mais alta que uma
+     linha — fica encostado ao topo (visto no ecrã da planta, ficava tudo
+     junto à borda de cima). A altura da linha tem de igualar o miolo da
+     caixa: toque − 2×borda(2px) − 2×padding vertical(12px) = toque − 28px. */
+  line-height: calc(var(--toque) - 28px);
   font-size: 19px;
   color: var(--txt);
   background: var(--painel);
