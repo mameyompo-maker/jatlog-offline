@@ -60,6 +60,9 @@ var TEXTOS = {
     'lev.semProgresso': 'Progresso ainda não carregado',
     'lev.contagem': '{n} de {total} plantas',
     'lev.contagemPc': '{n} de {total} plantas ({pc}%)',
+    // REMOVER-RAMOS-TEMP
+    'lev.ramos': 'Só ramos (temporário)',
+    'ramos.aviso': 'Escolha a mesma ronda que já tem altura e copa. Só o n.º de ramos é gravado — os outros campos ficam como estão.',
 
     'ronda.titulo': 'Ronda do levantamento',
     'ronda.texto': 'Identifica esta campanha de medição. Fica gravado no aparelho — só precisa de mudar quando começar uma ronda nova.',
@@ -177,6 +180,7 @@ var TEXTOS = {
 
     'grupo.porte': 'Porte da planta',
     'grupo.cachos': 'Cachos',
+    'grupo.ramos': 'Ramos',   // REMOVER-RAMOS-TEMP
     'grupo.habito': 'Hábito',
     'grupo.folha': 'Folha',
     'grupo.cores': 'Cores',
@@ -280,6 +284,9 @@ var TEXTOS = {
     'lev.semProgresso': 'Progress not loaded yet',
     'lev.contagem': '{n} of {total} plants',
     'lev.contagemPc': '{n} of {total} plants ({pc}%)',
+    // REMOVER-RAMOS-TEMP
+    'lev.ramos': 'Branches only (temporary)',
+    'ramos.aviso': 'Pick the same round that already has height and canopy. Only the branch count gets saved — the other fields are left as they are.',
 
     'ronda.titulo': 'Survey round',
     'ronda.texto': 'This names the measurement campaign. It stays on the phone — you only change it when a new round starts.',
@@ -397,6 +404,7 @@ var TEXTOS = {
 
     'grupo.porte': 'Plant stature',
     'grupo.cachos': 'Clusters',
+    'grupo.ramos': 'Branches',   // REMOVER-RAMOS-TEMP
     'grupo.habito': 'Habit',
     'grupo.folha': 'Leaf',
     'grupo.cores': 'Colours',
@@ -496,6 +504,9 @@ var TEXTOS = {
     'lev.semProgresso': '進捗はまだ読み込まれていません',
     'lev.contagem': '{total} 株中 {n} 株',
     'lev.contagemPc': '{total} 株中 {n} 株({pc}%)',
+    // REMOVER-RAMOS-TEMP
+    'lev.ramos': '枝数だけ(一時的)',
+    'ramos.aviso': '樹高・樹冠がすでに記録されている回を選んでください。保存されるのは枝の数だけで、他の項目はそのままです。',
 
     'ronda.titulo': '調査回',
     'ronda.texto': 'この測定キャンペーンの名前です。端末に保存されるので、新しい調査回を始めるときだけ変えてください。',
@@ -613,6 +624,7 @@ var TEXTOS = {
 
     'grupo.porte': '樹形',
     'grupo.cachos': '花房・果房',
+    'grupo.ramos': '枝数',   // REMOVER-RAMOS-TEMP
     'grupo.habito': '生育型',
     'grupo.folha': '葉',
     'grupo.cores': '色',

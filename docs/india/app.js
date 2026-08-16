@@ -149,7 +149,11 @@ var OBJECTOS = {
   ]
 };
 
-function tituloLev(modo) { return t('lev.' + modo); }
+function tituloLev(modo) {
+  // REMOVER-RAMOS-TEMP
+  if (modo === 'crescimento' && S.somenteRamos) return t('lev.ramos');
+  return t('lev.' + modo);
+}
 function rotuloCampo(c) { return t('campo.' + c.chave); }
 function rotuloOpcao(tipo, chave) { return t((tipo === 'cor' ? 'cor.' : 'habito.') + chave); }
 
@@ -232,6 +236,13 @@ function camposDe(modo) {
   LEVANTAMENTOS[modo].grupos.forEach(function (g) {
     g.campos.forEach(function (c) { out.push(c); });
   });
+  /* REMOVER-RAMOS-TEMP: no modo "só ramos" o formulário, a validação e a
+   * gravação têm todos de ver só este campo — é isto que impede que
+   * alturaPlanta/cnp1/cnp2/cachos* sejam gravados a 0 por omissão (ver
+   * gravarRegisto). */
+  if (modo === 'crescimento' && S.somenteRamos) {
+    out = out.filter(function (c) { return c.chave === 'ramos'; });
+  }
   return out;
 }
 
@@ -258,6 +269,12 @@ var S = {
   digitosAuto: false,
   planta: null,
   modo: null,
+  /* REMOVER-RAMOS-TEMP (2026-08-16): modo temporário "só ramos", para
+   * preencher o Branch de uma ronda de crescimento que já foi medida sem
+   * ele. Usa o mesmo modo 'crescimento' e a mesma ronda — só restringe o
+   * formulário a um campo. Ver os pontos marcados REMOVER-RAMOS-TEMP para
+   * tirar tudo de uma vez quando deixar de ser preciso. */
+  somenteRamos: false,
   valores: {},
   notas: '',           // observação livre do registo que está aberto
   edicao: null,        // {uuid, recorder} quando se está a corrigir um registo
@@ -1310,7 +1327,13 @@ function desenharFormulario() {
     av.hidden = true;
   }
 
-  lev.grupos.forEach(function (g) {
+  /* REMOVER-RAMOS-TEMP: no modo "só ramos" mostra-se só este campo, em vez
+   * dos grupos todos do crescimento (porte/cachos). */
+  var grupos = (S.modo === 'crescimento' && S.somenteRamos)
+    ? [{ chave: 'ramos', campos: camposDe(S.modo) }]
+    : lev.grupos;
+
+  grupos.forEach(function (g) {
     var box = document.createElement('div');
     box.className = 'grupo';
     box.innerHTML = '<h3>' + esc(t('grupo.' + g.chave)) + '</h3>';
@@ -1340,8 +1363,12 @@ function desenharFormulario() {
   /* Eliminar faz sentido para tudo o que já esteja na folha ou na fila deste
    * aparelho. Até 2026-08-12 o botão dependia do progresso já ter chegado do
    * servidor, e por isso desaparecia quando se abria um registo pelo
-   * histórico — que é justamente onde as pessoas o iam procurar. */
-  $('btnEliminar').hidden = !(S.edicao || S.feitas[S.planta.seq]);
+   * histórico — que é justamente onde as pessoas o iam procurar.
+   * REMOVER-RAMOS-TEMP: eliminar apaga o BLOCO INTEIRO da ronda (altura,
+   * copa, ramos, cachos) — no modo "só ramos" isso destruiria a medição
+   * antiga que já lá estava. Corrigir é sempre gravar outra vez por cima
+   * (só toca na coluna do Branch), nunca eliminar. */
+  $('btnEliminar').hidden = S.somenteRamos || !(S.edicao || S.feitas[S.planta.seq]);
 }
 
 /**
@@ -1658,7 +1685,11 @@ function gravarRegisto() {
    * lá a dizer que foi medida. Vai pela mesma fila, logo também funciona sem
    * rede — e a ordem interessa: primeiro grava-se no sítio certo. */
   var antigo = S.alvoOriginal;
-  var mudou = antigo && antigo.tinhaRegisto && antigo.planta.seq !== reg.seq;
+  /* REMOVER-RAMOS-TEMP: esta limpeza apaga o bloco da ronda inteiro (ver
+   * pedidoEliminar). No modo "só ramos" quase todas as plantas já têm
+   * registo — trocar de planta a meio apagaria a medição antiga da planta
+   * aberta primeiro, mesmo sem se lhe ter tocado. Nunca acontece aqui. */
+  var mudou = !S.somenteRamos && antigo && antigo.tinhaRegisto && antigo.planta.seq !== reg.seq;
   if (mudou && !S.trocouAlvo) mudou = false;   // só depois de se ter trocado a planta de propósito
 
   return DB.guardar(reg).then(function () {
@@ -1989,6 +2020,20 @@ function itemHistorico(o) {
 function prepararEdicao(modo, ronda, planta, valores, dono, uuidOriginal, notas) {
   S.modo = modo;
   if (modo === 'crescimento' && ronda) Def.set('ronda', ronda);
+  /* REMOVER-RAMOS-TEMP: um registo gravado no modo "só ramos" só tem a
+   * chave 'ramos' em values (ver gravarRegisto). Reabri-lo aqui pelo
+   * histórico, no formulário inteiro, e gravar sem tocar nos outros campos
+   * gravava-os a 0 por cima da medição antiga — isto detecta esse formato e
+   * volta ao mesmo formulário restrito com que foi gravado.
+   * ⚠ Isto é um "OU" com o que já estava em S.somenteRamos, nunca uma
+   * substituição: dentro da sessão "só ramos", QUALQUER planta que já
+   * tenha o registo completo de altura/copa (quase todas, é o ponto de
+   * partida) passa por aqui a corrigir — se se sobrescrevesse a bandeira
+   * a false, o formulário inteiro reaparecia e a gravação voltava a
+   * escrever 0 por cima da medição antiga. */
+  var pareceSoRamos = modo === 'crescimento' && !!valores && valores.ramos !== undefined &&
+    Object.keys(valores).every(function (k) { return k === 'ramos'; });
+  S.somenteRamos = S.somenteRamos || pareceSoRamos;
   S.planta = planta;
   S.fileira = planta.row;
   S.digitos = String(planta.noFileira);
@@ -2044,7 +2089,9 @@ function irParaLevantamento() {
 
 function abrirEcraPlanta() {
   $('subPlanta').textContent = t('planta.sub', {
-    titulo: tituloLev(S.modo), colunas: LEVANTAMENTOS[S.modo].colunas
+    titulo: tituloLev(S.modo),
+    // REMOVER-RAMOS-TEMP: só se escreve na coluna do Branch, não no bloco todo
+    colunas: (S.modo === 'crescimento' && S.somenteRamos) ? 'J' : LEVANTAMENTOS[S.modo].colunas
   });
   desenharFileiras();
   resolverPlanta();
@@ -2129,6 +2176,7 @@ function ligarEventos() {
         S.modo = b.getAttribute('data-modo');
         S.digitos = '';
         S.edicao = null;
+        S.somenteRamos = false;   // REMOVER-RAMOS-TEMP: sai do modo restrito ao escolher um levantamento normal
         if (S.modo === 'crescimento') {
           $('inpRonda').value = nomeRonda(Def.get('ronda', ''));
           $('inpRonda').dataset.bruto = Def.get('ronda', '');
@@ -2140,6 +2188,23 @@ function ligarEventos() {
       };
     })(cartoes[i]);
   }
+
+  /* REMOVER-RAMOS-TEMP: entrada do modo temporário. Usa a mesma ronda e a
+   * mesma tela de escolha de planta do crescimento — só o formulário fica
+   * restrito a 'ramos' (ver camposDe/desenharFormulario). Escolher aqui a
+   * MESMA ronda que já tem altura/copa gravadas é o que faz o Branch cair
+   * na coluna certa; ver colunaBlocoRonda_ no Codigo.gs. */
+  $('ligSomenteRamos').onclick = function () {
+    S.modo = 'crescimento';
+    S.somenteRamos = true;
+    S.digitos = '';
+    S.edicao = null;
+    $('inpRonda').value = nomeRonda(Def.get('ronda', ''));
+    $('inpRonda').dataset.bruto = Def.get('ronda', '');
+    desenharRondasConhecidas();
+    mostrar('ecraRonda');
+    brinde(t('ramos.aviso'));
+  };
 
   $('btnRonda').onclick = function () {
     var campo = $('inpRonda');

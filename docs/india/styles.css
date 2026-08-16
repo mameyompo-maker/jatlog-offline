@@ -366,6 +366,9 @@ textarea:focus { outline: none; border-color: var(--acento); }
 
 #visorNumero {
   flex: 0 0 34%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 6px 10px;
   text-align: center;
   font-size: 32px;
@@ -382,9 +385,6 @@ textarea:focus { outline: none; border-color: var(--acento); }
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .teclado {

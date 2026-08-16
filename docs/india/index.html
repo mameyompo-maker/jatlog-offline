@@ -58,6 +58,11 @@
     <span class="minitexto" data-texto="descritores"></span>
   </button>
 
+  <!-- REMOVER-RAMOS-TEMP (2026-08-16): modo temporário para preencher só o
+       Branch de uma ronda já medida. Ver os pontos marcados
+       REMOVER-RAMOS-TEMP em app.js e i18n.js para tirar tudo. -->
+  <button class="ligacao" id="ligSomenteRamos" data-t="lev.ramos"></button>
+
   <div class="accoes">
     <button class="ligacao" id="ligProgresso" data-t="lev.progresso"></button>
     <button class="ligacao" id="ligHistorico" data-t="lev.registos"></button>
@@ -92,8 +97,6 @@
 
   <div class="grelhaFileiras" id="grelhaFileiras"></div>
 
-  <div id="resolvidoPlanta" hidden></div>
-
   <div class="linhaNumero">
     <div id="visorNumero" class="vazio">—</div>
     <!-- Caso raro: fica de lado e pequeno para não roubar o sítio ao que se
@@ -112,6 +115,11 @@
     <button data-tecla="0">0</button>
     <button class="aux" data-tecla="apagar">←</button>
   </div>
+
+  <!-- Depois do teclado, não antes: se aparecesse aqui empurrava o número e o
+       teclado para baixo mal se carregasse na fileira, e quem já tinha o
+       polegar no sítio certo passava a acertar ao lado. -->
+  <div id="resolvidoPlanta" hidden></div>
 
   <div class="barraFundo">
     <button class="btn" id="btnPlanta" data-t="entrada.continuar" disabled></button>
