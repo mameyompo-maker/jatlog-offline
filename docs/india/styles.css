@@ -280,9 +280,13 @@ input.invalido { border-color: var(--erro); }
   background: transparent;
   border-color: var(--linha-forte);
 }
+/* Quando a planta em vista está marcada morta, este botão é a forma de
+   corrigir isso ali mesmo — por isso fica cheio e vermelho, não só com o
+   texto colorido: é a acção óbvia deste ecrã, não mais um botão discreto. */
 .ligacao.discreta.activo {
-  color: var(--aviso);
-  border-color: var(--aviso);
+  color: #ffb4ae;
+  background: #4a1414;
+  border-color: var(--erro);
   font-weight: 700;
 }
 
@@ -467,9 +471,12 @@ textarea:focus { outline: none; border-color: var(--acento); }
   white-space: nowrap;
 }
 .jaFeita { display: block; margin-top: 8px; color: var(--acento); font-size: 13px; }
-/* A planta morta bloqueia o Continuar (ver resolverPlanta) — por isso é um
-   aviso a sério, não uma etiqueta pequena como antes. */
-.mortaBloqueio { margin: 8px 0 0; }
+/* Morta tem de saltar à vista, bem diferente de uma planta normal ou já
+   feita: título grande a preencher a largura, não uma linha de texto ao
+   lado de um cabeçalho em tudo o resto igual. */
+.mortaBloqueio { margin: 8px 0 0; padding: 12px 14px; }
+.mortaTitulo { display: block; font-size: 17px; font-weight: 800; }
+.mortaBloqueio p { margin: 6px 0 0; font-size: 13px; line-height: 1.4; }
 
 /* Cabeçalho do formulário: é um botão, para se acertar a planta sem voltar. */
 .cabecalhoPlanta {

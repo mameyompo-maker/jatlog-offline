@@ -165,20 +165,11 @@ var OBJECTOS = {
   ]
 };
 
-function tituloLev(modo) {
-  // REMOVER-RAMOS-TEMP
-  if (modo === 'crescimento' && S.somenteRamos) return t('lev.ramos');
-  return t('lev.' + modo);
-}
-// REMOVER-RAMOS-TEMP: só se escreve na coluna do Branch, não no bloco todo
-function colunasDe(modo) {
-  return (modo === 'crescimento' && S.somenteRamos) ? 'J' : LEVANTAMENTOS[modo].colunas;
-}
-/* REMOVER-RAMOS-TEMP: o aviso da ronda fala em "sete colunas novas", que não
- * bate com um formulário que só grava o Branch numa ronda já existente. */
+function tituloLev(modo) { return t('lev.' + modo); }
+function colunasDe(modo) { return LEVANTAMENTOS[modo].colunas; }
 function pintarAvisoRonda() {
   var el = $('avisoRonda');
-  if (el) el.textContent = S.somenteRamos ? t('ramos.aviso') : t('ronda.aviso');
+  if (el) el.textContent = t('ronda.aviso');
 }
 function rotuloCampo(c) { return t('campo.' + c.chave); }
 function rotuloOpcao(tipo, chave) { return t((tipo === 'cor' ? 'cor.' : 'habito.') + chave); }
@@ -262,13 +253,6 @@ function camposDe(modo) {
   LEVANTAMENTOS[modo].grupos.forEach(function (g) {
     g.campos.forEach(function (c) { out.push(c); });
   });
-  /* REMOVER-RAMOS-TEMP: no modo "só ramos" o formulário, a validação e a
-   * gravação têm todos de ver só este campo — é isto que impede que
-   * alturaPlanta/cnp1/cnp2/cachos* sejam gravados a 0 por omissão (ver
-   * gravarRegisto). */
-  if (modo === 'crescimento' && S.somenteRamos) {
-    out = out.filter(function (c) { return c.chave === 'ramos'; });
-  }
   return out;
 }
 
@@ -295,12 +279,6 @@ var S = {
   digitosAuto: false,
   planta: null,
   modo: null,
-  /* REMOVER-RAMOS-TEMP (2026-08-16): modo temporário "só ramos", para
-   * preencher o Branch de uma ronda de crescimento que já foi medida sem
-   * ele. Usa o mesmo modo 'crescimento' e a mesma ronda — só restringe o
-   * formulário a um campo. Ver os pontos marcados REMOVER-RAMOS-TEMP para
-   * tirar tudo de uma vez quando deixar de ser preciso. */
-  somenteRamos: false,
   valores: {},
   notas: '',           // observação livre do registo que está aberto
   edicao: null,        // {uuid, recorder} quando se está a corrigir um registo
@@ -390,7 +368,7 @@ function redesenharEcra() {
     var bruto = campo.dataset.bruto || '';
     if (bruto) campo.value = nomeRonda(bruto);
     desenharRondasConhecidas();
-    pintarAvisoRonda();   // REMOVER-RAMOS-TEMP
+    pintarAvisoRonda();
   }
   if (S.ecra === 'ecraPlanta') {
     $('subPlanta').textContent = t('planta.sub', {
@@ -1170,12 +1148,13 @@ function resolverPlanta() {
   }
 
   S.planta = p;
-  cx.className = '';
+  cx.className = S.mortas[p.seq] ? 'erro' : '';
   cx.innerHTML = cartaoPlanta(p);
-  /* Uma planta morta não se mede: bloqueia o Continuar até se desmarcar
-   * (botão "Já morta — desmarcar" ao lado do número). Sem isto a marca de
-   * morta era só um aviso e dava para escrever medidas por cima na mesma. */
-  $('btnPlanta').disabled = !!S.mortas[p.seq];
+  /* Uma planta morta não se mede — o Continuar fica sempre activo e, ao
+   * carregar-lhe, salta o formulário e vai direito à seguinte da fileira
+   * (ver btnPlanta.onclick). Bloqueá-lo tornava o ecrã num beco sem saída
+   * para quem só queria confirmar e avançar. */
+  $('btnPlanta').disabled = false;
   pintarBotaoMorta();
 }
 
@@ -1199,11 +1178,15 @@ function cartaoPlanta(p) {
       ? '<div class="ronda">' + esc(nomeRonda(Def.get('ronda', ''))) + '</div>'
       : '');
 
-  /* Morta bloqueia o Continuar (ver resolverPlanta) — por isso é o único
-   * aviso que aparece: não faz sentido dizer "já feita" de uma planta em
-   * que não se pode entrar dados nenhuns. */
+  /* Morta não se mede — por isso é o único aviso que aparece, e tem de se
+   * ver logo que é diferente de "já feita": título grande, caixa vermelha
+   * a preencher a largura toda, não uma linha de texto que passa quase
+   * despercebida ao lado de um cartão em tudo o resto igual. */
   if (S.mortas[p.seq]) {
-    return cabecalho + '<div class="aviso erro mortaBloqueio">' + esc(t('planta.morta')) + '</div>';
+    return cabecalho + '<div class="aviso erro mortaBloqueio">' +
+      '<b class="mortaTitulo">' + esc(t('planta.morta.titulo')) + '</b>' +
+      '<p>' + esc(t('planta.morta.texto')) + '</p>' +
+      '</div>';
   }
 
   var quem = S.feitas[p.seq];
@@ -1237,10 +1220,16 @@ function irParaPlanta(p) {
   resolverPlanta();
 }
 
-/** A planta seguinte da mesma fileira, ou null no fim da fileira. */
+/**
+ * A planta seguinte da mesma fileira que ainda precise de formulário — salta
+ * as que estiverem marcadas mortas (não se medem) — ou null no fim da fileira.
+ */
 function seguinteNaFileira() {
   if (!S.planta) return null;
-  return (S.porFileira[S.planta.row] || [])[S.planta.noFileira + 1] || null;
+  var linha = S.porFileira[S.planta.row] || [];
+  var i = S.planta.noFileira + 1;
+  while (linha[i] && S.mortas[linha[i].seq]) i++;
+  return linha[i] || null;
 }
 
 // ------------------------------------------------------------ planta morta
@@ -1370,13 +1359,7 @@ function desenharFormulario() {
     av.hidden = true;
   }
 
-  /* REMOVER-RAMOS-TEMP: no modo "só ramos" mostra-se só este campo, em vez
-   * dos grupos todos do crescimento (porte/cachos). */
-  var grupos = (S.modo === 'crescimento' && S.somenteRamos)
-    ? [{ chave: 'ramos', campos: camposDe(S.modo) }]
-    : lev.grupos;
-
-  grupos.forEach(function (g) {
+  lev.grupos.forEach(function (g) {
     var box = document.createElement('div');
     box.className = 'grupo';
     box.innerHTML = '<h3>' + esc(t('grupo.' + g.chave)) + '</h3>';
@@ -1406,12 +1389,8 @@ function desenharFormulario() {
   /* Eliminar faz sentido para tudo o que já esteja na folha ou na fila deste
    * aparelho. Até 2026-08-12 o botão dependia do progresso já ter chegado do
    * servidor, e por isso desaparecia quando se abria um registo pelo
-   * histórico — que é justamente onde as pessoas o iam procurar.
-   * REMOVER-RAMOS-TEMP: eliminar apaga o BLOCO INTEIRO da ronda (altura,
-   * copa, ramos, cachos) — no modo "só ramos" isso destruiria a medição
-   * antiga que já lá estava. Corrigir é sempre gravar outra vez por cima
-   * (só toca na coluna do Branch), nunca eliminar. */
-  $('btnEliminar').hidden = S.somenteRamos || !(S.edicao || S.feitas[S.planta.seq]);
+   * histórico — que é justamente onde as pessoas o iam procurar. */
+  $('btnEliminar').hidden = !(S.edicao || S.feitas[S.planta.seq]);
 }
 
 /**
@@ -1728,11 +1707,7 @@ function gravarRegisto() {
    * lá a dizer que foi medida. Vai pela mesma fila, logo também funciona sem
    * rede — e a ordem interessa: primeiro grava-se no sítio certo. */
   var antigo = S.alvoOriginal;
-  /* REMOVER-RAMOS-TEMP: esta limpeza apaga o bloco da ronda inteiro (ver
-   * pedidoEliminar). No modo "só ramos" quase todas as plantas já têm
-   * registo — trocar de planta a meio apagaria a medição antiga da planta
-   * aberta primeiro, mesmo sem se lhe ter tocado. Nunca acontece aqui. */
-  var mudou = !S.somenteRamos && antigo && antigo.tinhaRegisto && antigo.planta.seq !== reg.seq;
+  var mudou = antigo && antigo.tinhaRegisto && antigo.planta.seq !== reg.seq;
   if (mudou && !S.trocouAlvo) mudou = false;   // só depois de se ter trocado a planta de propósito
 
   return DB.guardar(reg).then(function () {
@@ -2064,20 +2039,6 @@ function itemHistorico(o) {
 function prepararEdicao(modo, ronda, planta, valores, dono, uuidOriginal, notas) {
   S.modo = modo;
   if (modo === 'crescimento' && ronda) Def.set('ronda', ronda);
-  /* REMOVER-RAMOS-TEMP: um registo gravado no modo "só ramos" só tem a
-   * chave 'ramos' em values (ver gravarRegisto). Reabri-lo aqui pelo
-   * histórico, no formulário inteiro, e gravar sem tocar nos outros campos
-   * gravava-os a 0 por cima da medição antiga — isto detecta esse formato e
-   * volta ao mesmo formulário restrito com que foi gravado.
-   * ⚠ Isto é um "OU" com o que já estava em S.somenteRamos, nunca uma
-   * substituição: dentro da sessão "só ramos", QUALQUER planta que já
-   * tenha o registo completo de altura/copa (quase todas, é o ponto de
-   * partida) passa por aqui a corrigir — se se sobrescrevesse a bandeira
-   * a false, o formulário inteiro reaparecia e a gravação voltava a
-   * escrever 0 por cima da medição antiga. */
-  var pareceSoRamos = modo === 'crescimento' && !!valores && valores.ramos !== undefined &&
-    Object.keys(valores).every(function (k) { return k === 'ramos'; });
-  S.somenteRamos = S.somenteRamos || pareceSoRamos;
   S.planta = planta;
   S.fileira = planta.row;
   S.digitos = String(planta.noFileira);
@@ -2218,7 +2179,6 @@ function ligarEventos() {
         S.modo = b.getAttribute('data-modo');
         S.digitos = '';
         S.edicao = null;
-        S.somenteRamos = false;   // REMOVER-RAMOS-TEMP: sai do modo restrito ao escolher um levantamento normal
         if (S.modo === 'crescimento') {
           Def.set('ronda', RONDA_UNICA);   // RONDA-UNICA
         }
@@ -2226,20 +2186,6 @@ function ligarEventos() {
       };
     })(cartoes[i]);
   }
-
-  /* REMOVER-RAMOS-TEMP: entrada do modo temporário. Usa a mesma ronda e a
-   * mesma tela de escolha de planta do crescimento — só o formulário fica
-   * restrito a 'ramos' (ver camposDe/desenharFormulario). RONDA_UNICA é a
-   * MESMA ronda que já tem altura/copa gravadas, o que faz o Branch cair
-   * na coluna certa; ver colunaBlocoRonda_ no Codigo.gs. */
-  $('ligSomenteRamos').onclick = function () {
-    S.modo = 'crescimento';
-    S.somenteRamos = true;
-    S.digitos = '';
-    S.edicao = null;
-    Def.set('ronda', RONDA_UNICA);   // RONDA-UNICA
-    abrirEcraPlanta();
-  };
 
   $('btnRonda').onclick = function () {
     var campo = $('inpRonda');
@@ -2297,6 +2243,24 @@ function ligarEventos() {
       desenharFormulario();
       mostrar('ecraFormulario');
       brinde(t('form.alvoTrocado', { pid: S.planta.pid }));
+      return;
+    }
+
+    /* Morta não se mede: Continuar não abre o formulário, salta logo para a
+     * seguinte da fileira (seguinteNaFileira já ignora as mortas). Sem isto
+     * o botão ficava bloqueado e o ecrã virava um beco sem saída — o que
+     * também não fazia sentido, porque não há nada para preencher aqui. */
+    if (S.mortas[S.planta.seq]) {
+      var pMorta = S.planta;
+      var seguinteMorta = seguinteNaFileira();
+      if (seguinteMorta) {
+        abrirFormulario(seguinteMorta);
+      } else {
+        S.digitos = '';
+        desenharFileiras();
+        resolverPlanta();
+        brinde(t('planta.fimFileira', { row: pMorta.row }));
+      }
       return;
     }
 

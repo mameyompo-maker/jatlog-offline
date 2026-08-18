@@ -512,10 +512,18 @@ def main():
         ok(len(reg) == antes + 1, "a marca chegou ao servidor")
         ok(reg[-1]["accao"] == "Dead plant", f"gravada como Dead plant ({reg[-1]['accao']})")
         ok("morta" in pag.inner_text("#resolvidoPlanta"), "o ecra assinala a planta morta")
-        ok(pag.locator("#btnPlanta").is_disabled(),
-           "Continuar fica desactivado enquanto a planta estiver marcada morta")
+        ok(not pag.locator("#btnPlanta").is_disabled(),
+           "Continuar fica activo mesmo com a planta marcada morta (2026-08-19: nao ha nada para medir, nao e um beco sem saida)")
         ok(tratadas_r03() == n0 + 1,
            f"a fileira conta a planta morta como tratada ({n0} -> {tratadas_r03()})")
+
+        print("\n[20b] Continuar numa planta morta salta o formulario, vai direito a seguinte")
+        pag.click("#btnPlanta")
+        pag.wait_for_selector("#ecraFormulario:not([hidden])")
+        ok(pag.inner_text("#tituloForm").strip() == pid(79),
+           f"avancou para a planta seguinte da fileira sem pedir medidas da morta ({pag.inner_text('#tituloForm')!r})")
+        pag.click("#ligTrocarPlanta")
+        pag.wait_for_selector("#ecraPlanta:not([hidden])")
 
         pag.click("#ligProximaPorFazer")
         pag.wait_for_timeout(300)
@@ -523,14 +531,16 @@ def main():
            "a proxima por fazer salta as plantas mortas")
 
         escolher_seq(pag, 78)
-        ok(pag.locator("#btnPlanta").is_disabled(),
-           "continua desactivado ao voltar a escolher a mesma planta morta")
+        ok(not pag.locator("#btnPlanta").is_disabled(),
+           "continua activo ao voltar a escolher a mesma planta morta")
+        ok("morta" in pag.inner_text("#resolvidoPlanta"), "e continua a assinalar a planta morta")
         pag.click("#ligMorta")
         pag.wait_for_timeout(1200)
         reg = log_servidor()
         ok(reg[-1]["accao"] == "Live plant", f"desmarcar fica registado ({reg[-1]['accao']})")
-        ok(not pag.locator("#btnPlanta").is_disabled(),
-           "Continuar volta a ficar activo depois de desmarcar")
+        ok(not pag.locator("#btnPlanta").is_disabled(), "Continuar continua activo depois de desmarcar")
+        ok("morta" not in pag.inner_text("#resolvidoPlanta").lower(),
+           "o aviso de morta desaparece do cartao depois de desmarcar")
         ok(tratadas_r03() == n0,
            f"a fracção volta ao valor de antes depois de desmarcar ({tratadas_r03()} == {n0})")
 

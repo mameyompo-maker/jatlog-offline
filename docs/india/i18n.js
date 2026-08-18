@@ -60,9 +60,6 @@ var TEXTOS = {
     'lev.semProgresso': 'Progresso ainda não carregado',
     'lev.contagem': '{n} de {total} plantas',
     'lev.contagemPc': '{n} de {total} plantas ({pc}%)',
-    // REMOVER-RAMOS-TEMP
-    'lev.ramos': 'Só ramos (temporário)',
-    'ramos.aviso': 'Escolha exactamente a mesma ronda que já tem altura e copa gravadas. Só o n.º de ramos é gravado — os outros campos ficam como estão. Se o nome não bater certo com o que já está na folha, cria-se um bloco de colunas novo só para o Branch, separado da medição antiga.',
 
     'ronda.titulo': 'Ronda do levantamento',
     'ronda.texto': 'Identifica esta campanha de medição. Fica gravado no aparelho — só precisa de mudar quando começar uma ronda nova.',
@@ -91,7 +88,8 @@ var TEXTOS = {
     'planta.esq': 'n.º 1 à esquerda →',
     'planta.dir': '← n.º 1 à direita',
     'planta.desconhecida': 'Planta desconhecida.',
-    'planta.morta': 'Esta planta está marcada como morta. Desmarque-a (ao lado do número) para poder registar medidas.',
+    'planta.morta.titulo': '☠ Esta planta está morta',
+    'planta.morta.texto': 'Não há nada para medir aqui. Carregue em Continuar para passar à seguinte. Se afinal não estiver morta, corrija ao lado do número.',
     'planta.marcarMorta': 'Marcar planta morta',
     'form.marcarMorta': 'Esta planta está morta',
     'planta.desmarcarMorta': '† morta — desmarcar',
@@ -179,7 +177,6 @@ var TEXTOS = {
 
     'grupo.porte': 'Porte da planta',
     'grupo.cachos': 'Cachos',
-    'grupo.ramos': 'Ramos',   // REMOVER-RAMOS-TEMP
     'grupo.habito': 'Hábito',
     'grupo.folha': 'Folha',
     'grupo.cores': 'Cores',
@@ -283,9 +280,6 @@ var TEXTOS = {
     'lev.semProgresso': 'Progress not loaded yet',
     'lev.contagem': '{n} of {total} plants',
     'lev.contagemPc': '{n} of {total} plants ({pc}%)',
-    // REMOVER-RAMOS-TEMP
-    'lev.ramos': 'Branches only (temporary)',
-    'ramos.aviso': 'Pick the exact same round that already has height and canopy recorded. Only the branch count gets saved — the other fields are left as they are. If the name does not match what is already in the sheet, a new block of columns gets created just for the Branch value, separate from the earlier measurement.',
 
     'ronda.titulo': 'Survey round',
     'ronda.texto': 'This names the measurement campaign. It stays on the phone — you only change it when a new round starts.',
@@ -314,7 +308,8 @@ var TEXTOS = {
     'planta.esq': 'no. 1 on the left →',
     'planta.dir': '← no. 1 on the right',
     'planta.desconhecida': 'Unknown plant.',
-    'planta.morta': 'This plant is marked dead. Unmark it (next to the number) to record measurements.',
+    'planta.morta.titulo': '☠ This plant is dead',
+    'planta.morta.texto': 'There is nothing to measure here. Tap Continue to move to the next one. If it turns out not to be dead, correct it next to the number.',
     'planta.marcarMorta': 'Mark plant as dead',
     'form.marcarMorta': 'This plant is dead',
     'planta.desmarcarMorta': '† dead — undo',
@@ -402,7 +397,6 @@ var TEXTOS = {
 
     'grupo.porte': 'Plant stature',
     'grupo.cachos': 'Clusters',
-    'grupo.ramos': 'Branches',   // REMOVER-RAMOS-TEMP
     'grupo.habito': 'Habit',
     'grupo.folha': 'Leaf',
     'grupo.cores': 'Colours',
@@ -502,9 +496,6 @@ var TEXTOS = {
     'lev.semProgresso': '進捗はまだ読み込まれていません',
     'lev.contagem': '{total} 株中 {n} 株',
     'lev.contagemPc': '{total} 株中 {n} 株({pc}%)',
-    // REMOVER-RAMOS-TEMP
-    'lev.ramos': '枝数だけ(一時的)',
-    'ramos.aviso': '樹高・樹冠がすでに記録されている回と、まったく同じ名前を選んでください。保存されるのは枝の数だけで、他の項目はそのままです。名前がシート上の表記と一致しないと、その測定とは別に、枝の数だけのための新しい列のかたまりが作られてしまいます。',
 
     'ronda.titulo': '調査回',
     'ronda.texto': 'この測定キャンペーンの名前です。端末に保存されるので、新しい調査回を始めるときだけ変えてください。',
@@ -533,7 +524,8 @@ var TEXTOS = {
     'planta.esq': '1番は左端 →',
     'planta.dir': '← 1番は右端',
     'planta.desconhecida': '不明な株です。',
-    'planta.morta': 'この株は枯死としてマークされています。番号の横で解除しないと測定値を記録できません。',
+    'planta.morta.titulo': '☠ この株は枯死しています',
+    'planta.morta.texto': 'ここでは測定するものがありません。「進む」を押すと次の株に移ります。実際は枯れていない場合は、番号の横で取り消してください。',
     'planta.marcarMorta': '枯死株にする',
     'form.marcarMorta': 'この株は枯れている',
     'planta.desmarcarMorta': '† 枯死 — 取り消す',
@@ -621,7 +613,6 @@ var TEXTOS = {
 
     'grupo.porte': '樹形',
     'grupo.cachos': '花房・果房',
-    'grupo.ramos': '枝数',   // REMOVER-RAMOS-TEMP
     'grupo.habito': '生育型',
     'grupo.folha': '葉',
     'grupo.cores': '色',
