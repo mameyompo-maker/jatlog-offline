@@ -172,13 +172,16 @@ def main():
         escolher_seq(pag, 45)
         alvo = pag.inner_text("#resolvidoPlanta")
         ok(pid(45) in alvo, f"r02 n.º 10 -> -045 ({alvo.splitlines()[0]})")
-        ok("2 (India #bag02)" in alvo, f"a linhagem aparece em destaque ({alvo!r})")
+        ok(alvo.strip().startswith("Fileira r02, n.º 10"),
+           f"a fileira aparece primeiro e em destaque ({alvo.splitlines()[0]!r})")
+        ok("2 (India #bag02)" in alvo, "a linhagem continua visível, mais abaixo")
         ok("n.º 15" in alvo, "e o número dentro da linhagem")
-        ok("Fileira r02, n.º 10" in alvo, "a posição na fileira também")
 
         print("\n[3] registo normal, com confirmação pelo meio")
         pag.click("#btnPlanta")
         pag.wait_for_selector("#ecraFormulario:not([hidden])")
+        ok(pag.inner_text("#subForm").strip() == "Fileira r02, n.º 10",
+           f"o cabeçalho do formulário também traz a fileira em primeiro ({pag.inner_text('#subForm')!r})")
         ok("2 (India #bag02)" in pag.inner_text("#linhagemForm"),
            "o formulário também diz a linhagem")
         pag.fill("#campo_limboFoliar", "12,5")
@@ -496,6 +499,11 @@ def main():
         pag.click("#ligTrocarPlanta")
         pag.wait_for_selector("#ecraPlanta:not([hidden])")
         antes = len(log_servidor())
+        # a planta 100 (secção [6]) também está em r03: compara antes/depois em
+        # vez de um valor fixo, para não depender do que outras secções já fizeram
+        tratadas_r03 = lambda: int(pag.inner_text('#grelhaFileiras button:has-text("r03")')
+                                    .splitlines()[-1].split('/')[0])
+        n0 = tratadas_r03()
         escolher_seq(pag, 78)
         ok(pag.locator("#ligMorta").is_visible(), "o botao de planta morta aparece de lado")
         pag.click("#ligMorta")
@@ -504,6 +512,10 @@ def main():
         ok(len(reg) == antes + 1, "a marca chegou ao servidor")
         ok(reg[-1]["accao"] == "Dead plant", f"gravada como Dead plant ({reg[-1]['accao']})")
         ok("morta" in pag.inner_text("#resolvidoPlanta"), "o ecra assinala a planta morta")
+        ok(pag.locator("#btnPlanta").is_disabled(),
+           "Continuar fica desactivado enquanto a planta estiver marcada morta")
+        ok(tratadas_r03() == n0 + 1,
+           f"a fileira conta a planta morta como tratada ({n0} -> {tratadas_r03()})")
 
         pag.click("#ligProximaPorFazer")
         pag.wait_for_timeout(300)
@@ -511,10 +523,16 @@ def main():
            "a proxima por fazer salta as plantas mortas")
 
         escolher_seq(pag, 78)
+        ok(pag.locator("#btnPlanta").is_disabled(),
+           "continua desactivado ao voltar a escolher a mesma planta morta")
         pag.click("#ligMorta")
         pag.wait_for_timeout(1200)
         reg = log_servidor()
         ok(reg[-1]["accao"] == "Live plant", f"desmarcar fica registado ({reg[-1]['accao']})")
+        ok(not pag.locator("#btnPlanta").is_disabled(),
+           "Continuar volta a ficar activo depois de desmarcar")
+        ok(tratadas_r03() == n0,
+           f"a fracção volta ao valor de antes depois de desmarcar ({tratadas_r03()} == {n0})")
 
         print("\n[21] Voltar vai ao ecra anterior")
         voltar(pag)

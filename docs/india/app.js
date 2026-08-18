@@ -22,6 +22,22 @@
 var CFG = window.INDIAREC_CONFIG || {};
 var LOTE_ENVIO = 25;
 
+/* 2026-08-18 (a pedido do Kaz-san): só existe UMA ronda de crescimento na
+ * folha por agora, por isso o ecrã de escolher a ronda (#ecraRonda) fica de
+ * fora do caminho — entra-se logo na escolha da planta com esta ronda já
+ * posta. O nome tem de ser LETRA POR LETRA igual ao cabeçalho da coluna na
+ * folha Data (confirmado a 2026-08-16 via ?action=estado&mode=crescimento),
+ * senão colunaBlocoRonda_ no Codigo.gs cria um bloco novo em vez de escrever
+ * no bloco existente.
+ *
+ * Quando houver uma segunda ronda (ex.: "1 ano após a plantação"), voltar a
+ * mostrar o ecrã: nos dois sítios marcados RONDA-UNICA, trocar
+ * "Def.set('ronda', RONDA_UNICA); abrirEcraPlanta();" por
+ * "mostrar('ecraRonda')" (como estava antes) — o ecrã e o resto do mecanismo
+ * (rondasConhecidas, pintarAvisoRonda) continuam intactos, só deixaram de
+ * ser chamados. */
+var RONDA_UNICA = '5 month after planting (20260511)';
+
 /* O que se grava num campo que ficou por preencher.
  *
  * Uma célula vazia na folha é ambígua: tanto pode querer dizer "a planta não
@@ -1088,9 +1104,12 @@ function carregarPlantas() {
 /**
  * Grelha das fileiras. Escolher pela fileira é o que bate certo com o terreno,
  * e é assim desde o início — a passagem pelo n.º de referência (2026-08-12)
- * foi desfeita no dia 14. O que ficou dessa ideia é o ECRÃ: a linhagem e a
- * posição dentro dela aparecem em destaque no cartão da planta, porque é
- * assim que a folha de dados e o mapa do talhão estão organizados.
+ * foi desfeita no dia 14.
+ *
+ * A fracção conta plantas mortas como tratadas (feitas + mortas), não só
+ * medidas: senão uma fileira com todas as plantas mortas ou medidas ficava
+ * verde ("completa") mas o número dizia, por exemplo, "0/35" — uma morta não
+ * vai ter medidas, mas conta como uma passagem pela fileira na mesma.
  */
 function desenharFileiras() {
   var g = $('grelhaFileiras');
@@ -1099,7 +1118,7 @@ function desenharFileiras() {
   S.fileiras.forEach(function (f) {
     var c = contarFileira(f.row);
     var b = document.createElement('button');
-    b.innerHTML = f.row + '<span class="feito">' + c.feitas + '/' + c.total + '</span>';
+    b.innerHTML = f.row + '<span class="feito">' + c.tratadas + '/' + c.total + '</span>';
     b.className = (S.fileira === f.row ? 'activo' : '') +
       (c.tratadas === c.total ? ' completa' : '');
     /* Carregar na fileira já põe o n.º 1: é sempre por aí que se começa, e
@@ -1153,38 +1172,49 @@ function resolverPlanta() {
   S.planta = p;
   cx.className = '';
   cx.innerHTML = cartaoPlanta(p);
-  $('btnPlanta').disabled = false;
+  /* Uma planta morta não se mede: bloqueia o Continuar até se desmarcar
+   * (botão "Já morta — desmarcar" ao lado do número). Sem isto a marca de
+   * morta era só um aviso e dava para escrever medidas por cima na mesma. */
+  $('btnPlanta').disabled = !!S.mortas[p.seq];
   pintarBotaoMorta();
 }
 
 /**
- * O cartão da planta. A LINHAGEM vem em primeiro e em grande, porque a folha
- * de dados e o mapa do talhão estão organizados por linhagem: quem vai a
- * andar pela fileira precisa de saber, sem contas, em que linhagem está e em
- * que planta dessa linhagem. O Plant ID e a posição na fileira vêm a seguir,
- * para se conferir com a etiqueta.
+ * O cartão da planta. A fileira e o número dentro dela vêm em primeiro e em
+ * grande (2026-08-18): é por aí que se anda no terreno e se confere com o
+ * poste, não pela linhagem. Linhagem e ronda continuam no cartão — servem
+ * para conferir com o saco de semente — mas como informação secundária,
+ * cada uma na sua linha.
  */
 function cartaoPlanta(p) {
-  var avisos = '';
-  if (S.mortas[p.seq]) {
-    avisos += '<div class="marcaMorta">' + esc(t('planta.morta')) + '</div>';
-  }
-  var quem = S.feitas[p.seq];
-  if (quem) {
-    avisos += '<div class="jaFeita">' +
-      (quem === Def.get('nome', '')
-        ? esc(t('planta.jaFeitaPorSi'))
-        : esc(t('planta.jaFeitaPor', { quem: quem }))) + '</div>';
-  }
   // primeira planta da linhagem: é onde é fácil perder a conta
   var inicio = (p.noFolha === 1) ? ' <span class="inicioLote">' + esc(t('planta.inicioLote')) + '</span>' : '';
 
-  return '<div class="linhagem">' + esc(rotuloRef(p.source)) +
-    '<b>' + esc(t('planta.noLote', { no: p.noFolha })) + '</b>' + inicio + '</div>' +
-    '<div class="idPlanta">' + esc(p.pid) + '</div>' +
-    '<div class="posFileira">' + t('planta.detalhe', { row: p.row, no: p.noFileira }) +
+  var cabecalho = '<div class="posFileira">' + t('planta.detalhe', { row: p.row, no: p.noFileira }) +
     '<span class="sentido">' + esc(textoSentido(p.row)) + '</span></div>' +
-    avisos;
+    '<div class="idPlanta">' + esc(p.pid) + '</div>' +
+    '<div class="linhagem">' + esc(rotuloRef(p.source)) +
+    '<b>' + esc(t('planta.noLote', { no: p.noFolha })) + '</b>' + inicio + '</div>' +
+    (S.modo === 'crescimento'
+      ? '<div class="ronda">' + esc(nomeRonda(Def.get('ronda', ''))) + '</div>'
+      : '');
+
+  /* Morta bloqueia o Continuar (ver resolverPlanta) — por isso é o único
+   * aviso que aparece: não faz sentido dizer "já feita" de uma planta em
+   * que não se pode entrar dados nenhuns. */
+  if (S.mortas[p.seq]) {
+    return cabecalho + '<div class="aviso erro mortaBloqueio">' + esc(t('planta.morta')) + '</div>';
+  }
+
+  var quem = S.feitas[p.seq];
+  var avisos = quem
+    ? '<div class="jaFeita">' +
+      (quem === Def.get('nome', '')
+        ? esc(t('planta.jaFeitaPorSi'))
+        : esc(t('planta.jaFeitaPor', { quem: quem }))) + '</div>'
+    : '';
+
+  return cabecalho + avisos;
 }
 
 /** Primeira planta ainda sem registo, a partir da posição actual. */
@@ -1320,12 +1350,14 @@ function desenharFormulario() {
   alvo.innerHTML = '';
   S.ordemCampos = [];
 
+  // A fileira é a manchete do cabeçalho — linhagem e ronda vêm por baixo, secundárias.
+  $('subForm').textContent = t('planta.detalhe', { row: S.planta.row, no: S.planta.noFileira });
+  $('tituloForm').textContent = S.planta.pid;
   $('linhagemForm').textContent = rotuloRef(S.planta.source) + '  ' +
     t('planta.noLote', { no: S.planta.noFolha });
-  $('tituloForm').textContent = S.planta.pid;
-  $('subForm').textContent = t('form.sub', {
-    titulo: tituloLev(S.modo), row: S.planta.row, noFileira: S.planta.noFileira
-  }) + (S.modo === 'crescimento' ? ' · ' + nomeRonda(Def.get('ronda', '')) : '');
+  var elRonda = $('rondaForm');
+  elRonda.hidden = S.modo !== 'crescimento';
+  if (!elRonda.hidden) elRonda.textContent = nomeRonda(Def.get('ronda', ''));
 
   var av = $('avisoEdicao');
   if (S.edicao) {
@@ -1784,7 +1816,8 @@ function desenharGrelhaHistorico() {
   S.fileiras.forEach(function (f) {
     var c = contarFileira(f.row);
     var b = document.createElement('button');
-    b.innerHTML = f.row + '<span class="feito">' + c.feitas + '/' + c.total + '</span>';
+    // conta mortas como tratadas — mesma correcção do ecrã de medição
+    b.innerHTML = f.row + '<span class="feito">' + c.tratadas + '/' + c.total + '</span>';
     b.className = (S.fileiraHist === f.row ? 'activo' : '') +
       (c.tratadas === c.total ? ' completa' : '');
     b.onclick = function () {
@@ -2187,33 +2220,25 @@ function ligarEventos() {
         S.edicao = null;
         S.somenteRamos = false;   // REMOVER-RAMOS-TEMP: sai do modo restrito ao escolher um levantamento normal
         if (S.modo === 'crescimento') {
-          $('inpRonda').value = nomeRonda(Def.get('ronda', ''));
-          $('inpRonda').dataset.bruto = Def.get('ronda', '');
-          desenharRondasConhecidas();
-          pintarAvisoRonda();   // REMOVER-RAMOS-TEMP
-          mostrar('ecraRonda');
-        } else {
-          abrirEcraPlanta();
+          Def.set('ronda', RONDA_UNICA);   // RONDA-UNICA
         }
+        abrirEcraPlanta();
       };
     })(cartoes[i]);
   }
 
   /* REMOVER-RAMOS-TEMP: entrada do modo temporário. Usa a mesma ronda e a
    * mesma tela de escolha de planta do crescimento — só o formulário fica
-   * restrito a 'ramos' (ver camposDe/desenharFormulario). Escolher aqui a
-   * MESMA ronda que já tem altura/copa gravadas é o que faz o Branch cair
+   * restrito a 'ramos' (ver camposDe/desenharFormulario). RONDA_UNICA é a
+   * MESMA ronda que já tem altura/copa gravadas, o que faz o Branch cair
    * na coluna certa; ver colunaBlocoRonda_ no Codigo.gs. */
   $('ligSomenteRamos').onclick = function () {
     S.modo = 'crescimento';
     S.somenteRamos = true;
     S.digitos = '';
     S.edicao = null;
-    $('inpRonda').value = nomeRonda(Def.get('ronda', ''));
-    $('inpRonda').dataset.bruto = Def.get('ronda', '');
-    desenharRondasConhecidas();
-    pintarAvisoRonda();   // REMOVER-RAMOS-TEMP: substitui o aviso "7 colunas novas"
-    mostrar('ecraRonda');
+    Def.set('ronda', RONDA_UNICA);   // RONDA-UNICA
+    abrirEcraPlanta();
   };
 
   $('btnRonda').onclick = function () {

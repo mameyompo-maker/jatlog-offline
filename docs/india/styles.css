@@ -410,9 +410,11 @@ textarea:focus { outline: none; border-color: var(--acento); }
 .teclado button:active { background: var(--acento-esc); }
 .teclado button.aux { font-size: 15px; background: var(--painel); border: 2px solid var(--linha-forte); }
 
-/* Cartão da planta. A linhagem é a linha grande: a folha de dados e o mapa do
-   talhão estão organizados por linhagem, por isso é isso que quem anda pela
-   fileira precisa de ler primeiro. */
+/* Cartão da planta. A fileira e o número dentro dela são a linha grande
+   (2026-08-18, a pedido do Kaz-san): é isso que bate certo com o terreno —
+   quem anda pela fileira confere pelo poste e pela etiqueta, não pela
+   linhagem. Até aqui era a linhagem que vinha em grande (2026-08-12); ficou
+   ao contrário do que quem mede realmente usa para se orientar. */
 #resolvidoPlanta {
   margin-top: 8px;
   padding: 9px 12px;
@@ -423,14 +425,34 @@ textarea:focus { outline: none; border-color: var(--acento); }
 }
 #resolvidoPlanta.erro { border-left-color: var(--erro); color: #ff8a80; }
 
-.linhagem {
+.posFileira {
   display: block;
-  font-size: 19px;
+  font-size: 21px;
   font-weight: 800;
   color: var(--acento);
   line-height: 1.2;
 }
-.linhagem b { margin-left: 8px; color: var(--txt); }
+.posFileira .sentido {
+  display: block;
+  color: var(--txt2);
+  font-size: 12px;
+  font-weight: 400;
+  margin-top: 2px;
+}
+.idPlanta { display: block; font-size: 14px; font-weight: 700; margin-top: 4px; }
+/* Linhagem (saco de semente) e ronda são a informação secundária: úteis para
+   conferir, mas não o que se lê a cada planta — por isso mais pequenas e sem
+   cor de destaque. Antes ficavam à mistura numa só linha com pontos a
+   separar ("Crescimento · fileira r02, n.º 10 · 5 meses…"); agora cada uma
+   tem a sua linha, para não se confundirem. */
+.linhagem, .ronda {
+  display: block;
+  color: var(--txt2);
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.linhagem b { margin-left: 6px; color: var(--txt); font-weight: 600; }
 /* "inicio da linhagem" e uma informacao, nao um alerta: a ambar lia-se como
    "atencao, alguma coisa esta mal". E nao tinha altura nenhuma. */
 .inicioLote {
@@ -444,20 +466,10 @@ textarea:focus { outline: none; border-color: var(--acento); }
   margin-left: 6px;
   white-space: nowrap;
 }
-.idPlanta { display: block; font-size: 14px; font-weight: 700; }
-/* A fileira e o numero dentro dela sao a segunda forma de conferir a planta —
-   a etiqueta no campo tem o numero da linhagem, o mapa tem a fileira. A 13px e
-   em cinzento nao se liam ao sol, e era preciso adivinhar. */
-.posFileira { display: block; color: var(--txt); font-size: 16px; font-weight: 700; }
-.posFileira .sentido {
-  display: block;
-  color: var(--txt2);
-  font-size: 12px;
-  font-weight: 400;
-  margin-top: 2px;
-}
-.jaFeita { color: var(--acento); font-size: 13px; }
-.marcaMorta { color: var(--aviso); font-weight: 700; font-size: 13px; }
+.jaFeita { display: block; margin-top: 8px; color: var(--acento); font-size: 13px; }
+/* A planta morta bloqueia o Continuar (ver resolverPlanta) — por isso é um
+   aviso a sério, não uma etiqueta pequena como antes. */
+.mortaBloqueio { margin: 8px 0 0; }
 
 /* Cabeçalho do formulário: é um botão, para se acertar a planta sem voltar. */
 .cabecalhoPlanta {

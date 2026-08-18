@@ -135,10 +135,13 @@
   <!-- Depois de gravar entra-se logo no formulário da planta seguinte. O
        cabeçalho diz qual é e serve de botão para a trocar, para não ser
        preciso voltar atrás só para acertar o número. -->
+  <!-- A fileira vem primeiro e em grande (2026-08-18): é por aí que se
+       confere no terreno. Linhagem e ronda ficam por baixo, secundárias. -->
   <button class="cabecalhoPlanta" id="cabecalhoPlanta">
-    <span class="linhagem" id="linhagemForm"></span>
-    <span class="idPlanta" id="tituloForm"></span>
     <span class="posFileira" id="subForm"></span>
+    <span class="idPlanta" id="tituloForm"></span>
+    <span class="linhagem" id="linhagemForm"></span>
+    <span class="ronda" id="rondaForm" hidden></span>
     <span class="trocar" data-t="form.trocarPlanta"></span>
   </button>
   <div id="avisoEdicao" class="aviso" hidden></div>

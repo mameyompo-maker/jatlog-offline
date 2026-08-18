@@ -118,10 +118,9 @@ def main():
 
         print("\n[1] ronda normal de crescimento, com altura/copa mas SEM ramos "
               "(simula quem esqueceu de contar os ramos)")
+        # 2026-08-18: o ecra de escolher a ronda ficou de fora do caminho (so ha
+        # uma ronda por agora) -- entra-se logo em ecraPlanta com RONDA_UNICA.
         pag.click('.cartao[data-modo="crescimento"]')
-        pag.wait_for_selector("#ecraRonda:not([hidden])")
-        pag.fill("#inpRonda", RONDA)
-        pag.click("#btnRonda")
         pag.wait_for_selector("#ecraPlanta:not([hidden])")
         ok("Crescimento" in pag.inner_text("#subPlanta") and "G" in pag.inner_text("#subPlanta"),
            f"cabecalho normal mostra o bloco G-M ({pag.inner_text('#subPlanta')!r})")
@@ -129,6 +128,12 @@ def main():
         escolher_seq(pag, 50)
         pag.click("#btnPlanta")
         pag.wait_for_selector("#ecraFormulario:not([hidden])")
+        # seq 50 cai em r02 (36..70), posicao 50-35=15
+        ok(pag.inner_text("#subForm").strip() == "Fileira r02, n.º 15",
+           f"cabecalho do formulario tambem poe a fileira em primeiro ({pag.inner_text('#subForm')!r})")
+        # nomeRonda() traduz/formata RONDA_UNICA para apresentacao (pt-PT)
+        ok(pag.inner_text("#rondaForm").strip() == "5 meses após a plantação (11/05/2026)",
+           f"a ronda aparece na sua propria linha, formatada a partir de RONDA_UNICA ({pag.inner_text('#rondaForm')!r})")
         pag.fill("#campo_alturaPlanta", "3,20")
         pag.fill("#campo_cnp1", "1,10")
         pag.fill("#campo_cnp2", "1,05")
@@ -149,9 +154,6 @@ def main():
 
         ok(pag.locator("#ligSomenteRamos").is_visible(), "o botao temporario esta no menu")
         pag.click("#ligSomenteRamos")
-        pag.wait_for_selector("#ecraRonda:not([hidden])")
-        ok(pag.input_value("#inpRonda") != "", "a ronda ja vem preenchida (a ultima usada)")
-        pag.click("#btnRonda")
         pag.wait_for_selector("#ecraPlanta:not([hidden])")
         ok("J" in pag.inner_text("#subPlanta") and "G" not in pag.inner_text("#subPlanta"),
            f"cabecalho diz coluna J, nao o bloco G-M ({pag.inner_text('#subPlanta')!r})")
