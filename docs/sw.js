@@ -18,8 +18,9 @@ importScripts('./config.js');
 
 var CFG_COLHEITA = self.JATLOG_CONFIG || {};
 var CFG_INDIA = self.INDIAREC_CONFIG || {};
+var CFG_PESAGEM = self.PESAGEM_CONFIG || {};
 
-var CACHE = 'jatlog-v19';
+var CACHE = 'jatlog-v20';
 var CACHE_FONTES = 'jatlog-fontes-v1';
 
 var FICHEIROS = [
@@ -44,7 +45,13 @@ var FICHEIROS = [
   './india/app.js',
   './india/i18n.js',
   './india/styles.css',
-  './india/plants.json'
+  './india/plants.json',
+
+  './pesagem/',
+  './pesagem/index.html',
+  './pesagem/app.js',
+  './pesagem/i18n.js',
+  './pesagem/styles.css'
 ];
 
 var HOSTS_FONTES = ['fonts.googleapis.com', 'fonts.gstatic.com'];
@@ -116,6 +123,15 @@ function baseColheita() {
 
 function baseIndia() {
   return abrirBase('indiarec', 1, function (d) {
+    if (!d.objectStoreNames.contains('envios')) {
+      var s = d.createObjectStore('envios', { keyPath: 'uuid' });
+      s.createIndex('estado', 'estado');
+    }
+  });
+}
+
+function basePesagem() {
+  return abrirBase('pesagem', 1, function (d) {
     if (!d.objectStoreNames.contains('envios')) {
       var s = d.createObjectStore('envios', { keyPath: 'uuid' });
       s.createIndex('estado', 'estado');
@@ -329,16 +345,71 @@ function enviarIndiaEmSegundoPlano() {
   });
 }
 
+// -------------------------------------------------------------- pesagem
+/* Mesmo desenho da colheita (fila simples, apagada da base ao ser aceite):
+ * o histórico visível vem do servidor (action=log) somado ao que ainda está
+ * na fila local, tal como em colheita/app.js — não há aqui nenhum estado
+ * 'enviado' para manter. */
+
+function enviarPesagemEmSegundoPlano() {
+  if (!CFG_PESAGEM.ENDPOINT) return Promise.resolve();
+  var base;
+
+  return basePesagem().then(function (d) {
+    base = d;
+    return Promise.all([credenciais(), pendentesDe(d)]);
+  }).then(function (r) {
+    var token = r[0][0], adminPw = r[0][1], fila = r[1];
+    if (!fila.length) return;
+    if (!token) return desistir('sem código de activação', 0, fila.length);
+
+    return porLotes(fila, function (lote) {
+      var corpo = {
+        token: token,
+        entries: lote.map(function (e) {
+          return {
+            uuid: e.uuid, tipo: e.tipo, season: e.season, motherId: e.motherId,
+            weight: e.weight, unit: e.unit,
+            recorder: e.recorder, tsLocal: e.tsLocal, alvo: e.alvo || null
+          };
+        })
+      };
+      if (adminPw) corpo.adminPassword = adminPw;
+
+      return postar(CFG_PESAGEM.ENDPOINT, corpo).then(function (porUuid) {
+        return Promise.all(lote.map(function (e) {
+          var x = porUuid[e.uuid];
+          if (!x) return Promise.resolve();
+          if (x.ok) {
+            return comLoja(base, 'envios', 'readwrite', function (s) { return s.delete(e.uuid); });
+          }
+          e.estado = 'erro';
+          e.erro = x.erro || 'Erro desconhecido';
+          return comLoja(base, 'envios', 'readwrite', function (s) { return s.put(e); });
+        }));
+      });
+    }).then(function () {
+      return pendentesDe(base).then(function (sobram) {
+        if (sobram.length) throw new Error('ficaram ' + sobram.length + ' por enviar');
+      });
+    }, function (e) {
+      return desistir((e && e.message) || 'falhou o envio', 0, fila.length);
+    });
+  });
+}
+
 function enviarTudoEmSegundoPlano() {
   return Promise.all([
     enviarColheitaEmSegundoPlano().catch(function () {}),
-    enviarIndiaEmSegundoPlano().catch(function () {})
+    enviarIndiaEmSegundoPlano().catch(function () {}),
+    enviarPesagemEmSegundoPlano().catch(function () {})
   ]);
 }
 
 self.addEventListener('sync', function (e) {
   if (e.tag === 'jatlog-enviar') e.waitUntil(enviarColheitaEmSegundoPlano());
   if (e.tag === 'indiarec-enviar') e.waitUntil(enviarIndiaEmSegundoPlano());
+  if (e.tag === 'pesagem-enviar') e.waitUntil(enviarPesagemEmSegundoPlano());
 });
 
 // atalho para a própria página (e para os testes) mandarem tentar já

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """Servidor de teste do JatLog unificado.
 
-Serve docs/ e imita OS DOIS Apps Script:
-  /exec-colheita  -> Codigo.gs da colheita  (peso por linha/bloco)
-  /exec-india     -> Codigo.gs do India Rec (medicoes das plantas)
+Serve docs/ e imita OS TRES Apps Script:
+  /exec-colheita  -> Codigo.gs da colheita   (peso por linha/bloco)
+  /exec-india     -> Codigo.gs do India Rec  (medicoes das plantas)
+  /exec-pesagem   -> Codigo.gs da pesagem de sacos (Tanheia, temporario)
 
-O config.js e reescrito para apontar para estes dois caminhos.
-Token e senha de administrador sao os mesmos nos dois, como na producao.
+O config.js e reescrito para apontar para estes tres caminhos.
+Token e senha de administrador sao os mesmos nos tres, como na producao.
 
   python servidor.py <docs-dir> [porta]
 
@@ -64,6 +65,9 @@ def estado_inicial():
         "india": [],
         "indiaUuids": set(),
         "indiaMortas": set(),
+        # [ts, user, season, motherId, peso, unid, pesoKg, uuid]
+        "pesagem": {"25-26": [], "26-27": []},
+        "pesagemAudit": {"25-26": [], "26-27": []},
         "falhar": False,
     }
 
@@ -178,6 +182,117 @@ def aplicar_colheita(ent, admin):
         return {"uuid": uid, "ok": True, "tipo": tipo, "linha": linha[3]}
 
     return {"uuid": uid, "ok": False, "erro": "Operação desconhecida: %s" % tipo}
+
+
+# --------------------------------------------------------------- pesagem
+
+MOTHER_IDS = ["P1", "P9", "P10", "P11", "P13", "P15", "P20", "P40", "P50", "P68",
+              "P69", "P71", "P72", "P73", "P74", "P75", "P111", "P269", "P302", "?"]
+
+
+def peso_kg(peso, unidade):
+    return round(peso / 1000.0, 3) if unidade == "g" else round(peso, 3)
+
+
+def ids_processados_pesagem(season):
+    vistos = set()
+    for linha in E["pesagem"][season]:
+        if linha[7]:
+            vistos.add(linha[7])
+    for a in E["pesagemAudit"][season]:
+        if a[11]:
+            vistos.add(a[11])
+    return vistos
+
+
+def procurar_pesagem(season, alvo):
+    alvo = alvo or {}
+    u = str(alvo.get("uuid") or "").strip()
+    if u:
+        for i, linha in enumerate(E["pesagem"][season]):
+            if linha[7] == u:
+                return i
+    return -1
+
+
+def aplicar_pesagem(ent, admin):
+    uid = str(ent.get("uuid") or "").strip()
+    season = ent.get("season")
+    if season not in E["pesagem"]:
+        return {"uuid": uid, "ok": False, "erro": "Campanha desconhecida: %s" % season}
+    if not uid:
+        return {"uuid": "", "ok": False, "erro": "Falta o ID do envio."}
+    if uid in ids_processados_pesagem(season):
+        return {"uuid": uid, "ok": True, "duplicado": True}
+
+    tipo = ent.get("tipo", "criar")
+    quem = str(ent.get("recorder") or "").strip()
+    papel = "admin" if admin else "worker"
+    motherId = str(ent.get("motherId") or "").strip()
+
+    if tipo == "criar":
+        if motherId not in MOTHER_IDS:
+            return {"uuid": uid, "ok": False, "erro": "Mother ID desconhecido: %s" % motherId}
+        try:
+            peso = float(ent.get("weight"))
+        except (TypeError, ValueError):
+            return {"uuid": uid, "ok": False, "erro": "Peso inválido."}
+        if peso <= 0:
+            return {"uuid": uid, "ok": False, "erro": "Peso inválido."}
+        unidade = "g" if ent.get("unit") == "g" else "kg"
+        ts = str(ent.get("tsLocal") or "").strip() or agora()
+        E["pesagem"][season].append([ts, quem, season, motherId, "%.2f" % peso, unidade,
+                                     peso_kg(peso, unidade), uid])
+        E["pesagemAudit"][season].append([agora(), "CREATE", quem, papel, quem, season, motherId,
+                                          "", "", "%.2f" % peso, unidade, uid])
+        return {"uuid": uid, "ok": True, "tipo": tipo, "motherId": motherId}
+
+    idx = procurar_pesagem(season, ent.get("alvo"))
+    if idx < 0:
+        E["pesagemAudit"][season].append([agora(), "DELETE" if tipo == "apagar" else "EDIT",
+                                          quem, papel, "", season,
+                                          str((ent.get("alvo") or {}).get("motherId") or ""),
+                                          "", "", "", "", uid])
+        return {"uuid": uid, "ok": True, "tipo": tipo, "ausente": True}
+
+    linha = E["pesagem"][season][idx]
+    dono = linha[1]
+    if not admin and dono and not igual(dono, quem):
+        return {"uuid": uid, "ok": False,
+                "erro": "Só o autor (%s) ou um administrador pode alterar este registo." % dono}
+
+    if tipo == "apagar":
+        E["pesagem"][season].pop(idx)
+        E["pesagemAudit"][season].append([agora(), "DELETE", quem, papel, dono, season, linha[3],
+                                          linha[4], linha[5], "", "", uid])
+        return {"uuid": uid, "ok": True, "tipo": tipo, "motherId": linha[3]}
+
+    if tipo == "editar":
+        try:
+            peso = float(ent.get("weight"))
+        except (TypeError, ValueError):
+            return {"uuid": uid, "ok": False, "erro": "Peso inválido."}
+        if peso <= 0:
+            return {"uuid": uid, "ok": False, "erro": "Peso inválido."}
+        unidade = "g" if ent.get("unit") == "g" else "kg"
+        antigo, unidade_antiga = linha[4], linha[5]
+        linha[4] = "%.2f" % peso
+        linha[5] = unidade
+        linha[6] = peso_kg(peso, unidade)
+        E["pesagemAudit"][season].append([agora(), "EDIT", quem, papel, dono, season, linha[3],
+                                          antigo, unidade_antiga, linha[4], unidade, uid])
+        return {"uuid": uid, "ok": True, "tipo": tipo, "motherId": linha[3]}
+
+    return {"uuid": uid, "ok": False, "erro": "Operação desconhecida: %s" % tipo}
+
+
+def resumo_pesagem(season):
+    """[[motherId, sacos, pesoKg], ...] pela ordem de MOTHER_IDS, a partir do log."""
+    saida = []
+    for mid in MOTHER_IDS:
+        linhas = [l for l in E["pesagem"][season] if l[3] == mid]
+        saida.append([mid, len(linhas), round(sum(l[6] for l in linhas), 3)])
+    return saida
 
 
 # ------------------------------------------------------------------ india
@@ -298,6 +413,7 @@ def aplicar_india(ent, admin):
 CONFIG_JS = (
     "self.JATLOG_CONFIG={ENDPOINT:'/exec-colheita',VERSAO:'teste'};\n"
     "self.INDIAREC_CONFIG={ENDPOINT:'/exec-india',VERSAO:'teste'};\n"
+    "self.PESAGEM_CONFIG={ENDPOINT:'/exec-pesagem',VERSAO:'teste'};\n"
 )
 
 
@@ -338,7 +454,8 @@ class H(SimpleHTTPRequestHandler):
         if caminho == "/__estado":
             with TRAVA:
                 return self._json({"ok": True, "log": E["log"], "audit": E["audit"],
-                                   "india": E["india"]})
+                                   "india": E["india"], "pesagem": E["pesagem"],
+                                   "pesagemAudit": E["pesagemAudit"]})
         if caminho == "/__falhar":
             E["falhar"] = q.get("on", "1") == "1"
             return self._json({"ok": True, "falhar": E["falhar"]})
@@ -357,6 +474,8 @@ class H(SimpleHTTPRequestHandler):
             return self._get_colheita(q)
         if caminho == "/exec-india":
             return self._get_india(q)
+        if caminho == "/exec-pesagem":
+            return self._get_pesagem(q)
 
         return super().do_GET()
 
@@ -437,10 +556,32 @@ class H(SimpleHTTPRequestHandler):
 
         return self._json({"ok": False, "erro": "Acção desconhecida: " + accao})
 
+    def _get_pesagem(self, q):
+        if E["falhar"]:
+            return self._json({"ok": False, "erro": "servidor em baixo"}, 500)
+        if q.get("token") != TOKEN:
+            return self._json({"ok": False, "erro": "Não autorizado."})
+        accao = q.get("action", "master")
+        with TRAVA:
+            if accao == "admin":
+                return self._json({"ok": True, "admin": q.get("pw") == ADMIN_PW})
+            season = q.get("season", "25-26")
+            if season not in E["pesagem"]:
+                return self._json({"ok": False, "erro": "Campanha desconhecida: %s" % season})
+            if accao == "master":
+                return self._json({"ok": True, "hora": agora(), "season": season,
+                                   "linhas": resumo_pesagem(season)})
+            if accao == "log":
+                saida = [[l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7]]
+                         for l in E["pesagem"][season]]
+                return self._json({"ok": True, "hora": agora(), "season": season,
+                                   "registos": saida})
+            return self._json({"ok": False, "erro": "Acção desconhecida: %s" % accao})
+
     # ----------------------------------------------------------------- POST
     def do_POST(self):
         caminho = urlparse(self.path).path
-        if caminho not in ("/exec-colheita", "/exec-india"):
+        if caminho not in ("/exec-colheita", "/exec-india", "/exec-pesagem"):
             return self._json({"ok": False, "erro": "nao encontrado"}, 404)
         if E["falhar"]:
             return self._json({"ok": False, "erro": "servidor em baixo"}, 500)
@@ -455,7 +596,12 @@ class H(SimpleHTTPRequestHandler):
             return self._json({"ok": False, "erro": "Não autorizado."})
 
         admin = pedido.get("adminPassword") == ADMIN_PW
-        aplicar = aplicar_colheita if caminho == "/exec-colheita" else aplicar_india
+        if caminho == "/exec-colheita":
+            aplicar = aplicar_colheita
+        elif caminho == "/exec-india":
+            aplicar = aplicar_india
+        else:
+            aplicar = aplicar_pesagem
         with TRAVA:
             resultados = [aplicar(e, admin) for e in (pedido.get("entries") or [])]
         return self._json({"ok": True, "hora": agora(), "resultados": resultados})

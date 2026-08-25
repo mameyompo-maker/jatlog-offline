@@ -15,6 +15,7 @@
 
 var CFG_COLHEITA = window.JATLOG_CONFIG || {};
 var CFG_INDIA = window.INDIAREC_CONFIG || {};
+var CFG_PESAGEM = window.PESAGEM_CONFIG || {};
 
 /* O modo administrador expira sozinho: uma fila por enviar com correcções de
  * outra pessoa deixa de poder subir se a permissão desaparecer a meio, por
@@ -81,6 +82,15 @@ function baseColheita() {
 
 function baseIndia() {
   return abrirBase('indiarec', 1, function (d) {
+    if (!d.objectStoreNames.contains('envios')) {
+      var s = d.createObjectStore('envios', { keyPath: 'uuid' });
+      s.createIndex('estado', 'estado');
+    }
+  });
+}
+
+function basePesagem() {
+  return abrirBase('pesagem', 1, function (d) {
     if (!d.objectStoreNames.contains('envios')) {
       var s = d.createObjectStore('envios', { keyPath: 'uuid' });
       s.createIndex('estado', 'estado');
@@ -234,7 +244,8 @@ function pedirGet(endpoint, params) {
 
 var MODULOS = [
   { chave: 'colheita', endpoint: CFG_COLHEITA.ENDPOINT, nome: 'menu.colheita' },
-  { chave: 'india', endpoint: CFG_INDIA.ENDPOINT, nome: 'menu.india' }
+  { chave: 'india', endpoint: CFG_INDIA.ENDPOINT, nome: 'menu.india' },
+  { chave: 'pesagem', endpoint: CFG_PESAGEM.ENDPOINT, nome: 'menu.pesagem' }
 ];
 
 function provarCodigo(endpoint, codigo) {
@@ -316,6 +327,12 @@ function verificarAdmin(pw) {
       return pedirGet(CFG_INDIA.ENDPOINT, { action: 'admin', pw: pw })
         .then(function (k) { return !!(k && k.admin); })
         .catch(function () { return false; });
+    })
+    .then(function (ok) {
+      if (ok) return true;
+      return pedirGet(CFG_PESAGEM.ENDPOINT, { action: 'admin', pw: pw })
+        .then(function (m) { return !!(m && m.admin); })
+        .catch(function () { return false; });
     });
 }
 
@@ -370,6 +387,7 @@ function contarFilas() {
   }
   contar(baseColheita(), 'filaColheita');
   contar(baseIndia(), 'filaIndia');
+  contar(basePesagem(), 'filaPesagem');
 }
 
 // ------------------------------------------------------------------ entrada

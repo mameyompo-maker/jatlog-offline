@@ -1,0 +1,49 @@
+/* JatLog — módulo da pesagem: só o que este ecrã acrescenta à folha comum
+ * (../styles.css, carregada antes desta). As classes .ecra, .painel,
+ * .banner, .cartao, .mostrador, .segmento, .histrow, .accoes,
+ * .escolha-local, .topbar, .eyebrow, etc. já existem lá — não se repetem
+ * aqui, só se usam. As variáveis de cor (--ink, --card, --green, ...)
+ * também já vêm de lá.
+ *
+ * A única coisa nova deste módulo é o crachá "N sacos · X kg" na lista de
+ * planta-mãe (ecraLista) — a colheita não tinha nada assim.
+ */
+
+/* Os cartões da lista de planta-mãe são mais baixos que os da colheita
+ * (não têm variedade/plantas/saco a mostrar) e o conteúdo é HTML com
+ * elementos de bloco, não texto simples — por isso branco normal em vez do
+ * pre-line que .cartao usa por omissão. */
+#listaMaes .cartao {
+  min-height: 64px;
+  padding: 14px 16px;
+  white-space: normal;
+}
+
+.idMae {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* O crachá do total: pílula verde-suave quando já há sacos pesados, texto
+ * apagado sem pílula quando ainda não há nenhum — a mesma planta-mãe não
+ * deve parecer "em erro" só por ainda não ter sido pesada. */
+.totalMae {
+  display: inline-block;
+  margin-top: 7px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: #CFE8B4;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+}
+.totalMae.vazio {
+  padding-left: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
