@@ -25,10 +25,7 @@ self.INDIAREC_CONFIG = {
   VERSAO: '2.0.0'
 };
 
-/* Ainda por publicar — o URL fica vazio até o Apps Script ser implementado
- * manualmente (ver apps_script_pesagem/Codigo.gs). Endpoint vazio não bloqueia
- * a activação: provarCodigo() em shell.js aceita em silêncio quando não há URL. */
 self.PESAGEM_CONFIG = {
-  ENDPOINT: '',
+  ENDPOINT: 'https://script.google.com/macros/s/AKfycbwyl19ZOvaDkrAY6SYCYBWoF_8O1e1GjRkYddM9HhJ-qFCSXvjdIA84zjQv6U5jCUdQ/exec',
   VERSAO: '1.0.0'
 };

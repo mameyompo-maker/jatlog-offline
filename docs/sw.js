@@ -20,7 +20,7 @@ var CFG_COLHEITA = self.JATLOG_CONFIG || {};
 var CFG_INDIA = self.INDIAREC_CONFIG || {};
 var CFG_PESAGEM = self.PESAGEM_CONFIG || {};
 
-var CACHE = 'jatlog-v20';
+var CACHE = 'jatlog-v21';
 var CACHE_FONTES = 'jatlog-fontes-v1';
 
 var FICHEIROS = [
