@@ -44,9 +44,11 @@ var TEXTOS = {
 
     'lista.titulo': 'Escolha a planta-mãe',
     'lista.mudarEpoca': 'Mudar época',
+    'lista.buscar': 'Procurar planta-mãe…',
     'lista.badge': '{n} sacos · {kg} kg',
     'lista.semRegisto': 'ainda sem registo',
     'lista.semCadastro': 'A lista de planta-mãe ainda não foi carregada neste aparelho.',
+    'lista.semResultado': 'Nenhuma planta-mãe encontrada para "{filtro}".',
     'lista.gravado': '<span class="tick">✓</span><b>{id}</b> — {valor} {unidade} guardado às {hora}',
     'lista.gravadoLocal': '<span class="tick">✓</span><b>{id}</b> — {valor} {unidade} guardado às {hora} (no aparelho)',
 
@@ -121,9 +123,11 @@ var TEXTOS = {
 
     'lista.titulo': 'Choose the mother plant',
     'lista.mudarEpoca': 'Change season',
+    'lista.buscar': 'Search mother plant…',
     'lista.badge': '{n} sack(s) · {kg} kg',
     'lista.semRegisto': 'no entries yet',
     'lista.semCadastro': 'The mother-plant list has not been loaded on this phone yet.',
+    'lista.semResultado': 'No mother plant found for "{filtro}".',
     'lista.gravado': '<span class="tick">✓</span><b>{id}</b> — {valor} {unidade} saved at {hora}',
     'lista.gravadoLocal': '<span class="tick">✓</span><b>{id}</b> — {valor} {unidade} saved at {hora} (on this phone)',
 
@@ -196,9 +200,11 @@ var TEXTOS = {
 
     'lista.titulo': '母樹を選んでください',
     'lista.mudarEpoca': '収穫期を変える',
+    'lista.buscar': '母樹を検索…',
     'lista.badge': '{n} 袋 · {kg} kg',
     'lista.semRegisto': 'まだ記録なし',
     'lista.semCadastro': 'この端末にはまだ母樹リストがありません。',
+    'lista.semResultado': '「{filtro}」に一致する母樹が見つかりません。',
     'lista.gravado': '<span class="tick">✓</span><b>{id}</b> — {valor} {unidade} を {hora} に保存しました',
     'lista.gravadoLocal': '<span class="tick">✓</span><b>{id}</b> — {valor} {unidade} を {hora} に端末へ保存しました',
 

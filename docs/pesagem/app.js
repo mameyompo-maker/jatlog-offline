@@ -47,6 +47,8 @@ var S = {
   registos: [],           // o que o servidor sabe da época actual (os mais recentes)
   fila: [],               // envios pendentes/erro deste aparelho
   seleccionado: null,     // a planta-mãe escolhida, ao pesar
+  filtroMae: '',           // o que se escreveu na busca da lista
+  filtrados: [],           // a lista depois do filtro, para o Enter da busca
   unidade: 'kg',
   unidadeEdicao: 'kg',
   edicao: null,
@@ -89,6 +91,8 @@ function aplicarIdioma() {
   for (var i = 0; i < fixos.length; i++) {
     fixos[i].innerHTML = t(fixos[i].getAttribute('data-t'));
   }
+  var busca = $('buscaMae');
+  if (busca) busca.placeholder = t('lista.buscar');
   pintarBotoesIdioma();
   redesenharEcra();
 }
@@ -699,22 +703,47 @@ function irParaLista() {
     aviso('avisoGravado', '');
   }
 
+  var busca = $('buscaMae');
+  if (busca) busca.value = S.filtroMae || '';
+
   mostrarErrosDaFila();
   pintarLista();
   pintarTudo();
   mostrar('ecraLista');
 }
 
+/**
+ * Filtra a lista pelo que está escrito em S.filtroMae — substring, sem
+ * distinguir maiúsculas — antes de desenhar os cartões. Com ~20 planta-mãe
+ * por época, escrever "71" já chega a um só cartão (P71) sem tocar no ecrã;
+ * S.filtrados guarda o resultado para o Enter da busca poder abrir esse
+ * único cartão directamente (ver ligarEventos).
+ */
 function pintarLista() {
   var caixa = $('listaMaes');
   caixa.innerHTML = '';
 
-  var lista = S.master[S.season] || [];
-  if (!lista.length) {
+  var todas = S.master[S.season] || [];
+  if (!todas.length) {
+    S.filtrados = [];
     var v = document.createElement('div');
     v.className = 'empty';
     v.textContent = t('lista.semCadastro');
     caixa.appendChild(v);
+    return;
+  }
+
+  var filtro = (S.filtroMae || '').trim().toLowerCase();
+  var lista = filtro
+    ? todas.filter(function (item) { return String(item.id).toLowerCase().indexOf(filtro) >= 0; })
+    : todas;
+  S.filtrados = lista;
+
+  if (!lista.length) {
+    var s = document.createElement('div');
+    s.className = 'empty';
+    s.textContent = t('lista.semResultado', { filtro: S.filtroMae });
+    caixa.appendChild(s);
     return;
   }
 
@@ -995,6 +1024,7 @@ function continuarDaEpoca() {
   S.seleccionado = null;
   S.ultimoGravado = null;
   S.edicao = null;
+  S.filtroMae = '';
 
   aviso('avisoEpoca', t('epoca.aCarregar'));
 
@@ -1034,6 +1064,17 @@ function ligarEventos() {
     irParaEpoca();
   };
   $('btnMenu').onclick = irParaMenu;
+
+  /* Busca da lista: filtra a cada tecla; Enter com um só cartão visível abre-o
+   * logo, sem precisar de tocar — escrever "71" e Enter chega directo a P71. */
+  $('buscaMae').oninput = function (e) {
+    S.filtroMae = e.target.value;
+    pintarLista();
+  };
+  $('buscaMae').onkeydown = function (e) {
+    if (e.key !== 'Enter') return;
+    if (S.filtrados.length === 1) abrirPeso(S.filtrados[0]);
+  };
 
   // peso
   $('inpPeso').onkeydown = function (e) { if (e.key === 'Enter') submeterPeso(); };

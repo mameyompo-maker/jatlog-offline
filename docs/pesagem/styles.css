@@ -9,15 +9,52 @@
  * planta-mãe (ecraLista) — a colheita não tinha nada assim.
  */
 
+/* Caixa de pesquisa por cima da lista: filtra os cartões à medida que se
+ * escreve (id.indexOf() em app.js) — com ~20 planta-mãe por época, escrever
+ * duas ou três letras costuma chegar a um só cartão sem tocar em nada. Mais
+ * pequena que a .busca partilhada (essa é o ecrã inteiro da busca por
+ * número, na colheita); aqui é só uma barra por cima de uma lista curta. */
+.busca-mae {
+  display: block;
+  width: 100%;
+  margin: 10px 0 12px;
+  padding: 12px 14px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--card);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 16px;
+}
+.busca-mae::placeholder { color: var(--ink-fraco); }
+.busca-mae:focus { border-color: var(--green); outline: none; }
+
+/* Grelha em vez de lista de uma coluna: com ~20 planta-mãe, uma coluna só
+ * obriga a um ecrã inteiro de scroll para chegar às últimas. Em grelha
+ * (2 colunas num telemóvel estreito, mais numa tela larga) cabem quase
+ * todas de uma vez. auto-fill em vez de um número fixo de colunas para não
+ * ficar preso a nenhuma largura de ecrã. */
+#listaMaes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
 /* Os cartões da lista de planta-mãe são mais baixos que os da colheita
  * (não têm variedade/plantas/saco a mostrar) e o conteúdo é HTML com
  * elementos de bloco, não texto simples — por isso branco normal em vez do
- * pre-line que .cartao usa por omissão. */
+ * pre-line que .cartao usa por omissão. margin-bottom a zero porque o
+ * espaçamento entre cartões já vem do gap da grelha. */
 #listaMaes .cartao {
   min-height: 64px;
   padding: 14px 16px;
+  margin-bottom: 0;
   white-space: normal;
 }
+
+/* A mensagem "sem cadastro" / "nenhum resultado" ocupa a largura toda da
+ * grelha, em vez de ficar espremida numa só coluna. */
+#listaMaes .empty { grid-column: 1 / -1; }
 
 .idMae {
   display: block;
