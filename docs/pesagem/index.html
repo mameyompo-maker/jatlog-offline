@@ -110,14 +110,15 @@
 
   <!-- ----------------------------------------------- 4. confirmar valor ---- -->
   <section class="ecra" id="ecraConfirmar" hidden>
-    <div class="banner warn" id="avisoConfirmar"></div>
+    <div class="banner warn" id="avisoConfirmar" hidden></div>
     <div class="readout">
       <div class="tag" data-t="confirmar.tag"></div>
       <div class="line-code" id="confirmarMae"></div>
       <div class="sub" id="confirmarValor"></div>
     </div>
     <div class="duas">
-      <button class="btn principal" id="btnRegistarAssim" data-t="confirmar.assim"></button>
+      <!-- o texto muda consoante haja ou não aviso de faixa — ver submeterPeso() em app.js -->
+      <button class="btn principal" id="btnRegistarAssim"></button>
       <button class="btn cancelar" id="btnCorrigir" data-t="confirmar.corrigir"></button>
     </div>
   </section>

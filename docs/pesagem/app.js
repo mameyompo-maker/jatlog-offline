@@ -823,19 +823,24 @@ function submeterPeso() {
     return;
   }
 
+  /* Todo registo passa por aqui antes de ir para o servidor — não só o que
+   * está fora da faixa. O ecrã é o mesmo dos dois casos; só o aviso de faixa
+   * e o texto do botão principal mudam, consoante haja ou não algo a avisar. */
   var g = gramas(peso, S.unidade);
-  if (g > GRAMAS_MAX || g < GRAMAS_MIN) {
-    S.porConfirmar = { peso: peso, unidade: S.unidade };
-    $('avisoConfirmar').innerHTML = t('confirmar.aviso', {
-      valor: mostrarNumero(peso.toFixed(2)), unidade: S.unidade
-    });
-    $('confirmarMae').textContent = S.seleccionado.id;
-    $('confirmarValor').textContent = mostrarNumero(peso.toFixed(2)) + ' ' + S.unidade;
-    mostrar('ecraConfirmar');
-    return;
-  }
+  var foraDaFaixa = (g > GRAMAS_MAX || g < GRAMAS_MIN);
 
-  gravarPeso(peso, S.unidade);
+  S.porConfirmar = { peso: peso, unidade: S.unidade };
+  if (foraDaFaixa) {
+    aviso('avisoConfirmar', t('confirmar.aviso', {
+      valor: mostrarNumero(peso.toFixed(2)), unidade: S.unidade
+    }));
+  } else {
+    aviso('avisoConfirmar', '');
+  }
+  $('btnRegistarAssim').textContent = t(foraDaFaixa ? 'confirmar.assim' : 'confirmar.registar');
+  $('confirmarMae').textContent = S.seleccionado.id;
+  $('confirmarValor').textContent = mostrarNumero(peso.toFixed(2)) + ' ' + S.unidade;
+  mostrar('ecraConfirmar');
 }
 
 function gravarPeso(peso, unidade) {

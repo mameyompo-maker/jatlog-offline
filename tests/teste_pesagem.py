@@ -78,12 +78,16 @@ def cartaoHist(page, motherId):
 
 
 def pesar(page, motherId, valor, unidade=None):
+    """Regista um saco, passando pelo ecrã de confirmação (todo registo passa
+    por lá agora, não só o que está fora da faixa — ver submeterPeso())."""
     cartaoMae(page, motherId).click()
     esperar_ecra(page, "ecraPeso")
     if unidade:
         page.click('#segPeso button[data-unidade="%s"]' % unidade)
     page.fill("#inpPeso", str(valor))
     page.press("#inpPeso", "Enter")
+    esperar_ecra(page, "ecraConfirmar")
+    page.click("#btnRegistarAssim")
     esperar_ecra(page, "ecraLista")
 
 
@@ -159,6 +163,31 @@ with sync_playwright() as p:
           "ainda sem registo" in cartaoMae(page, "P71").inner_text())
     page.screenshot(path=os.path.join(OUT, "02_lista.png"), full_page=True)
 
+    # ------------------------------------------------- C0. ecrã de confirmação
+    # Mesmo um valor normal (dentro da faixa) passa pelo ecrã de confirmação
+    # antes de ir para o servidor — só o aviso de faixa e o texto do botão
+    # mudam consoante o caso (ver submeterPeso() em app.js).
+    cartaoMae(page, "P13").click()
+    esperar_ecra(page, "ecraPeso")
+    page.fill("#inpPeso", "8")
+    page.press("#inpPeso", "Enter")
+    check("C0a valor normal também pede confirmação",
+          esperar_ecra(page, "ecraConfirmar"), ecra_actual(page))
+    check("C0b mostra a planta-mãe e o valor",
+          page.inner_text("#confirmarMae").strip() == "P13" and
+          "8" in page.inner_text("#confirmarValor"),
+          (page.inner_text("#confirmarMae"), page.inner_text("#confirmarValor")))
+    check("C0c sem aviso de faixa quando o valor é normal", not visivel(page, "#avisoConfirmar"))
+    check("C0d botão diz 'Registar' (não 'Registar assim')",
+          page.inner_text("#btnRegistarAssim").strip() == "Registar",
+          page.inner_text("#btnRegistarAssim"))
+    page.click("#btnRegistarAssim")
+    check("C0e grava depois de confirmar", esperar_ecra(page, "ecraLista"), ecra_actual(page))
+    time.sleep(1.2)
+    check("C0f chegou ao servidor",
+          any(l[3] == "P13" and l[4] == "8.00" for l in estado()["pesagem"]["25-26"]),
+          estado()["pesagem"]["25-26"])
+
     # ---------------------------------------------------------------- C. peso
     pesar(page, "P71", "12.4")
     check("C1 volta à lista depois de gravar", ecra_actual(page) == "ecraLista")
@@ -170,13 +199,16 @@ with sync_playwright() as p:
           page.inner_text("#avisoGravado"))
     time.sleep(1.5)
 
+    # (P13 do C0 já lá está — filtra-se por P71 em vez de usar o índice/tamanho
+    # da lista toda, para não depender de quantos outros registos vieram antes)
     st = estado()
-    linhas = st["pesagem"]["25-26"]
+    linhasP71 = [l for l in st["pesagem"]["25-26"] if l[3] == "P71"]
     check("C4 chegou ao servidor",
-          len(linhas) == 1 and linhas[0][3] == "P71" and linhas[0][4] == "12.40", linhas)
-    check("C5 kg convertidos", abs(linhas[0][6] - 12.4) < 1e-6, linhas[0][6])
+          len(linhasP71) == 1 and linhasP71[0][4] == "12.40", linhasP71)
+    check("C5 kg convertidos", abs(linhasP71[0][6] - 12.4) < 1e-6, linhasP71[0][6])
     check("C6 auditoria CREATE", st["pesagemAudit"]["25-26"][0][1] == "CREATE")
-    check("C7 contador do topo a 1", page.inner_text("#topoNum") == "1", page.inner_text("#topoNum"))
+    # o contador do topo soma a época toda: 1 saco do P13 (C0) + 1 do P71 aqui
+    check("C7 contador do topo a 2", page.inner_text("#topoNum") == "2", page.inner_text("#topoNum"))
 
     # segundo saco da mesma planta-mãe: soma, não substitui
     # (1200 g = 1.2 kg -- tem de ficar dentro da faixa 1-200 kg, senão pede confirmação)
@@ -187,7 +219,8 @@ with sync_playwright() as p:
           "13,6" in cartaoMae(page, "P71").inner_text(),
           cartaoMae(page, "P71").inner_text())
     st = estado()
-    check("C9 dois registos no servidor", len(st["pesagem"]["25-26"]) == 2)
+    check("C9 dois registos no servidor",
+          len([l for l in st["pesagem"]["25-26"] if l[3] == "P71"]) == 2)
     page.screenshot(path=os.path.join(OUT, "03_dois_sacos.png"), full_page=True)
 
     # valor fora da faixa pede confirmação
@@ -201,6 +234,10 @@ with sync_playwright() as p:
     page.fill("#inpPeso", "0.2")
     page.press("#inpPeso", "Enter")
     esperar_ecra(page, "ecraConfirmar")
+    check("C10b fora da faixa mostra o aviso e o botão 'Registar assim'",
+          visivel(page, "#avisoConfirmar") and
+          page.inner_text("#btnRegistarAssim").strip() == "Registar assim",
+          page.inner_text("#btnRegistarAssim"))
     page.click("#btnRegistarAssim")
     check("C11 confirma e grava mesmo assim", esperar_ecra(page, "ecraLista"), ecra_actual(page))
     time.sleep(1.2)
@@ -260,8 +297,9 @@ with sync_playwright() as p:
           "ainda sem registo" in cartaoMae(page, "P71").inner_text())
     pesar(page, "P71", "3")
     time.sleep(1.2)
+    # 25-26 tem 3: P13 (C0) + P71 x2 (C1/C8) — o P9 do C10/C11 foi apagado no E
     check("F3 26-27 não mistura com 25-26",
-          len(estado()["pesagem"]["26-27"]) == 1 and len(estado()["pesagem"]["25-26"]) == 2,
+          len(estado()["pesagem"]["26-27"]) == 1 and len(estado()["pesagem"]["25-26"]) == 3,
           estado()["pesagem"])
     page.screenshot(path=os.path.join(OUT, "05_outra_epoca.png"), full_page=True)
 

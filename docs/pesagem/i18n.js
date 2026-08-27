@@ -61,6 +61,7 @@ var TEXTOS = {
 
     'confirmar.tag': 'Confirmar registo',
     'confirmar.aviso': 'O valor <b>{valor} {unidade}</b> está fora da faixa esperada para um saco. Confirme se está correcto antes de registar.',
+    'confirmar.registar': 'Registar',
     'confirmar.assim': 'Registar assim',
     'confirmar.corrigir': 'Corrigir',
 
@@ -139,6 +140,7 @@ var TEXTOS = {
     'peso.maiorQueZero': 'The weight must be greater than zero.',
 
     'confirmar.tag': 'Confirm the entry',
+    'confirmar.registar': 'Record',
     'confirmar.aviso': '<b>{valor} {unidade}</b> is outside the expected range for a sack. Check it before recording.',
     'confirmar.assim': 'Record it anyway',
     'confirmar.corrigir': 'Fix it',
@@ -216,6 +218,7 @@ var TEXTOS = {
     'peso.maiorQueZero': '重量は0より大きい値にしてください。',
 
     'confirmar.tag': '登録の確認',
+    'confirmar.registar': '登録する',
     'confirmar.aviso': '<b>{valor} {unidade}</b> は袋の重量として想定の範囲外です。正しいか確認してから登録してください。',
     'confirmar.assim': 'このまま登録',
     'confirmar.corrigir': '入力し直す',
