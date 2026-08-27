@@ -54,6 +54,17 @@ def esperar_ecra(page, alvo, limite=12):
     return False
 
 
+def esperar_dialogo(page, sel, limite=12):
+    """A confirmação é um <dialog> nativo por cima do ecrã (não uma
+    section.ecra), por isso não passa por ecra_actual()/esperar_ecra()."""
+    fim = time.time() + limite
+    while time.time() < fim:
+        if visivel(page, sel):
+            return True
+        time.sleep(0.2)
+    return False
+
+
 def _idNoInicio(motherId):
     """'P1' não pode casar com 'P10'/'P11'/'P13'/'P15'/'P111': o ID vem sempre
     no início do texto do cartão, por isso ancora-se ao início e exige um
@@ -78,15 +89,15 @@ def cartaoHist(page, motherId):
 
 
 def pesar(page, motherId, valor, unidade=None):
-    """Regista um saco, passando pelo ecrã de confirmação (todo registo passa
-    por lá agora, não só o que está fora da faixa — ver submeterPeso())."""
+    """Regista um saco, passando pela janela de confirmação (todo registo
+    passa por lá agora, não só o que está fora da faixa — ver submeterPeso())."""
     cartaoMae(page, motherId).click()
     esperar_ecra(page, "ecraPeso")
     if unidade:
         page.click('#segPeso button[data-unidade="%s"]' % unidade)
     page.fill("#inpPeso", str(valor))
     page.press("#inpPeso", "Enter")
-    esperar_ecra(page, "ecraConfirmar")
+    esperar_dialogo(page, "#dlgConfirmar")
     page.click("#btnRegistarAssim")
     esperar_ecra(page, "ecraLista")
 
@@ -172,11 +183,10 @@ with sync_playwright() as p:
     page.fill("#inpPeso", "8")
     page.press("#inpPeso", "Enter")
     check("C0a valor normal também pede confirmação",
-          esperar_ecra(page, "ecraConfirmar"), ecra_actual(page))
+          esperar_dialogo(page, "#dlgConfirmar"), ecra_actual(page))
     check("C0b mostra a planta-mãe e o valor",
-          page.inner_text("#confirmarMae").strip() == "P13" and
-          "8" in page.inner_text("#confirmarValor"),
-          (page.inner_text("#confirmarMae"), page.inner_text("#confirmarValor")))
+          "P13" in page.inner_text("#alvoConfirmar") and "8" in page.inner_text("#alvoConfirmar"),
+          page.inner_text("#alvoConfirmar"))
     check("C0c sem aviso de faixa quando o valor é normal", not visivel(page, "#avisoConfirmar"))
     check("C0d botão diz 'Registar' (não 'Registar assim')",
           page.inner_text("#btnRegistarAssim").strip() == "Registar",
@@ -228,12 +238,12 @@ with sync_playwright() as p:
     esperar_ecra(page, "ecraPeso")
     page.fill("#inpPeso", "0.2")
     page.press("#inpPeso", "Enter")
-    check("C10 fora da faixa pede confirmação", esperar_ecra(page, "ecraConfirmar"), ecra_actual(page))
+    check("C10 fora da faixa pede confirmação", esperar_dialogo(page, "#dlgConfirmar"), ecra_actual(page))
     page.click("#btnCorrigir")
     esperar_ecra(page, "ecraPeso")
     page.fill("#inpPeso", "0.2")
     page.press("#inpPeso", "Enter")
-    esperar_ecra(page, "ecraConfirmar")
+    esperar_dialogo(page, "#dlgConfirmar")
     check("C10b fora da faixa mostra o aviso e o botão 'Registar assim'",
           visivel(page, "#avisoConfirmar") and
           page.inner_text("#btnRegistarAssim").strip() == "Registar assim",

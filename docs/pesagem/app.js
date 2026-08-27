@@ -316,7 +316,7 @@ function mostrar(id) {
   var ecras = document.querySelectorAll('.ecra');
   for (var i = 0; i < ecras.length; i++) ecras[i].hidden = (ecras[i].id !== id);
 
-  var comContexto = ['ecraLista', 'ecraPeso', 'ecraConfirmar', 'ecraEditar', 'ecraApagar'];
+  var comContexto = ['ecraLista', 'ecraPeso', 'ecraEditar', 'ecraApagar'];
   $('topo').hidden = comContexto.indexOf(id) < 0;
 
   var comHistorico = ['ecraLista'];
@@ -824,12 +824,14 @@ function submeterPeso() {
   }
 
   /* Todo registo passa por aqui antes de ir para o servidor — não só o que
-   * está fora da faixa. O ecrã é o mesmo dos dois casos; só o aviso de faixa
-   * e o texto do botão principal mudam, consoante haja ou não algo a avisar. */
+   * está fora da faixa. A janela é a mesma dos dois casos; só o aviso de
+   * faixa e o texto do botão principal mudam, consoante haja algo a avisar. */
   var g = gramas(peso, S.unidade);
   var foraDaFaixa = (g > GRAMAS_MAX || g < GRAMAS_MIN);
 
   S.porConfirmar = { peso: peso, unidade: S.unidade };
+  $('alvoConfirmar').innerHTML = '<b>' + esc(S.seleccionado.id) + '</b> — ' +
+    esc(mostrarNumero(peso.toFixed(2))) + ' ' + esc(S.unidade);
   if (foraDaFaixa) {
     aviso('avisoConfirmar', t('confirmar.aviso', {
       valor: mostrarNumero(peso.toFixed(2)), unidade: S.unidade
@@ -838,9 +840,13 @@ function submeterPeso() {
     aviso('avisoConfirmar', '');
   }
   $('btnRegistarAssim').textContent = t(foraDaFaixa ? 'confirmar.assim' : 'confirmar.registar');
-  $('confirmarMae').textContent = S.seleccionado.id;
-  $('confirmarValor').textContent = mostrarNumero(peso.toFixed(2)) + ' ' + S.unidade;
-  mostrar('ecraConfirmar');
+
+  /* Adiado: chamado a partir do Enter no campo de peso, showModal() move o
+   * foco para o primeiro botão do dialog logo no keydown — e o keyup da
+   * mesma tecla Enter, já a atingir esse botão, activa-o sozinho (fecha-se
+   * a janela sem ninguém ter tocado em nada). Um passo de fora do ciclo do
+   * evento de teclado evita a corrida. */
+  setTimeout(function () { $('dlgConfirmar').showModal(); }, 0);
 }
 
 function gravarPeso(peso, unidade) {
@@ -1094,15 +1100,20 @@ function ligarEventos() {
 
   // confirmação de valor fora da faixa
   $('btnRegistarAssim').onclick = function () {
+    $('dlgConfirmar').close();
     if (!S.porConfirmar) return;
     gravarPeso(S.porConfirmar.peso, S.porConfirmar.unidade);
   };
   $('btnCorrigir').onclick = function () {
+    $('dlgConfirmar').close();
     S.porConfirmar = null;
-    mostrar('ecraPeso');
-    $('inpPeso').value = '';
-    setTimeout(function () { $('inpPeso').focus(); }, 150);
+    setTimeout(function () { $('inpPeso').focus(); }, 100);
   };
+  // Esc fecha a janela sem gravar, tal como o botão Corrigir.
+  $('dlgConfirmar').addEventListener('cancel', function () {
+    $('dlgConfirmar').close();
+    S.porConfirmar = null;
+  });
 
   // edição
   $('btnGuardarEdicao').onclick = guardarEdicao;

@@ -108,21 +108,6 @@
     </div>
   </section>
 
-  <!-- ----------------------------------------------- 4. confirmar valor ---- -->
-  <section class="ecra" id="ecraConfirmar" hidden>
-    <div class="banner warn" id="avisoConfirmar" hidden></div>
-    <div class="readout">
-      <div class="tag" data-t="confirmar.tag"></div>
-      <div class="line-code" id="confirmarMae"></div>
-      <div class="sub" id="confirmarValor"></div>
-    </div>
-    <div class="duas">
-      <!-- o texto muda consoante haja ou não aviso de faixa — ver submeterPeso() em app.js -->
-      <button class="btn principal" id="btnRegistarAssim"></button>
-      <button class="btn cancelar" id="btnCorrigir" data-t="confirmar.corrigir"></button>
-    </div>
-  </section>
-
   <!-- -------------------------------------------------------- 5. editar ---- -->
   <section class="ecra" id="ecraEditar" hidden>
     <div class="banner error" id="avisoEditar" hidden></div>
@@ -179,6 +164,20 @@
 </main>
 
 <div id="brinde" hidden></div>
+
+<!-- ----------------------------------------- confirmar antes de gravar ---- -->
+<!-- Janela pequena por cima do ecrã de peso, não um ecrã inteiro novo — o
+     mesmo formato usado na confirmação do India Rec antes de gravar. -->
+<dialog id="dlgConfirmar">
+  <h3 data-t="confirmar.tag"></h3>
+  <p class="alvoConfirmar" id="alvoConfirmar"></p>
+  <div class="banner warn" id="avisoConfirmar" hidden></div>
+  <div class="dialogoBotoes">
+    <button class="btn cancelar" id="btnCorrigir" data-t="confirmar.corrigir"></button>
+    <!-- o texto muda consoante haja ou não aviso de faixa — ver submeterPeso() em app.js -->
+    <button class="btn principal" id="btnRegistarAssim"></button>
+  </div>
+</dialog>
 
 <script src="../config.js"></script>
 <script src="./i18n.js"></script>
