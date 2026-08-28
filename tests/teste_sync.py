@@ -48,6 +48,18 @@ def esperar(page, alvo, limite=15):
     return False
 
 
+def esperar_dialogo(page, sel, limite=12):
+    fim = time.time() + limite
+    while time.time() < fim:
+        try:
+            if page.locator(sel).is_visible():
+                return True
+        except Exception:
+            pass
+        time.sleep(0.2)
+    return False
+
+
 api("/__reset")
 
 with sync_playwright() as p:
@@ -100,6 +112,8 @@ with sync_playwright() as p:
         esperar(page, "ecraPeso")
         page.fill("#inpPeso", str(peso))
         page.press("#inpPeso", "Enter")
+        esperar_dialogo(page, "#dlgConfirmar")
+        page.click("#btnRegistarAssim")
         esperar(page, "ecraBusca")
     check("S5 dois pesos na fila", page.evaluate("() => S.fila.length") == 2,
           page.evaluate("() => S.fila.length"))

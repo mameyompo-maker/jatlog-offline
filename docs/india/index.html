@@ -47,15 +47,11 @@
   <button class="cartao" data-modo="crescimento">
     <b data-t="lev.crescimento"></b>
     <span data-t="lev.crescimento.desc"></span>
-    <span class="minibarra" data-barra="crescimento"><i></i></span>
-    <span class="minitexto" data-texto="crescimento"></span>
   </button>
 
   <button class="cartao" data-modo="descritores">
     <b data-t="lev.descritores"></b>
     <span data-t="lev.descritores.desc"></span>
-    <span class="minibarra" data-barra="descritores"><i></i></span>
-    <span class="minitexto" data-texto="descritores"></span>
   </button>
 
   <div class="accoes">
@@ -218,9 +214,11 @@
     <ul id="listaVazios"></ul>
   </details>
   <p class="notaDialogo" data-t="dlg.faltamNota"></p>
+  <!-- O confirmar fica à esquerda, tal como no resto da app — mesma ordem
+       em todo o lado (2026-08-28). -->
   <div class="dialogoBotoes">
-    <button class="btn secundario" id="btnVoltarPreencher" data-t="dlg.corrigir"></button>
     <button class="btn" id="btnEnviarAssim" data-t="dlg.confirmar"></button>
+    <button class="btn secundario" id="btnVoltarPreencher" data-t="dlg.corrigir"></button>
   </div>
 </dialog>
 

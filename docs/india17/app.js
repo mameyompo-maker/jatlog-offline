@@ -38,13 +38,30 @@ var LIMITE_LOG = 200;
 
 /* Os meses da folha "India 17 weight": "Up to Jul/26" é a coluna E (o total
  * acumulado até essa data, anterior a este módulo) e Aug/26..Mar/27 são as
- * colunas F..M. O texto de cada um é o que o Apps Script espera para
- * resolver a coluna certa (colunasDados_/MES_ANTES do Codigo.gs) — tal como
- * os meses da colheita (Jan..Dec), este token NÃO se traduz consoante o
- * idioma do ecrã. Lista fixa por agora: quando a folha ganhar novas colunas
- * (nova campanha), acrescenta-se aqui e no Codigo.gs. */
+ * colunas F..M. O VALOR de cada um é o que o Apps Script espera para
+ * resolver a coluna certa (colunasDados_/MES_ANTES do Codigo.gs) e por isso
+ * não muda com o idioma — só o RÓTULO mostrado no ecrã é que se traduz (ver
+ * rotuloMes(), abaixo). Lista fixa por agora: quando a folha ganhar novas
+ * colunas (nova campanha), acrescenta-se aqui, em MES_ROTULOS e no
+ * Codigo.gs. */
 var MESES = ['Up to Jul/26', 'Aug/26', 'Sep/26', 'Oct/26', 'Nov/26', 'Dec/26', 'Jan/27', 'Feb/27', 'Mar/27'];
 var MES_ANTES = 'Up to Jul/26';
+
+var MES_ROTULOS = {
+  pt: { 'Aug/26': 'Ago/26', 'Sep/26': 'Set/26', 'Oct/26': 'Out/26', 'Nov/26': 'Nov/26',
+        'Dec/26': 'Dez/26', 'Jan/27': 'Jan/27', 'Feb/27': 'Fev/27', 'Mar/27': 'Mar/27' },
+  en: { 'Aug/26': 'Aug/26', 'Sep/26': 'Sep/26', 'Oct/26': 'Oct/26', 'Nov/26': 'Nov/26',
+        'Dec/26': 'Dec/26', 'Jan/27': 'Jan/27', 'Feb/27': 'Feb/27', 'Mar/27': 'Mar/27' },
+  ja: { 'Aug/26': '2026年8月', 'Sep/26': '2026年9月', 'Oct/26': '2026年10月', 'Nov/26': '2026年11月',
+        'Dec/26': '2026年12月', 'Jan/27': '2027年1月', 'Feb/27': '2027年2月', 'Mar/27': '2027年3月' }
+};
+/** Rótulo do mês na língua do ecrã ("Up to Jul/26" tem tradução própria em
+ * 'mes.antes' porque não é um mês normal). */
+function rotuloMes(m) {
+  if (m === MES_ANTES) return t('mes.antes');
+  var tabela = MES_ROTULOS[S.idioma] || MES_ROTULOS.pt;
+  return tabela[m] || m;
+}
 
 // ------------------------------------------------------------------- estado
 
@@ -654,7 +671,7 @@ function podeAlterar(autor) {
 function pintarTopo() {
   var cracha = Admin.activo() ? '<span class="badge-adm">ADMIN</span>' : '';
   $('topoNome').innerHTML = esc(S.nome) + cracha;
-  $('topoMes').textContent = S.mes;
+  $('topoMes').textContent = rotuloMes(S.mes);
   $('topoNum').textContent = String(totalRegistosMes());
 }
 
@@ -683,7 +700,7 @@ function irParaMes() {
   MESES.forEach(function (m) {
     var o = document.createElement('option');
     o.value = m;
-    o.textContent = (m === MES_ANTES) ? t('mes.antes') : m;
+    o.textContent = rotuloMes(m);
     sel.appendChild(o);
   });
   sel.value = S.escolha || S.mes || MESES[1];
@@ -814,7 +831,7 @@ function abrirPeso(item) {
   aviso('avisoPeso', '');
 
   $('pesoId').textContent = item.id;
-  $('pesoSub').textContent = t('peso.subMes', { mes: S.mes });
+  $('pesoSub').textContent = t('peso.subMes', { mes: rotuloMes(S.mes) });
 
   $('inpPeso').value = '';
   pintarSegmento('segPeso', S.unidade);
@@ -851,7 +868,7 @@ function submeterPeso() {
   var foraDaFaixa = (g > GRAMAS_MAX || g < GRAMAS_MIN);
 
   S.porConfirmar = { peso: peso, unidade: S.unidade };
-  $('alvoConfirmar').innerHTML = '<b>' + esc(S.seleccionado.id) + '</b> — ' + esc(S.mes) + ' — ' +
+  $('alvoConfirmar').innerHTML = '<b>' + esc(S.seleccionado.id) + '</b> — ' + esc(rotuloMes(S.mes)) + ' — ' +
     esc(mostrarNumero(peso.toFixed(2))) + ' ' + esc(S.unidade);
   if (foraDaFaixa) {
     aviso('avisoConfirmar', t('confirmar.aviso', {
@@ -905,7 +922,7 @@ function pintarHistorico() {
   if (!lista.length) {
     var v = document.createElement('div');
     v.className = 'empty';
-    v.textContent = t('historico.vazio', { mes: S.mes });
+    v.textContent = t('historico.vazio', { mes: rotuloMes(S.mes) });
     caixa.appendChild(v);
     return;
   }

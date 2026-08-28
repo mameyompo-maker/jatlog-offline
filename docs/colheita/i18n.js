@@ -54,6 +54,7 @@ var TEXTOS = {
     'local.faltaLocal': 'Escolha o local.',
     'local.mes': 'Mês',
     'local.ano': 'Ano',
+    'local.ateJul': 'Até Jul (acumulado)',
     'local.botao': 'Continuar',
     'local.aCarregar': 'A carregar o cadastro…',
     'local.semCadastro': 'Não foi possível descarregar o cadastro deste local e ainda não há cópia neste aparelho. Ligue-se à internet uma vez.',
@@ -89,6 +90,7 @@ var TEXTOS = {
     'peso.plantas': 'Plantas',
 
     'confirmar.tag': 'Confirmar registo',
+    'confirmar.registar': 'Registar',
     'confirmar.aviso': 'O valor <b>{valor} {unidade}</b> está fora da faixa esperada. Confirme se está correcto antes de registar.',
     'confirmar.assim': 'Registar assim',
     'confirmar.corrigir': 'Corrigir',
@@ -178,6 +180,7 @@ var TEXTOS = {
     'local.faltaLocal': 'Choose the site.',
     'local.mes': 'Month',
     'local.ano': 'Year',
+    'local.ateJul': 'Up to Jul (cumulative)',
     'local.botao': 'Continue',
     'local.aCarregar': 'Loading the register…',
     'local.semCadastro': 'The register for this site could not be downloaded and there is no copy on this phone yet. Connect to the internet once.',
@@ -213,6 +216,7 @@ var TEXTOS = {
     'peso.plantas': 'Plants',
 
     'confirmar.tag': 'Confirm the entry',
+    'confirmar.registar': 'Record',
     'confirmar.aviso': '<b>{valor} {unidade}</b> is outside the expected range. Check it before recording.',
     'confirmar.assim': 'Record it anyway',
     'confirmar.corrigir': 'Fix it',
@@ -300,6 +304,7 @@ var TEXTOS = {
     'local.faltaLocal': '拠点を選んでください。',
     'local.mes': '月',
     'local.ano': '年',
+    'local.ateJul': '7月まで(累計)',
     'local.botao': '次へ',
     'local.aCarregar': '台帳を読み込んでいます…',
     'local.semCadastro': 'この拠点の台帳を取得できず、この端末にも控えがありません。一度だけ通信できる場所で開いてください。',
@@ -335,6 +340,7 @@ var TEXTOS = {
     'peso.plantas': '株数',
 
     'confirmar.tag': '登録の確認',
+    'confirmar.registar': '登録する',
     'confirmar.aviso': '<b>{valor} {unidade}</b> は想定の範囲外です。正しいか確認してから登録してください。',
     'confirmar.assim': 'このまま登録',
     'confirmar.corrigir': '入力し直す',

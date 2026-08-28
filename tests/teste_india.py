@@ -174,7 +174,7 @@ def main():
         ok(pid(45) in alvo, f"r02 n.º 10 -> -045 ({alvo.splitlines()[0]})")
         ok(alvo.strip().startswith("Fileira r02, n.º 10"),
            f"a fileira aparece primeiro e em destaque ({alvo.splitlines()[0]!r})")
-        ok("2 (India #bag02)" in alvo, "a linhagem continua visível, mais abaixo")
+        ok("India #bag02(2)" in alvo, "a linhagem continua visível, mais abaixo")
         ok("n.º 15" in alvo, "e o número dentro da linhagem")
 
         print("\n[3] registo normal, com confirmação pelo meio")
@@ -182,7 +182,7 @@ def main():
         pag.wait_for_selector("#ecraFormulario:not([hidden])")
         ok(pag.inner_text("#subForm").strip() == "Fileira r02, n.º 10",
            f"o cabeçalho do formulário também traz a fileira em primeiro ({pag.inner_text('#subForm')!r})")
-        ok("2 (India #bag02)" in pag.inner_text("#linhagemForm"),
+        ok("India #bag02(2)" in pag.inner_text("#linhagemForm"),
            "o formulário também diz a linhagem")
         pag.fill("#campo_limboFoliar", "12,5")
         pag.locator('.escolha:has-text("Vertical")').click()
@@ -209,8 +209,6 @@ def main():
            "contador da fileira r02 mostra 1/35")
         voltar(pag)
         pag.wait_for_timeout(300)
-        ok("1 de 415" in pag.inner_text('[data-texto="descritores"]'),
-           f"cartao mostra 1 de 415 (obtido: {pag.inner_text('[data-texto=descritores]')})")
 
         pag.click("#ligProgresso")
         pag.wait_for_selector("#ecraProgresso:not([hidden])")
@@ -262,7 +260,7 @@ def main():
         pag.wait_for_selector("#ecraHistorico:not([hidden])")
         pag.wait_for_selector("#listaHistorico li", timeout=5000)
         ok(pag.locator("#listaHistorico li").count() == 2, "2 registos locais neste aparelho")
-        ok("(India #bag02)" in pag.inner_text("#listaHistorico"),
+        ok("India #bag02(2)" in pag.inner_text("#listaHistorico"),
            "a lista identifica pela linhagem")
 
         pag.click('.aba[data-aba="todos"]')
@@ -340,7 +338,7 @@ def main():
         pag.fill("#campo_limboFoliar", "9")
         guardar_ate(pag, seq_seguinte=47)
         ok(pag.locator("#ecraFormulario").is_visible(), "continua no formulário")
-        ok("2 (India #bag02)" in pag.inner_text("#linhagemForm"),
+        ok("India #bag02(2)" in pag.inner_text("#linhagemForm"),
            "e a linhagem acompanha a planta")
 
         print("\n[12] fim da fileira volta ao ecra da escolha")

@@ -18,6 +18,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 
@@ -141,20 +142,6 @@
     </div>
   </section>
 
-  <!-- ----------------------------------------------- 6. confirmar valor ---- -->
-  <section class="ecra" id="ecraConfirmar" hidden>
-    <div class="banner warn" id="avisoConfirmar"></div>
-    <div class="readout">
-      <div class="tag" data-t="confirmar.tag"></div>
-      <div class="line-code" id="confirmarLinha"></div>
-      <div class="sub" id="confirmarValor"></div>
-    </div>
-    <div class="duas">
-      <button class="btn principal" id="btnRegistarAssim" data-t="confirmar.assim"></button>
-      <button class="btn cancelar" id="btnCorrigir" data-t="confirmar.corrigir"></button>
-    </div>
-  </section>
-
   <!-- -------------------------------------------------------- 7. editar ---- -->
   <section class="ecra" id="ecraEditar" hidden>
     <div class="banner error" id="avisoEditar" hidden></div>
@@ -211,6 +198,22 @@
 </main>
 
 <div id="brinde" hidden></div>
+
+<!-- ----------------------------------------- confirmar antes de gravar ---- -->
+<!-- Janela pequena por cima do ecrã de peso, não um ecrã inteiro novo — o
+     mesmo formato usado no India Rec/pesagem/índia17. Aparece SEMPRE antes de
+     gravar, não só quando o valor está fora da faixa — só o aviso e o texto
+     do botão principal mudam consoante o caso (ver submeterPeso() em app.js).
+     Confirmar fica à esquerda, tal como o Registar do ecrã de peso. -->
+<dialog id="dlgConfirmar">
+  <h3 data-t="confirmar.tag"></h3>
+  <p class="alvoConfirmar" id="alvoConfirmar"></p>
+  <div class="banner warn" id="avisoConfirmar" hidden></div>
+  <div class="dialogoBotoes">
+    <button class="btn principal" id="btnRegistarAssim"></button>
+    <button class="btn cancelar" id="btnCorrigir" data-t="confirmar.corrigir"></button>
+  </div>
+</dialog>
 
 <script src="../config.js"></script>
 <script src="./i18n.js"></script>

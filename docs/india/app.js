@@ -361,7 +361,6 @@ function pintarBotoesIdioma() {
 /** Volta a montar o ecrã actual, para o texto dinâmico mudar de língua também. */
 function redesenharEcra() {
   actualizarEstado();
-  pintarCartoes();
   if (S.ecra === 'ecraLevantamento') $('ola').textContent = t('lev.ola', { nome: Def.get('nome', '') });
   if (S.ecra === 'ecraRonda') {
     var campo = $('inpRonda');
@@ -959,26 +958,7 @@ function totalMortas() {
 function pintarProgresso() {
   desenharFileiras();
   resolverPlanta();
-  pintarCartoes();
   if (!$('ecraProgresso').hidden) desenharEcraProgresso();
-}
-
-/** Barras nos dois cartões do ecrã inicial (uma leitura por levantamento). */
-function pintarCartoes() {
-  ['crescimento', 'descritores'].forEach(function (modo) {
-    var g = null;
-    try { g = JSON.parse(Def.get(chaveEstado(modo), 'null')); } catch (e) {}
-    var n = g && g.feitas ? g.feitas.length : 0;
-    var pc = Math.round(n / S.total * 100);
-    var barra = document.querySelector('[data-barra="' + modo + '"] i');
-    var texto = document.querySelector('[data-texto="' + modo + '"]');
-    if (barra) barra.style.width = pc + '%';
-    if (texto) {
-      texto.textContent = g
-        ? t(pc >= 1 ? 'lev.contagemPc' : 'lev.contagem', { n: n, total: S.total, pc: pc })
-        : t('lev.semProgresso');
-    }
-  });
 }
 
 function desenharEcraProgresso() {
@@ -2082,7 +2062,6 @@ function irParaMenu() {
 
 function irParaLevantamento() {
   $('ola').textContent = t('lev.ola', { nome: Def.get('nome', '') });
-  pintarCartoes();
   mostrar('ecraLevantamento');
   /* ⚠ Limpar DEPOIS de mostrar, não antes: o mostrar() empilha o ecrã de onde
    * se vinha, e a seguir a um reiniciarPilha() isso deixava lá o formulário.
@@ -2354,7 +2333,7 @@ function ligarEventos() {
   var voltares = document.querySelectorAll('[data-voltar]');
   for (var j = 0; j < voltares.length; j++) {
     (function (b) {
-      b.onclick = function () { voltar(b.getAttribute('data-voltar')); pintarCartoes(); };
+      b.onclick = function () { voltar(b.getAttribute('data-voltar')); };
     })(voltares[j]);
   }
 

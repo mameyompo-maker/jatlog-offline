@@ -186,7 +186,8 @@ with sync_playwright() as p:
     page.wait_for_load_state("load")
     check("A3 chega directo à lista do Índia 17 (sem repetir a pergunta do mês)",
           esperar_ecra(page, "ecraLista"), ecra_actual(page))
-    check("A4 mês do topo é 'Aug/26'", "AUG/26" in page.inner_text("#topoMes").upper(),
+    # O rótulo vem traduzido (pt, língua por omissão) — "Ago/26", não "Aug/26".
+    check("A4 mês do topo é 'Ago/26'", "AGO/26" in page.inner_text("#topoMes").upper(),
           page.inner_text("#topoMes"))
     page.screenshot(path=os.path.join(OUT, "01_mes.png"), full_page=True)
 
@@ -212,7 +213,7 @@ with sync_playwright() as p:
           esperar_dialogo(page, "#dlgConfirmar"), ecra_actual(page))
     check("C0b mostra o Source ID, o mês e o valor",
           "India #bag13" in page.inner_text("#alvoConfirmar") and
-          "Aug/26" in page.inner_text("#alvoConfirmar") and
+          "Ago/26" in page.inner_text("#alvoConfirmar") and
           "8" in page.inner_text("#alvoConfirmar"),
           page.inner_text("#alvoConfirmar"))
     check("C0c sem aviso de faixa quando o valor é normal", not visivel(page, "#avisoConfirmar"))

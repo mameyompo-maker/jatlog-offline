@@ -23,6 +23,42 @@ var GRAMAS_MIN = 5;       // abaixo disto também
 var MESES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+/* O valor de cada mês (MESES, acima) é sempre em inglês — é o que vai para
+ * S.mes e para o servidor. Isto aqui é só o rótulo mostrado no <select>,
+ * por língua; o índice bate certo com MESES porque as duas listas têm a
+ * mesma ordem Jan..Dec. */
+var MES_ROTULOS = {
+  pt: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+  en: MESES,
+  ja: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+};
+function rotuloMes(m) {
+  var lista = MES_ROTULOS[S.idioma] || MES_ROTULOS.pt;
+  var i = MESES.indexOf(m);
+  return i >= 0 ? lista[i] : m;
+}
+/** "Jan-26" -> "Jan-26"/"1月-26"/… conforme a língua (S.mes de Tanheia/7 de
+ * Abril é sempre "Mon-YY"; ver MESES acima). */
+function rotuloMesAno(v) {
+  if (!v || v.indexOf('-') < 0) return v;
+  var partes = v.split('-');
+  return rotuloMes(partes[0]) + '-' + partes[1];
+}
+
+/* Mesma ideia para os meses de Índia 17 (INDIA17_MESES_POR_ANO, abaixo): a
+ * chave "Up to Jul" já tem tradução própria (ver 'confirmar.upToJul' em
+ * i18n.js) porque não é um mês normal. */
+var MES17_ROTULOS = {
+  pt: { Aug: 'Ago', Sep: 'Set', Oct: 'Out', Nov: 'Nov', Dec: 'Dez', Jan: 'Jan', Feb: 'Fev', Mar: 'Mar' },
+  en: { Aug: 'Aug', Sep: 'Sep', Oct: 'Oct', Nov: 'Nov', Dec: 'Dec', Jan: 'Jan', Feb: 'Feb', Mar: 'Mar' },
+  ja: { Aug: '8月', Sep: '9月', Oct: '10月', Nov: '11月', Dec: '12月', Jan: '1月', Feb: '2月', Mar: '3月' }
+};
+function rotuloMes17(m) {
+  if (m === 'Up to Jul') return t('local.ateJul');
+  var tabela = MES17_ROTULOS[S.idioma] || MES17_ROTULOS.pt;
+  return tabela[m] || m;
+}
+
 /* Índia 17 não segue o calendário Jan..Dec + ano à volta do actual: a folha
  * "India 17 weight" só tem colunas fixas (Aug/26..Mar/27) mais o caso
  * especial "Up to Jul/26" (soma tudo até essa data — ver MES_ANTES no
@@ -372,8 +408,7 @@ function mostrar(id) {
   var ecras = document.querySelectorAll('.ecra');
   for (var i = 0; i < ecras.length; i++) ecras[i].hidden = (ecras[i].id !== id);
 
-  var comContexto = ['ecraBusca', 'ecraCandidatos', 'ecraPeso', 'ecraConfirmar',
-                     'ecraEditar', 'ecraApagar'];
+  var comContexto = ['ecraBusca', 'ecraCandidatos', 'ecraPeso', 'ecraEditar', 'ecraApagar'];
   $('topo').hidden = comContexto.indexOf(id) < 0;
 
   var comHistorico = ['ecraBusca', 'ecraCandidatos', 'ecraPeso'];
@@ -684,7 +719,7 @@ function carregarRegistos(silencioso) {
 function pintarTopo() {
   var cracha = Admin.activo() ? '<span class="badge-adm">ADMIN</span>' : '';
   $('topoNome').innerHTML = esc(S.nome) + cracha;
-  $('topoMes').textContent = S.mes + ' · ' + local_().curto;
+  $('topoMes').textContent = rotuloMesAno(S.mes) + ' · ' + local_().curto;
   $('topoNum').textContent = String(registosVisiveis().length);
 }
 
@@ -753,7 +788,7 @@ function popularMesAno() {
   var anos = [agora.getFullYear() - 1, agora.getFullYear(), agora.getFullYear() + 1];
   selM.innerHTML = ''; selA.innerHTML = '';
   MESES.forEach(function (m) {
-    var o = document.createElement('option'); o.value = m; o.textContent = m; selM.appendChild(o);
+    var o = document.createElement('option'); o.value = m; o.textContent = rotuloMes(m); selM.appendChild(o);
   });
   anos.forEach(function (a) {
     var o = document.createElement('option'); o.value = String(a); o.textContent = String(a);
@@ -783,7 +818,7 @@ function popularMesesIndia17() {
 
   selM.innerHTML = '';
   lista.forEach(function (m) {
-    var o = document.createElement('option'); o.value = m; o.textContent = m; selM.appendChild(o);
+    var o = document.createElement('option'); o.value = m; o.textContent = rotuloMes17(m); selM.appendChild(o);
   });
 
   var omissao = (lista[0] === 'Up to Jul') ? (lista[1] || lista[0]) : lista[0];
@@ -809,7 +844,8 @@ function irParaBusca() {
     sel.innerHTML = '';
     opcoes.forEach(function (o) {
       var el = document.createElement('option');
-      el.value = o; el.textContent = o;
+      var partes = o.split('-');
+      el.value = o; el.textContent = rotuloMes(partes[0]) + '-' + partes[1];
       sel.appendChild(el);
     });
     sel.value = S.mes;
@@ -985,19 +1021,32 @@ function submeterPeso() {
     return;
   }
 
+  /* Todo registo passa por aqui antes de ir para o servidor — não só o que
+   * está fora da faixa. A janela é a mesma dos dois casos; só o aviso de
+   * faixa e o texto do botão principal mudam, consoante haja algo a avisar
+   * (mesmo formato do índia17/pesagem/India Rec). */
   var g = gramas(peso, S.unidade);
-  if (g > GRAMAS_MAX || g < GRAMAS_MIN) {
-    S.porConfirmar = { peso: peso, unidade: S.unidade };
-    $('avisoConfirmar').innerHTML = t('confirmar.aviso', {
-      valor: mostrarNumero(peso.toFixed(2)), unidade: S.unidade
-    });
-    $('confirmarLinha').textContent = S.seleccionado.campo;
-    $('confirmarValor').textContent = mostrarNumero(peso.toFixed(2)) + ' ' + S.unidade;
-    mostrar('ecraConfirmar');
-    return;
-  }
+  var foraDaFaixa = (g > GRAMAS_MAX || g < GRAMAS_MIN);
 
-  gravarPeso(peso, S.unidade);
+  S.porConfirmar = { peso: peso, unidade: S.unidade };
+  $('alvoConfirmar').innerHTML = '<b>' + esc(S.seleccionado.campo) + '</b> — ' + esc(rotuloMesAno(S.mes)) + ' — ' +
+    esc(mostrarNumero(peso.toFixed(2))) + ' ' + esc(S.unidade);
+  if (foraDaFaixa) {
+    aviso('avisoConfirmar', t('confirmar.aviso', {
+      valor: mostrarNumero(peso.toFixed(2)), unidade: S.unidade
+    }));
+  } else {
+    aviso('avisoConfirmar', '');
+  }
+  $('btnRegistarAssim').textContent = t(foraDaFaixa ? 'confirmar.assim' : 'confirmar.registar');
+
+  /* Adiado: chamado a partir do Enter no campo de peso, showModal() move o
+   * foco para o primeiro botão do dialog logo no keydown — e o keyup da
+   * mesma tecla Enter, já a atingir esse botão, activa-o sozinho (fecha-se
+   * a janela sem ninguém ter tocado em nada). Um passo de fora do ciclo do
+   * evento de teclado evita a corrida (o mesmo problema já resolvido no
+   * índia17). */
+  setTimeout(function () { $('dlgConfirmar').showModal(); }, 0);
 }
 
 function gravarPeso(peso, unidade) {
@@ -1036,7 +1085,7 @@ function pintarHistorico() {
   if (!lista.length) {
     var v = document.createElement('div');
     v.className = 'empty';
-    v.textContent = t('historico.vazio', { mes: S.mes });
+    v.textContent = t('historico.vazio', { mes: rotuloMesAno(S.mes) });
     caixa.appendChild(v);
     return;
   }
@@ -1267,17 +1316,22 @@ function ligarEventos() {
     pintarSegmento('segPeso', u);
   };
 
-  // confirmação de valor fora da faixa
+  // confirmação antes de gravar
   $('btnRegistarAssim').onclick = function () {
+    $('dlgConfirmar').close();
     if (!S.porConfirmar) return;
     gravarPeso(S.porConfirmar.peso, S.porConfirmar.unidade);
   };
   $('btnCorrigir').onclick = function () {
+    $('dlgConfirmar').close();
     S.porConfirmar = null;
-    mostrar('ecraPeso');
-    $('inpPeso').value = '';
-    setTimeout(function () { $('inpPeso').focus(); }, 150);
+    setTimeout(function () { $('inpPeso').focus(); }, 100);
   };
+  // Esc fecha a janela sem gravar, tal como o botão Corrigir.
+  $('dlgConfirmar').addEventListener('cancel', function () {
+    $('dlgConfirmar').close();
+    S.porConfirmar = null;
+  });
 
   // edição
   $('btnGuardarEdicao').onclick = guardarEdicao;

@@ -172,10 +172,12 @@
   <h3 data-t="confirmar.tag"></h3>
   <p class="alvoConfirmar" id="alvoConfirmar"></p>
   <div class="banner warn" id="avisoConfirmar" hidden></div>
+  <!-- O confirmar fica à esquerda, tal como no ecrã de peso (Registar/Cancelar)
+       — o Kaz notou que aqui estava ao contrário (2026-08-28). -->
   <div class="dialogoBotoes">
-    <button class="btn cancelar" id="btnCorrigir" data-t="confirmar.corrigir"></button>
     <!-- o texto muda consoante haja ou não aviso de faixa — ver submeterPeso() em app.js -->
     <button class="btn principal" id="btnRegistarAssim"></button>
+    <button class="btn cancelar" id="btnCorrigir" data-t="confirmar.corrigir"></button>
   </div>
 </dialog>
 

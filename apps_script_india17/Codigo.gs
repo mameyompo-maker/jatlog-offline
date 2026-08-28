@@ -156,9 +156,11 @@ function folhaHatena_(ss) { return folhaOuCriar_(ss, FOLHA_HATENA, CABECALHO_HAT
 
 /**
  * Folha de dados ("India 17 weight"): tenta o nome esperado primeiro; se a
- * folha tiver sido renomeada, usa a primeira folha que não seja uma das duas
- * que este script cria (Harvest17_Log / Harvest17_Audit). Nunca é criada
- * aqui — se não existir nenhuma, é erro.
+ * folha tiver sido renomeada (2026-08-28: passou de "シート1" a "26-27"; por
+ * isso NOME_FOLHA_DADOS não é de fiar sozinho), usa a primeira folha que não
+ * seja nenhuma das três que este script cria (Harvest17_Log / Harvest17_Audit
+ * / Harvest17_Hatena). Nunca é criada aqui — se não existir nenhuma, é erro.
+ * Só funciona enquanto houver UMA ÚNICA folha de dados nesta spreadsheet.
  */
 function folhaDados_(ss) {
   var f = ss.getSheetByName(NOME_FOLHA_DADOS);
@@ -166,7 +168,7 @@ function folhaDados_(ss) {
   var todas = ss.getSheets();
   for (var i = 0; i < todas.length; i++) {
     var nome = todas[i].getName();
-    if (nome !== FOLHA_LOG && nome !== FOLHA_AUDIT) return todas[i];
+    if (nome !== FOLHA_LOG && nome !== FOLHA_AUDIT && nome !== FOLHA_HATENA) return todas[i];
   }
   throw new Error('Não foi possível encontrar a folha de dados (esperava "' + NOME_FOLHA_DADOS + '").');
 }

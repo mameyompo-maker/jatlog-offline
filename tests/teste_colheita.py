@@ -55,12 +55,25 @@ def esperar_ecra(page, alvo, limite=12):
     return False
 
 
+def esperar_dialogo(page, sel, limite=12):
+    """A confirmação é um <dialog> nativo por cima do ecrã (não uma
+    section.ecra), por isso não passa por ecra_actual()/esperar_ecra()."""
+    fim = time.time() + limite
+    while time.time() < fim:
+        if visivel(page, sel):
+            return True
+        time.sleep(0.2)
+    return False
+
+
 def cartao(page, texto):
     """O cartão do histórico de um registo concreto (não depender da ordem)."""
     return page.locator("#listaHistorico .cartao", has_text=texto).first
 
 
 def registar(page, numero, peso, unidade=None):
+    """Regista um lançamento, passando pela janela de confirmação (todo
+    registo passa por lá agora, não só o que está fora da faixa)."""
     page.fill("#inpBusca", str(numero))
     page.press("#inpBusca", "Enter")
     esperar_ecra(page, "ecraPeso")
@@ -68,6 +81,8 @@ def registar(page, numero, peso, unidade=None):
         page.click('#segPeso button[data-unidade="%s"]' % unidade)
     page.fill("#inpPeso", str(peso))
     page.press("#inpPeso", "Enter")
+    esperar_dialogo(page, "#dlgConfirmar")
+    page.click("#btnRegistarAssim")
     esperar_ecra(page, "ecraBusca")
 
 
@@ -188,15 +203,34 @@ with sync_playwright() as p:
     time.sleep(0.3)
     check("D4 zero é recusado", "maior que zero" in page.inner_text("#avisoPeso"))
 
+    # Agora TODO registo passa pela confirmação — não só o fora da faixa
+    # (pedido do Kaz, 2026-08-28): mesma janela nos dois casos, só o aviso de
+    # faixa e o texto do botão principal mudam consoante o caso.
     page.fill("#inpPeso", "99")
     page.press("#inpPeso", "Enter")
     check("D5 valor fora da faixa pede confirmação",
-          esperar_ecra(page, "ecraConfirmar"), ecra_actual(page))
+          esperar_dialogo(page, "#dlgConfirmar"), ecra_actual(page))
+    check("D5b fora da faixa mostra o aviso e o botão 'Registar assim'",
+          visivel(page, "#avisoConfirmar") and
+          page.inner_text("#btnRegistarAssim").strip() == "Registar assim",
+          page.inner_text("#btnRegistarAssim"))
     page.click("#btnCorrigir")
-    esperar_ecra(page, "ecraPeso")
+    check("D5c Corrigir fecha a janela e volta ao peso",
+          not visivel(page, "#dlgConfirmar") and ecra_actual(page) == "ecraPeso")
 
     page.fill("#inpPeso", "4.4")
     page.press("#inpPeso", "Enter")
+    check("D5d valor normal também pede confirmação, sem aviso de faixa",
+          esperar_dialogo(page, "#dlgConfirmar") and not visivel(page, "#avisoConfirmar"),
+          ecra_actual(page))
+    check("D5e botão diz 'Registar' (não 'Registar assim')",
+          page.inner_text("#btnRegistarAssim").strip() == "Registar",
+          page.inner_text("#btnRegistarAssim"))
+    check("D5f mostra a linha e o valor",
+          "L2" in page.inner_text("#alvoConfirmar") and
+          "4,40" in page.inner_text("#alvoConfirmar"),
+          page.inner_text("#alvoConfirmar"))
+    page.click("#btnRegistarAssim")
     check("D6 volta à busca depois de gravar", esperar_ecra(page, "ecraBusca"), ecra_actual(page))
     # o ecra esta em portugues, por isso o sinal decimal mostrado e a virgula
     check("D7 banner de gravado", "4,40" in page.inner_text("#avisoGravado"),
@@ -429,6 +463,8 @@ with sync_playwright() as p:
           page.inner_text("#pesoLinha"))
     page.fill("#inpPeso", "4.2")
     page.press("#inpPeso", "Enter")
+    esperar_dialogo(page, "#dlgConfirmar")
+    page.click("#btnRegistarAssim")
     esperar_ecra(page, "ecraBusca")
     time.sleep(1.0)
     st = estado()
@@ -479,15 +515,17 @@ with sync_playwright() as p:
     anos = page.locator("#selAno option").all_inner_texts()
     check("N2 escolher Índia 17 restringe o ano a 2026/2027", anos == ["2026", "2027"], anos)
 
+    # Os rótulos vêm traduzidos (pt, língua por omissão) — o valor por trás
+    # de cada <option> continua em inglês (ver N5, mais abaixo).
     page.select_option("#selAno", "2026")
     meses2026 = page.locator("#selMes option").all_inner_texts()
     check("N3 com 2026, o mês inclui 'Up to Jul'",
-          meses2026 == ["Up to Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], meses2026)
+          meses2026 == ["Até Jul (acumulado)", "Ago", "Set", "Out", "Nov", "Dez"], meses2026)
 
     page.select_option("#selAno", "2027")
     meses2027 = page.locator("#selMes option").all_inner_texts()
     check("N4 com 2027, só Jan/Feb/Mar (sem 'Up to Jul')",
-          meses2027 == ["Jan", "Feb", "Mar"], meses2027)
+          meses2027 == ["Jan", "Fev", "Mar"], meses2027)
 
     # volta a 2026 e escolhe "Up to Jul" — o caso especial pedido pelo Kaz
     page.select_option("#selAno", "2026")

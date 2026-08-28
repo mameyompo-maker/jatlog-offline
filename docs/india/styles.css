@@ -741,8 +741,6 @@ dialog ul { margin: 10px 0; padding-left: 20px; color: var(--aviso); font-size: 
   border-radius: 999px;
   transition: width .35s ease-out;
 }
-.minitexto { display: block; margin-top: 6px; font-size: 13px; color: var(--txt2); }
-
 .resumo {
   margin: 6px 0 18px;
   padding: 16px;

@@ -1,0 +1,35 @@
+/* JatLog — módulo da colheita: só o que este ecrã acrescenta à folha comum
+ * (../styles.css, carregada antes desta). As classes .ecra, .painel, .banner,
+ * .cartao, .mostrador, .segmento, .histrow, .accoes, .topbar, .eyebrow, etc.
+ * já existem lá — não se repetem aqui, só se usam.
+ */
+
+/* Confirmação antes de gravar: janela pequena por cima do ecrã (dialog nativo
+ * do navegador), não um ecrã inteiro — o mesmo formato da pesagem/índia17/
+ * India Rec. */
+dialog#dlgConfirmar {
+  width: min(420px, calc(100vw - 36px));
+  padding: 22px;
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line-forte);
+  border-radius: var(--r-card);
+}
+dialog#dlgConfirmar::backdrop { background: rgba(0, 0, 0, .68); }
+dialog#dlgConfirmar h3 {
+  margin: 0 0 12px;
+  font-family: var(--font-ui);
+  font-size: 18px;
+  color: var(--ink);
+}
+.alvoConfirmar {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  background: var(--card2);
+  border-radius: var(--r-ctl);
+  font-family: var(--font-mono);
+  font-size: 17px;
+}
+dialog#dlgConfirmar .banner.warn { margin: 0 0 12px; }
+.dialogoBotoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+.dialogoBotoes .btn { margin: 0; }

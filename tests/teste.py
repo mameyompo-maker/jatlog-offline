@@ -60,12 +60,25 @@ def ir_menu(page):
     esperar_ecra(page, "ecraMenu")
 
 
+def esperar_dialogo(page, sel, limite=12):
+    fim = time.time() + limite
+    while time.time() < fim:
+        if visivel(page, sel):
+            return True
+        time.sleep(0.2)
+    return False
+
+
 def registar_peso(page, numero, peso):
+    """Regista um lançamento, passando pela janela de confirmação (todo
+    registo passa por lá agora, não só o que está fora da faixa)."""
     page.fill("#inpBusca", str(numero))
     page.press("#inpBusca", "Enter")
     esperar_ecra(page, "ecraPeso")
     page.fill("#inpPeso", str(peso))
     page.press("#inpPeso", "Enter")
+    esperar_dialogo(page, "#dlgConfirmar")
+    page.click("#btnRegistarAssim")
     esperar_ecra(page, "ecraBusca")
 
 
