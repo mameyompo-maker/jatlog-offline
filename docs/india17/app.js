@@ -792,6 +792,21 @@ function mostrarErrosDaFila() {
   }
 }
 
+/**
+ * Botão "Source ID desconhecido (?)": vai direito ao peso de um Source ID
+ * "?", sem precisar de existir na folha "India 17 weight" — ao contrário do
+ * "?" da colheita (que é uma linha do Master), aqui o Kaz pediu para NÃO
+ * mexer nessa folha. O Harvest17_Log já aceita qualquer texto em Source ID
+ * (não há validação contra a lista), por isso não é preciso nada especial
+ * do lado do cliente para o registo em si — só este atalho, já que "?" não
+ * está em S.master[mes] e não apareceria na lista. O Codigo.gs, ao ver
+ * sourceId="?", actualiza a folha à parte Harvest17_Hatena (uma linha por
+ * mês) em vez de tentar (em vão) encontrá-lo em "India 17 weight".
+ */
+function buscarHatena() {
+  abrirPeso({ id: '?', rowNumber: '', totalPlantas: '' });
+}
+
 function abrirPeso(item) {
   S.seleccionado = item;
   S.porConfirmar = null;
@@ -1032,10 +1047,15 @@ function voltarDaEdicao() {
 
 // ------------------------------------------------------------------ entrada
 
-function continuarDoMes() {
-  var mes = $('selMes').value;
-  if (!mes || MESES.indexOf(mes) < 0) { aviso('avisoMes', t('mes.falta')); return; }
-
+/**
+ * Entra num mês concreto e vai direito à lista — usado tanto pelo botão
+ * Continuar deste ecrã (continuarDoMes) como pela entrada directa vinda da
+ * colheita, que já traz o mês escolhido na URL (ver arrancar()). Mostra
+ * sempre ecraMes primeiro (mesmo vindo de fora) para a mensagem "a
+ * carregar…" ter onde aparecer — o mesmo padrão do ecraLocal da colheita
+ * enquanto o cadastro carrega.
+ */
+function entrarNoMes(mes) {
   S.mes = mes;
   Def.set('mes', mes);
   S.seleccionado = null;
@@ -1044,6 +1064,7 @@ function continuarDoMes() {
   S.filtroId = '';
 
   aviso('avisoMes', t('mes.aCarregar'));
+  mostrar('ecraMes');
 
   carregarMaster(false).then(function () {
     aviso('avisoMes', '');
@@ -1052,6 +1073,12 @@ function continuarDoMes() {
   }).catch(function () {
     aviso('avisoMes', t('mes.semCadastro'));
   });
+}
+
+function continuarDoMes() {
+  var mes = $('selMes').value;
+  if (!mes || MESES.indexOf(mes) < 0) { aviso('avisoMes', t('mes.falta')); return; }
+  entrarNoMes(mes);
 }
 
 /**
@@ -1078,6 +1105,7 @@ function ligarEventos() {
     irParaMes();
   };
   $('btnMenu').onclick = irParaMenu;
+  $('btnHatena').onclick = buscarHatena;
 
   /* Busca da lista: filtra a cada tecla; Enter com um só cartão visível abre-o
    * logo, sem precisar de tocar. */
@@ -1182,8 +1210,23 @@ function arrancar() {
     if (pendentes().length) pedirSincronizacaoEmSegundoPlano();
     if (navigator.onLine) enviarFila();
 
-    /* Começa-se sempre pela escolha do mês, sem nada marcado — mesma razão
-     * da pesagem: com um valor por omissão era fácil registar no mês
+    /* Vindo da escolha de local da colheita (Índia 17 é a 3ª opção lá — ver
+     * colheita/app.js): o mês/ano já foram escolhidos naquele ecrã e seguem
+     * na URL, por isso salta-se direito para a lista, tal como Tanheia/7 de
+     * Abril vão direito à busca — sem repetir a pergunta aqui.
+     * ⚠ Tira-se o "?mes=" da URL logo a seguir (history.replaceState): senão
+     * um simples recarregar da página (F5, ou o arranque sem rede) voltava
+     * sempre a saltar a escolha do mês, mesmo sem ter vindo da colheita. */
+    var mesUrl = new URLSearchParams(location.search).get('mes');
+    if (mesUrl) history.replaceState(null, '', location.pathname);
+    if (mesUrl && MESES.indexOf(mesUrl) >= 0) {
+      entrarNoMes(mesUrl);
+      return;
+    }
+
+    /* Sem mês na URL (ex.: "Mudar mês" dentro do próprio módulo, ou recarregar
+     * a página): começa-se pela escolha do mês, sem nada marcado — mesma
+     * razão da pesagem: com um valor por omissão era fácil registar no mês
      * errado sem dar por isso. */
     S.escolha = null;
     irParaMes();

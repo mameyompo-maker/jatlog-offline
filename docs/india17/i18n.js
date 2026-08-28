@@ -39,6 +39,7 @@ var TEXTOS = {
     'geral.menu': 'Menu (trocar de registo)',
 
     'lista.titulo': 'Escolha o Source ID',
+    'lista.hatena': 'Source ID desconhecido (?)',
     'lista.mudarMes': 'Mudar mês',
     'lista.buscar': 'Procurar Source ID…',
     'lista.badge': '{n} registo(s) · {kg} kg',
@@ -117,6 +118,7 @@ var TEXTOS = {
     'geral.menu': 'Menu (switch record)',
 
     'lista.titulo': 'Choose the Source ID',
+    'lista.hatena': 'Unknown Source ID (?)',
     'lista.mudarMes': 'Change month',
     'lista.buscar': 'Search Source ID…',
     'lista.badge': '{n} entry(ies) · {kg} kg',
@@ -195,6 +197,7 @@ var TEXTOS = {
     'geral.menu': 'メニュー(登録先を変える)',
 
     'lista.titulo': 'Source ID を選んでください',
+    'lista.hatena': '不明な Source ID(?)',
     'lista.mudarMes': '月を変える',
     'lista.buscar': 'Source ID を検索…',
     'lista.badge': '{n} 件 · {kg} kg',

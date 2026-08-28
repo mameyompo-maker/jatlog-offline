@@ -23,6 +23,25 @@ var GRAMAS_MIN = 5;       // abaixo disto também
 var MESES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+/* Índia 17 não segue o calendário Jan..Dec + ano à volta do actual: a folha
+ * "India 17 weight" só tem colunas fixas (Aug/26..Mar/27) mais o caso
+ * especial "Up to Jul/26" (soma tudo até essa data — ver MES_ANTES no
+ * apps_script_india17/Codigo.gs). Por agora só há as campanhas 2026/2027.
+ * O pulldown de mês/ano é o mesmo #selMes/#selAno dos outros locais — só a
+ * lista de opções muda consoante o local escolhido (ver popularMesAno()). */
+var INDIA17_ANOS = [2026, 2027];
+var INDIA17_MESES_POR_ANO = {
+  2026: ['Up to Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  2027: ['Jan', 'Feb', 'Mar']
+};
+
+/** "Aug"+2026 -> "Aug/26"; "Up to Jul"+2026 -> "Up to Jul/26" (o valor exacto
+ * que o Apps Script do Índia 17 espera — ver MES_ANTES em Codigo.gs). */
+function india17Mes(mes, ano) {
+  if (mes === 'Up to Jul') return 'Up to Jul/26';
+  return mes + '/' + String(ano).slice(-2);
+}
+
 /* Acrescentar um local aqui (e no Codigo.gs, e em i18n.js) basta para ele
  * aparecer no menu. Os nomes dos sítios são próprios, não se traduzem. */
 /* "hatena": true liga o botão "Bloco desconhecido (?)" no ecrã de busca — só
@@ -35,7 +54,9 @@ var MESES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
  * mês, sem separador "Master" com busca), por isso continua com o seu
  * próprio módulo (../india17/), só a entrada é que passou a ser esta mesma
  * "escolha do local", lado a lado com Tanheia e 7 de Abril — não tem mais
- * cartão próprio no menu. Ver continuarDoLocal(). */
+ * cartão próprio no menu. O mês/ano escolhem-se aqui mesmo (popularMesAno());
+ * ao continuar, o valor já escolhido segue na URL para o módulo próprio
+ * aterrar direito na lista, sem repetir a pergunta. Ver continuarDoLocal(). */
 var LOCAIS = {
   lines:   { rotulo: 'Tanheia (Linhas)',    curto: 'Tanheia',    campo: 'Line Number', prefixo: 'L', hatena: false },
   blocks:  { rotulo: '7 de Abril (Blocos)', curto: '7 de Abril', campo: 'Block',       prefixo: ''  , hatena: true  },
@@ -700,16 +721,36 @@ function irParaLocal() {
   });
   $('btnContinuar').disabled = !S.escolha;
 
-  /* Índia 17 não usa mês+ano desta página — segue para o seu próprio módulo,
-   * que pergunta o mês à maneira dele (colunas fixas da folha, não um
-   * calendário qualquer). Ver LOCAIS.india17.redirecionar. */
-  var vaiRedirigir = S.escolha && LOCAIS[S.escolha].redirecionar;
-  $('linhaMesAno').hidden = !!vaiRedirigir;
-  $('avisoIndia17').hidden = !vaiRedirigir;
+  popularMesAno();
+
+  mostrar('ecraLocal');
+}
+
+/**
+ * Preenche #selMes/#selAno consoante o local escolhido. Tanheia/7 de Abril
+ * usam o calendário Jan..Dec + ano à volta do actual (como sempre); Índia 17
+ * usa só as campanhas 2026/2027 e os meses reais dessa folha (ver
+ * INDIA17_MESES_POR_ANO) — o pulldown é o mesmo par de <select>, só a lista
+ * de opções muda. Chamada sempre que a escolha de local muda (irParaLocal())
+ * e sempre que o ano de Índia 17 muda (ver ligarEventos).
+ */
+function popularMesAno() {
+  var selM = $('selMes'), selA = $('selAno');
+
+  if (S.escolha === 'india17') {
+    var anoAntes = selA.value;
+    selA.innerHTML = '';
+    INDIA17_ANOS.forEach(function (a) {
+      var o = document.createElement('option'); o.value = String(a); o.textContent = String(a);
+      selA.appendChild(o);
+    });
+    selA.value = (INDIA17_ANOS.indexOf(Number(anoAntes)) >= 0) ? anoAntes : String(INDIA17_ANOS[0]);
+    popularMesesIndia17();
+    return;
+  }
 
   var agora = new Date();
   var anos = [agora.getFullYear() - 1, agora.getFullYear(), agora.getFullYear() + 1];
-  var selM = $('selMes'), selA = $('selAno');
   selM.innerHTML = ''; selA.innerHTML = '';
   MESES.forEach(function (m) {
     var o = document.createElement('option'); o.value = m; o.textContent = m; selM.appendChild(o);
@@ -729,8 +770,24 @@ function irParaLocal() {
   }
   selM.value = mes;
   selA.value = ano;
+}
 
-  mostrar('ecraLocal');
+/** Repõe as opções de #selMes para o ano escolhido de Índia 17. Nunca cai em
+ * "Up to Jul" por omissão — a mesma cautela do módulo Índia 17: com um valor
+ * por omissão era fácil registar sem querer no acumulado. */
+function popularMesesIndia17() {
+  var selM = $('selMes');
+  var ano = Number($('selAno').value) || INDIA17_ANOS[0];
+  var antigo = selM.value;
+  var lista = INDIA17_MESES_POR_ANO[ano] || [];
+
+  selM.innerHTML = '';
+  lista.forEach(function (m) {
+    var o = document.createElement('option'); o.value = m; o.textContent = m; selM.appendChild(o);
+  });
+
+  var omissao = (lista[0] === 'Up to Jul') ? (lista[1] || lista[0]) : lista[0];
+  selM.value = (lista.indexOf(antigo) >= 0) ? antigo : omissao;
 }
 
 function irParaBusca() {
@@ -1124,7 +1181,11 @@ function voltarDaEdicao() {
 function continuarDoLocal() {
   var site = S.escolha;
   if (!site || !LOCAIS[site]) { aviso('avisoLocal', t('local.faltaLocal')); return; }
-  if (LOCAIS[site].redirecionar) { location.href = LOCAIS[site].redirecionar; return; }
+  if (LOCAIS[site].redirecionar) {
+    var mesIndia = india17Mes($('selMes').value, Number($('selAno').value));
+    location.href = LOCAIS[site].redirecionar + '?mes=' + encodeURIComponent(mesIndia);
+    return;
+  }
   var mes = $('selMes').value + '-' + String($('selAno').value).slice(-2);
 
   S.site = site;
@@ -1163,6 +1224,12 @@ function ligarEventos() {
   // local e mês
   $('btnContinuar').onclick = continuarDoLocal;
   $('btnMenu2').onclick = irParaMenu;
+  /* Só para Índia 17: o ano decide que meses existem (ver
+   * INDIA17_MESES_POR_ANO) — nos outros locais o mês é sempre Jan..Dec,
+   * independente do ano, por isso não precisa de reagir aqui. */
+  $('selAno').onchange = function () {
+    if (S.escolha === 'india17') popularMesesIndia17();
+  };
 
   // busca
   $('inpBusca').onkeydown = function (e) {

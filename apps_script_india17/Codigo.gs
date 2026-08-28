@@ -23,8 +23,12 @@
  * O cliente envia POST com Content-Type: text/plain para evitar o preflight
  * CORS (o Apps Script nao responde a OPTIONS). O corpo e JSON.
  *
- * Script novo: tal como o da pesagem, Harvest17_Log e Harvest17_Audit nascem
- * so com este script, por isso nao precisam de logica de migracao.
+ * Script novo: tal como o da pesagem, Harvest17_Log, Harvest17_Audit e
+ * Harvest17_Hatena nascem so com este script, por isso nao precisam de
+ * logica de migracao. Harvest17_Hatena e o total mensal do Source ID
+ * especial "?" (lancamento desconhecido, tal como o "?" da colheita/
+ * pesagem) — o Kaz pediu para NAO acrescentar esse caso a folha "India 17
+ * weight", por isso fica numa folha propria, uma linha por mes.
  *
  * Antes de implantar, corre a funcao diagnostico() (menu "Executar" no editor,
  * escolhendo essa funcao) e confere o registo (Ver > Registos de execucao):
@@ -57,6 +61,16 @@ var MESES_VALIDOS = MESES_COLUNAS.concat([MES_ANTES]);
 var FOLHA_LOG = 'Harvest17_Log';
 var FOLHA_AUDIT = 'Harvest17_Audit';
 var FUSO = 'Africa/Maputo';
+
+// Fonte especial "?" (Source ID desconhecido, tal como o "?" da colheita e
+// da pesagem): o Kaz pediu para NÃO mexer na folha "India 17 weight", por
+// isso "?" nunca lá aparece. Cada lançamento com sourceId="?" fica sempre no
+// Harvest17_Log (aceita qualquer texto, sem validação de lista) e, além
+// disso, o total por mês fica visível numa folha própria, criada sozinha —
+// ver folhaHatena_/atualizarHatena17_.
+var SOURCE_HATENA = '?';
+var FOLHA_HATENA = 'Harvest17_Hatena';
+var CABECALHO_HATENA = ['Month', 'Records', 'Total weight (kg)'];
 
 // Harvest17_Log: A..H.
 var COL_TS = 1, COL_USER = 2, COL_MES = 3, COL_SOURCE = 4;
@@ -138,6 +152,7 @@ function folhaOuCriar_(ss, nome, cabecalho) {
 
 function folhaLog_(ss) { return folhaOuCriar_(ss, FOLHA_LOG, CABECALHO_LOG); }
 function folhaAudit_(ss) { return folhaOuCriar_(ss, FOLHA_AUDIT, CABECALHO_AUDIT); }
+function folhaHatena_(ss) { return folhaOuCriar_(ss, FOLHA_HATENA, CABECALHO_HATENA); }
 
 /**
  * Folha de dados ("India 17 weight"): tenta o nome esperado primeiro; se a
@@ -326,6 +341,35 @@ function atualizarResumo17_(folhaD, cols, mes, sourceId, linhasLog) {
   }
 }
 
+/**
+ * Recalcula, a partir do Harvest17_Log, o total desse mês para o Source ID
+ * especial "?" e escreve/actualiza a linha correspondente na folha
+ * Harvest17_Hatena (uma linha por mês, criada por este script — a folha
+ * "India 17 weight" fica sempre de fora disto, por pedido do Kaz).
+ */
+function atualizarHatena17_(folhaH, mes, linhasLog) {
+  var conta = 0, soma = 0;
+  for (var k = 0; k < linhasLog.length; k++) {
+    var L = linhasLog[k];
+    if (String(L[COL_MES - 1]).trim() !== mes) continue;
+    if (!igual_(L[COL_SOURCE - 1], SOURCE_HATENA)) continue;
+    conta++;
+    soma += Number(L[COL_KG - 1]) || 0;
+  }
+
+  var ultima = folhaH.getLastRow();
+  var linha = 0;
+  if (ultima >= 2) {
+    var meses = folhaH.getRange(2, 1, ultima - 1, 1).getValues();
+    for (var i = 0; i < meses.length; i++) {
+      if (String(meses[i][0]).trim() === mes) { linha = i + 2; break; }
+    }
+  }
+  if (!linha) linha = Math.max(ultima + 1, 2);
+
+  folhaH.getRange(linha, 1, 1, CABECALHO_HATENA.length).setValues([[mes, conta, arred_(soma, 3)]]);
+}
+
 // ---------------------------------------------------------------- doGet
 
 function doGet(e) {
@@ -465,14 +509,27 @@ function doPost(e) {
 
     // O Harvest17_Log ja esta todo actualizado (em memoria e na folha) neste
     // ponto; recalcula a cache uma vez por cada par mes+Source ID tocado, ja
-    // com o efeito de todas as entradas do lote.
+    // com o efeito de todas as entradas do lote. O Source ID especial "?"
+    // nunca esta na folha "India 17 weight" (por pedido do Kaz), por isso
+    // vai antes para a folha Harvest17_Hatena, criada a parte.
     if (Object.keys(tocados).length) {
       var folhaD = folhaDados_(ss);
       var cols = colunasDados_(folhaD);
+      var folhaH = null;
       for (var chave in tocados) {
         var partes = chave.split('|');
+        var mesTocado = partes[0], sourceIdTocado = partes[1];
+        if (igual_(sourceIdTocado, SOURCE_HATENA)) {
+          try {
+            folhaH = folhaH || folhaHatena_(ss);
+            atualizarHatena17_(folhaH, mesTocado, linhas);
+          } catch (err4b) {
+            // Idem: nao deve impedir o resto do lote.
+          }
+          continue;
+        }
         try {
-          atualizarResumo17_(folhaD, cols, partes[0], partes[1], linhas);
+          atualizarResumo17_(folhaD, cols, mesTocado, sourceIdTocado, linhas);
         } catch (err4) {
           // Um mes/Source ID sem correspondencia na folha de dados nao deve
           // impedir o resto do lote; o Harvest17_Log ja ficou correcto.
@@ -602,6 +659,10 @@ function diagnostico() {
                (log ? Math.max(log.getLastRow() - 1, 0) + ' linhas' : 'AUSENTE (criada no 1º uso)'));
     Logger.log(FOLHA_AUDIT + '=' +
                (audit ? Math.max(audit.getLastRow() - 1, 0) + ' linhas' : 'AUSENTE (criada no 1º uso)'));
+
+    var hatena = ss.getSheetByName(FOLHA_HATENA);
+    Logger.log(FOLHA_HATENA + '=' +
+               (hatena ? Math.max(hatena.getLastRow() - 1, 0) + ' linhas' : 'AUSENTE (criada no 1º uso)'));
   } catch (err) {
     Logger.log('ERRO — ' + err);
   }

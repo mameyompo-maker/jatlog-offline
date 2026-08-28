@@ -110,31 +110,37 @@ def ir_entrada(page):
         esperar_ecra(page, "ecraEntrada")
 
 
-def ir_para_india17(page):
+def ir_para_india17(page, mes="Aug", ano=2026):
     """A partir do menu, chega ao módulo do Índia 17 — que não tem cartão
-    próprio: vive como 3ª opção na escolha de local da colheita, ao lado de
-    Tanheia e 7 de Abril. Escolhê-la e continuar só redirecciona para
-    ../india17/, que trata do resto (a escolha do mês) sozinho."""
+    próprio: vive como 3ª opção na escolha de local da colheita, com o mesmo
+    par de pulldowns mês/ano usado por Tanheia/7 de Abril (só a lista de
+    opções muda — ver INDIA17_MESES_POR_ANO em colheita/app.js). Escolher
+    local + mês/ano e continuar vai direito para a lista do módulo próprio
+    (../india17/?mes=...), sem repetir a pergunta do mês lá. 'mes' usa o
+    nome curto do pulldown (ex. "Aug", "Up to Jul"), não o formato completo
+    ("Aug/26") que o módulo do Índia 17 grava."""
     esperar_ecra(page, "ecraMenu")
     page.click("#cartaoColheita")
     page.wait_for_load_state("load")
     esperar_ecra(page, "ecraLocal")
     page.click('.escolha-local[data-site="india17"]')
+    page.select_option("#selAno", str(ano))
+    page.select_option("#selMes", mes)
     page.click("#btnContinuar")
     page.wait_for_load_state("load")
-    esperar_ecra(page, "ecraMes")
+    esperar_ecra(page, "ecraLista")
 
 
-def entrar_como(page, nome, senha=None):
+def entrar_como(page, nome, senha=None, mes="Aug", ano=2026):
     """Troca de utilizador na entrada comum e volta ao módulo do Índia 17,
-    na escolha do mês."""
+    já na lista (mês/ano escolhidos na colheita, como qualquer outro local)."""
     ir_entrada(page)
     page.fill("#inpNome", nome)
     if senha is not None:
         page.locator("#blocoAdmin summary").click()
         page.fill("#inpSenha", senha)
     page.click("#btnComecar")
-    ir_para_india17(page)
+    ir_para_india17(page, mes, ano)
 
 
 def escolher_mes(page, mes):
@@ -171,25 +177,25 @@ with sync_playwright() as p:
     check("A2 Índia 17 aparece na escolha de local, junto de Tanheia/7 de Abril",
           page.locator('.escolha-local[data-site="india17"]').count() == 1)
 
+    # o mês/ano escolhem-se já aqui, tal como Tanheia/7 de Abril — só a lista
+    # de opções muda (2026/2027 fixos; ver teste_colheita.py para o detalhe)
     page.click('.escolha-local[data-site="india17"]')
+    page.select_option("#selAno", "2026")
+    page.select_option("#selMes", "Aug")
     page.click("#btnContinuar")
     page.wait_for_load_state("load")
-    check("A3 chega ao módulo do Índia 17, na escolha do mês",
-          esperar_ecra(page, "ecraMes"), ecra_actual(page))
-    check("A4 pulldown tem os 9 meses (Up to Jul/26 + Aug/26..Mar/27)",
-          page.locator("#selMes option").count() == 9)
+    check("A3 chega directo à lista do Índia 17 (sem repetir a pergunta do mês)",
+          esperar_ecra(page, "ecraLista"), ecra_actual(page))
+    check("A4 mês do topo é 'Aug/26'", "AUG/26" in page.inner_text("#topoMes").upper(),
+          page.inner_text("#topoMes"))
     page.screenshot(path=os.path.join(OUT, "01_mes.png"), full_page=True)
 
-    # ------------------------------------------------------------ B. escolha
-    page.select_option("#selMes", "Aug/26")
-    check("B1 fica marcado no pulldown", page.input_value("#selMes") == "Aug/26")
-    page.click("#btnContinuar")
-    check("B2 chega à lista de Source ID", esperar_ecra(page, "ecraLista"), ecra_actual(page))
-    check("B3 lista tem os 17 Source ID", page.locator("#listaIds .cartao").count() == 17,
+    # ------------------------------------------------------------ B. lista
+    check("B1 lista tem os 17 Source ID", page.locator("#listaIds .cartao").count() == 17,
           page.locator("#listaIds .cartao").count())
-    check("B4 sem registo mostra o texto neutro",
+    check("B2 sem registo mostra o texto neutro",
           "ainda sem registo" in cartaoId(page, "India #bag05").inner_text())
-    check("B5 mostra a linha e o n.º de plantas de contexto",
+    check("B3 mostra a linha e o n.º de plantas de contexto",
           "Linha" in cartaoId(page, "India #bag05").inner_text(),
           cartaoId(page, "India #bag05").inner_text())
     page.screenshot(path=os.path.join(OUT, "02_lista.png"), full_page=True)
@@ -395,8 +401,7 @@ with sync_playwright() as p:
           page.locator("#listaHistorico .selo").count() == 0)
 
     # ---------------------------------------------------------- H. permissões
-    entrar_como(page, "Op2")
-    escolher_mes(page, "Sep/26")
+    entrar_como(page, "Op2", mes="Sep")
     check("H1 registos de outra pessoa ficam trancados",
           page.locator("#listaHistorico .histrow").count() >= 3,
           page.locator("#listaHistorico .histrow").count())
@@ -409,8 +414,7 @@ with sync_playwright() as p:
     page.locator("#blocoAdmin summary").click()
     page.fill("#inpSenha", "JatRD2026")
     page.click("#btnComecar")
-    ir_para_india17(page)
-    escolher_mes(page, "Sep/26")
+    ir_para_india17(page, mes="Sep")
     check("I1 crachá ADMIN", "ADMIN" in page.inner_text("#topoNome"))
     check("I2 admin pode editar tudo",
           page.locator("#listaHistorico .cartao").count() >= 3,
@@ -438,6 +442,28 @@ with sync_playwright() as p:
           page.locator("#listaIds .cartao").count() == 17)
     ctx.set_offline(False)
     page.screenshot(path=os.path.join(OUT, "09_offline_reload.png"), full_page=True)
+
+    # -------------------------------------------------- L. Source ID "?"
+    # A folha "India 17 weight" (master) fica intocada, tal como pedido pelo
+    # Kaz — os lançamentos com Source ID desconhecido vão para uma folha
+    # própria (Harvest17_Hatena), aberta directamente pelo botão da lista,
+    # sem precisar de aparecer no cadastro (ver buscarHatena() em app.js e
+    # atualizarHatena17_() em Codigo.gs).
+    check("L1 botão do Source ID desconhecido aparece na lista",
+          page.locator("#btnHatena").count() == 1)
+    page.click("#btnHatena")
+    check("L2 abre o ecrã de peso com o Source ID '?'",
+          esperar_ecra(page, "ecraPeso") and page.inner_text("#pesoId").strip() == "?",
+          page.inner_text("#pesoId"))
+    page.fill("#inpPeso", "4.5")
+    page.press("#inpPeso", "Enter")
+    esperar_dialogo(page, "#dlgConfirmar")
+    page.click("#btnRegistarAssim")
+    check("L3 grava e volta à lista", esperar_ecra(page, "ecraLista"), ecra_actual(page))
+    time.sleep(1.2)
+    check("L4 chegou ao servidor com sourceId '?'",
+          any(l[3] == "?" and l[4] == "4.50" for l in estado()["india17"]["Sep/26"]),
+          estado()["india17"]["Sep/26"])
 
     # -------------------------------------------------------- K. erros de JS
     check("K sem erros de JavaScript na consola", not erros_js, erros_js)

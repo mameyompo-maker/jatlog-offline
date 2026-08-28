@@ -356,7 +356,9 @@ def aplicar_india17(ent, admin):
     sourceId = str(ent.get("sourceId") or "").strip()
 
     if tipo == "criar":
-        if sourceId not in source_ids_17():
+        # "?" (hatena): so como a colheita/pesagem, um lancamento desconhecido
+        # nao precisa de constar da lista fixa de Source ID.
+        if sourceId not in source_ids_17() and sourceId != "?":
             return {"uuid": uid, "ok": False, "erro": "Source ID desconhecido: %s" % sourceId}
         try:
             peso = float(ent.get("weight"))
