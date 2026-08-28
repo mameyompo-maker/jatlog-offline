@@ -45,36 +45,31 @@ function rotuloMesAno(v) {
   return rotuloMes(partes[0]) + '-' + partes[1];
 }
 
-/* Mesma ideia para os meses de Índia 17 (INDIA17_MESES_POR_ANO, abaixo): a
- * chave "Up to Jul" já tem tradução própria (ver 'confirmar.upToJul' em
- * i18n.js) porque não é um mês normal. */
+/* Mesma ideia para os meses de Índia 17 (INDIA17_MESES_POR_ANO, abaixo). */
 var MES17_ROTULOS = {
-  pt: { Aug: 'Ago', Sep: 'Set', Oct: 'Out', Nov: 'Nov', Dec: 'Dez', Jan: 'Jan', Feb: 'Fev', Mar: 'Mar' },
-  en: { Aug: 'Aug', Sep: 'Sep', Oct: 'Oct', Nov: 'Nov', Dec: 'Dec', Jan: 'Jan', Feb: 'Feb', Mar: 'Mar' },
-  ja: { Aug: '8月', Sep: '9月', Oct: '10月', Nov: '11月', Dec: '12月', Jan: '1月', Feb: '2月', Mar: '3月' }
+  pt: { Apr: 'Abr', May: 'Mai', Jun: 'Jun', Jul: 'Jul', Aug: 'Ago', Sep: 'Set', Oct: 'Out', Nov: 'Nov', Dec: 'Dez', Jan: 'Jan', Feb: 'Fev', Mar: 'Mar' },
+  en: { Apr: 'Apr', May: 'May', Jun: 'Jun', Jul: 'Jul', Aug: 'Aug', Sep: 'Sep', Oct: 'Oct', Nov: 'Nov', Dec: 'Dec', Jan: 'Jan', Feb: 'Feb', Mar: 'Mar' },
+  ja: { Apr: '4月', May: '5月', Jun: '6月', Jul: '7月', Aug: '8月', Sep: '9月', Oct: '10月', Nov: '11月', Dec: '12月', Jan: '1月', Feb: '2月', Mar: '3月' }
 };
 function rotuloMes17(m) {
-  if (m === 'Up to Jul') return t('local.ateJul');
   var tabela = MES17_ROTULOS[S.idioma] || MES17_ROTULOS.pt;
   return tabela[m] || m;
 }
 
 /* Índia 17 não segue o calendário Jan..Dec + ano à volta do actual: a folha
- * "India 17 weight" só tem colunas fixas (Aug/26..Mar/27) mais o caso
- * especial "Up to Jul/26" (soma tudo até essa data — ver MES_ANTES no
- * apps_script_india17/Codigo.gs). Por agora só há as campanhas 2026/2027.
- * O pulldown de mês/ano é o mesmo #selMes/#selAno dos outros locais — só a
- * lista de opções muda consoante o local escolhido (ver popularMesAno()). */
+ * "India 17 weight" tem colunas fixas, ciclo de 12 meses Apr/26..Mar/27. Por
+ * agora só há as campanhas 2026/2027. O pulldown de mês/ano é o mesmo
+ * #selMes/#selAno dos outros locais — só a lista de opções muda consoante o
+ * local escolhido (ver popularMesAno()). */
 var INDIA17_ANOS = [2026, 2027];
 var INDIA17_MESES_POR_ANO = {
-  2026: ['Up to Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  2026: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
   2027: ['Jan', 'Feb', 'Mar']
 };
 
-/** "Aug"+2026 -> "Aug/26"; "Up to Jul"+2026 -> "Up to Jul/26" (o valor exacto
- * que o Apps Script do Índia 17 espera — ver MES_ANTES em Codigo.gs). */
+/** "Aug"+2026 -> "Aug/26" (o valor exacto que o Apps Script do Índia 17
+ * espera). */
 function india17Mes(mes, ano) {
-  if (mes === 'Up to Jul') return 'Up to Jul/26';
   return mes + '/' + String(ano).slice(-2);
 }
 
@@ -807,9 +802,7 @@ function popularMesAno() {
   selA.value = ano;
 }
 
-/** Repõe as opções de #selMes para o ano escolhido de Índia 17. Nunca cai em
- * "Up to Jul" por omissão — a mesma cautela do módulo Índia 17: com um valor
- * por omissão era fácil registar sem querer no acumulado. */
+/** Repõe as opções de #selMes para o ano escolhido de Índia 17. */
 function popularMesesIndia17() {
   var selM = $('selMes');
   var ano = Number($('selAno').value) || INDIA17_ANOS[0];
@@ -821,8 +814,7 @@ function popularMesesIndia17() {
     var o = document.createElement('option'); o.value = m; o.textContent = rotuloMes17(m); selM.appendChild(o);
   });
 
-  var omissao = (lista[0] === 'Up to Jul') ? (lista[1] || lista[0]) : lista[0];
-  selM.value = (lista.indexOf(antigo) >= 0) ? antigo : omissao;
+  selM.value = (lista.indexOf(antigo) >= 0) ? antigo : lista[0];
 }
 
 function irParaBusca() {

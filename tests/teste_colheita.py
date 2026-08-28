@@ -502,10 +502,11 @@ with sync_playwright() as p:
     # ------------------------------------------- N. Índia 17 na hierarquia
     # Índia 17 vive na mesma escolha de local que Tanheia e 7 de Abril, com o
     # mesmo par de pulldowns mês/ano (não tem cartão próprio no menu) — só a
-    # lista de opções muda: 2026/2027 fixos, e "Up to Jul" só aparece com
-    # 2026 escolhido. Continuar vai direito para a lista do módulo próprio,
-    # tal como os outros locais vão direito à busca — sem repetir a
-    # pergunta do mês lá.
+    # lista de opções muda: 2026/2027 fixos, ciclo de 12 meses Apr/26..Mar/27
+    # (2026-08-28: Apr/May/Jun/Jul substituíram o antigo mês especial
+    # "Up to Jul", que já não existe). Continuar vai direito para a lista do
+    # módulo próprio, tal como os outros locais vão direito à busca — sem
+    # repetir a pergunta do mês lá.
     page.click("#btnMudarLocal")
     esperar_ecra(page, "ecraLocal")
     check("N1 Índia 17 aparece como 3ª opção, ao lado de Tanheia/7 de Abril",
@@ -519,23 +520,22 @@ with sync_playwright() as p:
     # de cada <option> continua em inglês (ver N5, mais abaixo).
     page.select_option("#selAno", "2026")
     meses2026 = page.locator("#selMes option").all_inner_texts()
-    check("N3 com 2026, o mês inclui 'Up to Jul'",
-          meses2026 == ["Até Jul (acumulado)", "Ago", "Set", "Out", "Nov", "Dez"], meses2026)
+    check("N3 com 2026, o mês vai de Abr a Dez",
+          meses2026 == ["Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"], meses2026)
 
     page.select_option("#selAno", "2027")
     meses2027 = page.locator("#selMes option").all_inner_texts()
-    check("N4 com 2027, só Jan/Feb/Mar (sem 'Up to Jul')",
-          meses2027 == ["Jan", "Fev", "Mar"], meses2027)
+    check("N4 com 2027, só Jan/Feb/Mar", meses2027 == ["Jan", "Fev", "Mar"], meses2027)
 
-    # volta a 2026 e escolhe "Up to Jul" — o caso especial pedido pelo Kaz
+    # volta a 2026 e escolhe "Apr" — um dos 4 meses novos
     page.select_option("#selAno", "2026")
-    page.select_option("#selMes", "Up to Jul")
+    page.select_option("#selMes", "Apr")
     page.click("#btnContinuar")
     page.wait_for_load_state("load")
-    check("N5 aterra direito na lista do Índia 17, já no mês 'Up to Jul/26'"
-          " (sem repetir a pergunta do mês lá)",
+    check("N5 aterra direito na lista do Índia 17, já no mês 'Apr/26'"
+          " (sem repetir a pergunta do mês lá; o rótulo vem traduzido: 'Abr/26')",
           esperar_ecra(page, "ecraLista") and
-          "up to jul/26" in page.inner_text("#topoMes").lower(),
+          "abr/26" in page.inner_text("#topoMes").lower(),
           (ecra_actual(page), page.inner_text("#topoMes")))
 
     check("Z sem erros de JavaScript", not erros_js, erros_js)

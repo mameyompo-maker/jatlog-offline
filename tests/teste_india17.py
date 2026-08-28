@@ -117,7 +117,7 @@ def ir_para_india17(page, mes="Aug", ano=2026):
     opções muda — ver INDIA17_MESES_POR_ANO em colheita/app.js). Escolher
     local + mês/ano e continuar vai direito para a lista do módulo próprio
     (../india17/?mes=...), sem repetir a pergunta do mês lá. 'mes' usa o
-    nome curto do pulldown (ex. "Aug", "Up to Jul"), não o formato completo
+    nome curto do pulldown (ex. "Apr", "Aug"), não o formato completo
     ("Aug/26") que o módulo do Índia 17 grava."""
     esperar_ecra(page, "ecraMenu")
     page.click("#cartaoColheita")
@@ -342,28 +342,26 @@ with sync_playwright() as p:
           estado()["india17"])
     page.screenshot(path=os.path.join(OUT, "05_outro_mes.png"), full_page=True)
 
-    # ------------------------------------------------- F4-F6. "Up to Jul/26"
-    # O mês especial que soma tudo o que foi colhido até essa data (coluna E
-    # "Up  to Jul/26" na folha) funciona como qualquer outro mês — só entra no
-    # pulldown com o texto "Up to Jul/26" a identificá-lo (pedido do Kaz:
-    # basta esse texto aparecer na opção).
+    # ------------------------------------------------- F4-F6. mês novo (Apr/26)
+    # Apr/26..Jul/26 substituíram o antigo mês especial "Up to Jul/26"
+    # (2026-08-28): já não há caso especial, são 4 colunas mensais normais.
     page.click("#btnMudarMes")
     esperar_ecra(page, "ecraMes")
-    check("F4 pulldown mostra o texto 'Up to Jul/26' na opção especial",
-          "Up to Jul/26" in page.locator('#selMes option[value="Up to Jul/26"]').inner_text())
-    page.select_option("#selMes", "Up to Jul/26")
+    check("F4 pulldown mostra a opção 'Apr/26'",
+          page.locator('#selMes option[value="Apr/26"]').count() == 1)
+    page.select_option("#selMes", "Apr/26")
     page.click("#btnContinuar")
     esperar_ecra(page, "ecraLista")
-    check("F5 'Up to Jul/26' começa sem registos",
+    check("F5 'Apr/26' começa sem registos",
           "ainda sem registo" in cartaoId(page, "India #bag01").inner_text())
     pesar(page, "India #bag01", "2.2")
     time.sleep(1.2)
-    check("F6 grava em 'Up to Jul/26' sem misturar com os outros meses",
-          len(estado()["india17"]["Up to Jul/26"]) == 1 and
+    check("F6 grava em 'Apr/26' sem misturar com os outros meses",
+          len(estado()["india17"]["Apr/26"]) == 1 and
           len(estado()["india17"]["Sep/26"]) == 1 and
           len(estado()["india17"]["Aug/26"]) == 3,
           estado()["india17"])
-    page.screenshot(path=os.path.join(OUT, "05b_up_to.png"), full_page=True)
+    page.screenshot(path=os.path.join(OUT, "05b_novo_mes.png"), full_page=True)
 
     # volta a Sep/26: o resto do fluxo (offline, permissões, admin) conta
     # com esse mês continuar a ser o actual.

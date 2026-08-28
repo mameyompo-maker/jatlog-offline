@@ -4,15 +4,14 @@
  * fixa de 17 Source ID (ex.: "India #bag01", "India#S-2A") que vem do
  * servidor — mas ao contrário da pesagem (que escolhe a época), aqui
  * escolhe-se o MÊS, porque a folha "India 17 weight" tem uma coluna por mês
- * (Aug/26 .. Mar/27) em vez de um separador por época.
+ * (Apr/26 .. Mar/27, ciclo de 12 meses) em vez de um separador por época.
  *
  * A activação e o nome são pedidos no menu (../index.html), comum aos quatro
  * módulos. Aqui o fluxo começa já na escolha do mês:
  *   mês -> lista de Source ID -> peso -> confirmar -> volta à lista
  * Cada submissão do ecrã de peso representa exactamente UM lançamento; o
  * "N registos" de cada Source ID é simplesmente quantas vezes se submeteu
- * ali NAQUELE mês (a coluna "Up to Jul/26" da folha é anterior a este módulo
- * e nunca é tocada por ele).
+ * ali NAQUELE mês.
  *
  * Regra de conflito (a mesma decidida pelo Kaz para a colheita, 2026-08-09):
  * duas pessoas nunca lançam o mesmo registo, portanto "quem chega depois
@@ -36,29 +35,28 @@ var GRAMAS_MIN = 100;
  * encontrar o seu registo original. */
 var LIMITE_LOG = 200;
 
-/* Os meses da folha "India 17 weight": "Up to Jul/26" é a coluna E (o total
- * acumulado até essa data, anterior a este módulo) e Aug/26..Mar/27 são as
- * colunas F..M. O VALOR de cada um é o que o Apps Script espera para
- * resolver a coluna certa (colunasDados_/MES_ANTES do Codigo.gs) e por isso
- * não muda com o idioma — só o RÓTULO mostrado no ecrã é que se traduz (ver
- * rotuloMes(), abaixo). Lista fixa por agora: quando a folha ganhar novas
- * colunas (nova campanha), acrescenta-se aqui, em MES_ROTULOS e no
+/* Os meses da folha "India 17 weight": ciclo de 12 meses, Apr/26..Mar/27,
+ * cada um com coluna própria. O VALOR de cada um é o que o Apps Script
+ * espera para resolver a coluna certa (colunasDados_ do Codigo.gs) e por
+ * isso não muda com o idioma — só o RÓTULO mostrado no ecrã é que se traduz
+ * (ver rotuloMes(), abaixo). Lista fixa por agora: quando a folha ganhar
+ * novas colunas (nova campanha), acrescenta-se aqui, em MES_ROTULOS e no
  * Codigo.gs. */
-var MESES = ['Up to Jul/26', 'Aug/26', 'Sep/26', 'Oct/26', 'Nov/26', 'Dec/26', 'Jan/27', 'Feb/27', 'Mar/27'];
-var MES_ANTES = 'Up to Jul/26';
+var MESES = ['Apr/26', 'May/26', 'Jun/26', 'Jul/26', 'Aug/26', 'Sep/26', 'Oct/26', 'Nov/26', 'Dec/26', 'Jan/27', 'Feb/27', 'Mar/27'];
 
 var MES_ROTULOS = {
-  pt: { 'Aug/26': 'Ago/26', 'Sep/26': 'Set/26', 'Oct/26': 'Out/26', 'Nov/26': 'Nov/26',
+  pt: { 'Apr/26': 'Abr/26', 'May/26': 'Mai/26', 'Jun/26': 'Jun/26', 'Jul/26': 'Jul/26',
+        'Aug/26': 'Ago/26', 'Sep/26': 'Set/26', 'Oct/26': 'Out/26', 'Nov/26': 'Nov/26',
         'Dec/26': 'Dez/26', 'Jan/27': 'Jan/27', 'Feb/27': 'Fev/27', 'Mar/27': 'Mar/27' },
-  en: { 'Aug/26': 'Aug/26', 'Sep/26': 'Sep/26', 'Oct/26': 'Oct/26', 'Nov/26': 'Nov/26',
+  en: { 'Apr/26': 'Apr/26', 'May/26': 'May/26', 'Jun/26': 'Jun/26', 'Jul/26': 'Jul/26',
+        'Aug/26': 'Aug/26', 'Sep/26': 'Sep/26', 'Oct/26': 'Oct/26', 'Nov/26': 'Nov/26',
         'Dec/26': 'Dec/26', 'Jan/27': 'Jan/27', 'Feb/27': 'Feb/27', 'Mar/27': 'Mar/27' },
-  ja: { 'Aug/26': '2026年8月', 'Sep/26': '2026年9月', 'Oct/26': '2026年10月', 'Nov/26': '2026年11月',
+  ja: { 'Apr/26': '2026年4月', 'May/26': '2026年5月', 'Jun/26': '2026年6月', 'Jul/26': '2026年7月',
+        'Aug/26': '2026年8月', 'Sep/26': '2026年9月', 'Oct/26': '2026年10月', 'Nov/26': '2026年11月',
         'Dec/26': '2026年12月', 'Jan/27': '2027年1月', 'Feb/27': '2027年2月', 'Mar/27': '2027年3月' }
 };
-/** Rótulo do mês na língua do ecrã ("Up to Jul/26" tem tradução própria em
- * 'mes.antes' porque não é um mês normal). */
+/** Rótulo do mês na língua do ecrã. */
 function rotuloMes(m) {
-  if (m === MES_ANTES) return t('mes.antes');
   var tabela = MES_ROTULOS[S.idioma] || MES_ROTULOS.pt;
   return tabela[m] || m;
 }
@@ -691,10 +689,10 @@ function irParaMes() {
   $('subMes').innerHTML = t(Admin.activo() ? 'mes.usuarioAdmin' : 'mes.usuario',
                             { nome: esc(S.nome) });
 
-  /* Pulldown com os meses da folha (Up to Jul/26 primeiro, depois Aug/26 em
-   * diante) — sem nada pré-marcado da primeira vez: a mesma razão da pesagem
-   * para a época, com um valor por omissão era fácil registar no mês errado
-   * sem dar por isso. Da segunda vez em diante, fica no que já estava. */
+  /* Pulldown com os meses da folha (Apr/26 primeiro, depois em diante) —
+   * sem nada pré-marcado da primeira vez: a mesma razão da pesagem para a
+   * época, com um valor por omissão era fácil registar no mês errado sem
+   * dar por isso. Da segunda vez em diante, fica no que já estava. */
   var sel = $('selMes');
   sel.innerHTML = '';
   MESES.forEach(function (m) {
@@ -1209,7 +1207,7 @@ function arrancar() {
   pedirArmazenamentoPersistente();
 
   definirIdioma(Def.get('idioma', 'pt'));
-  S.mes = Def.get('mes', MESES[1]);   // MESES[0] é "Up to Jul/26" — a omissão é o mês corrente, não o acumulado
+  S.mes = Def.get('mes', MESES[1]);
   if (MESES.indexOf(S.mes) < 0) S.mes = MESES[1];
   S.nome = Def.get('nome', '');
 

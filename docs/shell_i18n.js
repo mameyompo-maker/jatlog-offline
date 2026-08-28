@@ -26,7 +26,7 @@ var TEXTOS = {
     'activacao.botao': 'Activar',
     'activacao.falta': 'Digite o código de activação.',
     'activacao.aVerificar': 'A confirmar o código com o servidor…',
-    'activacao.recusado': 'O servidor não aceita este código. Peça o código certo ao gestor — sem ele nada do que registar consegue subir.',
+    'activacao.recusado': 'O servidor não aceita este código. Peça o código certo ao gestor — sem ele, nenhum registo consegue subir.',
     'activacao.recusadoNum': 'O servidor de {modulos} não aceita este código. Peça o código certo ao gestor — os registos desse módulo não conseguem subir.',
     'activacao.semRede': 'Sem ligação: o código ficou guardado, mas ainda não foi confirmado. Vai ser confirmado sozinho quando houver rede.',
 
@@ -42,7 +42,7 @@ var TEXTOS = {
     'entrada.botao': 'Começar',
     'entrada.faltaNome': 'Escreva o seu nome.',
     'entrada.senhaErrada': 'Senha do administrador incorrecta.',
-    'entrada.semVerificar': 'Não foi possível verificar a senha agora. Tente com internet.',
+    'entrada.semVerificar': 'Não foi possível verificar a senha agora. Tente de novo quando tiver internet.',
     'entrada.senhaDepois': 'Sem rede: a senha será verificada no envio',
 
     'menu.titulo': 'O que vai registar?',
@@ -74,10 +74,10 @@ var TEXTOS = {
     'activacao.aVerificar': 'Checking the code with the server…',
     'activacao.recusado': 'The server does not accept this code. Ask your manager for the right one — without it nothing you record can be uploaded.',
     'activacao.recusadoNum': 'The {modulos} server does not accept this code. Ask your manager for the right one — records from that module cannot be uploaded.',
-    'activacao.semRede': 'No connection: the code was saved but not confirmed yet. It will be confirmed by itself once there is network.',
+    'activacao.semRede': 'No connection: the code was saved but not confirmed yet. It will be confirmed automatically once there is signal.',
 
     'entrada.titulo': 'Who are you?',
-    'entrada.texto': 'Your name stays until you switch user, and it is used by both records.',
+    'entrada.texto': 'Your name stays until you switch user, and it applies to both records.',
     'entrada.adminActivo': 'Administrator mode is on — you will stay an administrator.',
     'entrada.sairAdmin': 'Leave administrator mode',
     'entrada.nome': 'User name',
@@ -88,7 +88,7 @@ var TEXTOS = {
     'entrada.botao': 'Start',
     'entrada.faltaNome': 'Enter your name.',
     'entrada.senhaErrada': 'Wrong administrator password.',
-    'entrada.semVerificar': 'The password cannot be checked right now. Try again with internet.',
+    'entrada.semVerificar': 'The password cannot be checked right now. Try again when you have internet.',
     'entrada.senhaDepois': 'No signal: the password will be checked when the records are sent',
 
     'menu.titulo': 'What are you recording?',
@@ -101,7 +101,7 @@ var TEXTOS = {
     'menu.pesagem': 'Sack weighing',
     'menu.pesagemDesc': 'Actual seed weight per mother plant (Tanheia) — 25-26 / 26-27.',
     'menu.india17': 'Harvest — India 17',
-    'menu.porEnviar': '{n} waiting to send',
+    'menu.porEnviar': '{n} waiting to be sent',
     'menu.desactivar': 'Deactivate this phone',
     'menu.confirmarDesactivar': 'Erase the activation code from this phone? Records waiting to be sent are kept.',
 
@@ -118,12 +118,12 @@ var TEXTOS = {
     'activacao.botao': '有効にする',
     'activacao.falta': 'アクティベーションコードを入力してください。',
     'activacao.aVerificar': 'サーバーでコードを確認しています…',
-    'activacao.recusado': 'このコードはサーバーに受け付けられません。正しいコードを管理者に確認してください。このままでは登録したものが一つも送信できません。',
+    'activacao.recusado': 'サーバーがこのコードを受け付けません。正しいコードを管理者に確認してください。このままでは登録したものが一つも送信できません。',
     'activacao.recusadoNum': '{modulos}のサーバーがこのコードを受け付けません。正しいコードを管理者に確認してください。この項目の登録は送信できません。',
     'activacao.semRede': '圏外です。コードは保存しましたが、まだ確認できていません。電波が戻れば自動で確認します。',
 
     'entrada.titulo': '名前を入れてください',
-    'entrada.texto': '名前はユーザーを切り替えるまで保持され、2つの登録の両方で使われます。',
+    'entrada.texto': '名前はユーザーを切り替えるまで保持され、どちらの記録でも使われます。',
     'entrada.adminActivo': '管理者モードが有効です。このまま管理者として続けます。',
     'entrada.sairAdmin': '管理者モードを終了する',
     'entrada.nome': 'ユーザー名',
@@ -135,9 +135,9 @@ var TEXTOS = {
     'entrada.faltaNome': '名前を入力してください。',
     'entrada.senhaErrada': '管理者パスワードが違います。',
     'entrada.semVerificar': '今はパスワードを確認できません。通信できる場所で試してください。',
-    'entrada.senhaDepois': '圏外です。パスワードは送信時に確認されます',
+    'entrada.senhaDepois': '圏外のため、パスワードは送信時に確認されます',
 
-    'menu.titulo': '何を登録しますか?',
+    'menu.titulo': '何を登録しますか',
     'menu.usuario': 'ユーザー: <b>{nome}</b>',
     'menu.usuarioAdmin': 'ユーザー: <b>{nome}</b> · 管理者',
     'menu.colheita': '収穫重量',
@@ -145,11 +145,11 @@ var TEXTOS = {
     'menu.india': 'インドの測定',
     'menu.indiaDesc': 'NBF(Tanheia)26 の株の生育と形態記載。',
     'menu.pesagem': '種子の袋の計量',
-    'menu.pesagemDesc': 'マザーIDごとの種子の実測重量(Tanheia)— 25-26 / 26-27。',
+    'menu.pesagemDesc': '母樹ごとの種子の実測重量(Tanheia) — 25-26 / 26-27。',
     'menu.india17': '収穫 — インド17系統',
     'menu.porEnviar': '未送信 {n} 件',
     'menu.desactivar': 'この端末を無効にする',
-    'menu.confirmarDesactivar': 'この端末のアクティベーションコードを消しますか?未送信の記録は消えません。',
+    'menu.confirmarDesactivar': 'この端末のアクティベーションコードを消しますか。未送信の記録は消えません。',
 
     'geral.trocarUsuario': 'ユーザーを切り替える'
   }

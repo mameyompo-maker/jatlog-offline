@@ -32,7 +32,7 @@ PORTA = int(sys.argv[2]) if len(sys.argv) > 2 else 8810
 TOKEN = "jatropha"
 ADMIN_PW = "JatRD2026"
 
-MESES_17 = ['Up to Jul/26', 'Aug/26', 'Sep/26', 'Oct/26', 'Nov/26', 'Dec/26', 'Jan/27', 'Feb/27', 'Mar/27']
+MESES_17 = ['Apr/26', 'May/26', 'Jun/26', 'Jul/26', 'Aug/26', 'Sep/26', 'Oct/26', 'Nov/26', 'Dec/26', 'Jan/27', 'Feb/27', 'Mar/27']
 
 TRAVA = threading.Lock()
 
