@@ -28,10 +28,18 @@ var MESES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 /* "hatena": true liga o botão "Bloco desconhecido (?)" no ecrã de busca — só
  * faz sentido onde o cadastro pode mesmo ter uma linha com Block = "?" (o
  * Kaz acrescenta essa linha à mão na folha Master; o resto é automático,
- * igual ao "?" que já existe na pesagem). */
+ * igual ao "?" que já existe na pesagem).
+ *
+ * "redirecionar": este local não participa do fluxo de busca por número desta
+ * página — a estrutura da folha "Índia 17" é outra (Source ID + colunas por
+ * mês, sem separador "Master" com busca), por isso continua com o seu
+ * próprio módulo (../india17/), só a entrada é que passou a ser esta mesma
+ * "escolha do local", lado a lado com Tanheia e 7 de Abril — não tem mais
+ * cartão próprio no menu. Ver continuarDoLocal(). */
 var LOCAIS = {
-  lines:  { rotulo: 'Tanheia (Linhas)',    curto: 'Tanheia',    campo: 'Line Number', prefixo: 'L', hatena: false },
-  blocks: { rotulo: '7 de Abril (Blocos)', curto: '7 de Abril', campo: 'Block',       prefixo: ''  , hatena: true  }
+  lines:   { rotulo: 'Tanheia (Linhas)',    curto: 'Tanheia',    campo: 'Line Number', prefixo: 'L', hatena: false },
+  blocks:  { rotulo: '7 de Abril (Blocos)', curto: '7 de Abril', campo: 'Block',       prefixo: ''  , hatena: true  },
+  india17: { rotulo: 'Índia 17 (Source ID)', curto: 'Índia 17',  redirecionar: '../india17/' }
 };
 
 // ------------------------------------------------------------------- estado
@@ -692,6 +700,13 @@ function irParaLocal() {
   });
   $('btnContinuar').disabled = !S.escolha;
 
+  /* Índia 17 não usa mês+ano desta página — segue para o seu próprio módulo,
+   * que pergunta o mês à maneira dele (colunas fixas da folha, não um
+   * calendário qualquer). Ver LOCAIS.india17.redirecionar. */
+  var vaiRedirigir = S.escolha && LOCAIS[S.escolha].redirecionar;
+  $('linhaMesAno').hidden = !!vaiRedirigir;
+  $('avisoIndia17').hidden = !vaiRedirigir;
+
   var agora = new Date();
   var anos = [agora.getFullYear() - 1, agora.getFullYear(), agora.getFullYear() + 1];
   var selM = $('selMes'), selA = $('selAno');
@@ -1109,6 +1124,7 @@ function voltarDaEdicao() {
 function continuarDoLocal() {
   var site = S.escolha;
   if (!site || !LOCAIS[site]) { aviso('avisoLocal', t('local.faltaLocal')); return; }
+  if (LOCAIS[site].redirecionar) { location.href = LOCAIS[site].redirecionar; return; }
   var mes = $('selMes').value + '-' + String($('selAno').value).slice(-2);
 
   S.site = site;

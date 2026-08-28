@@ -1,6 +1,7 @@
 /**
  * JatLog offline — endpoint do peso da colheita por mes (Indice 17), um
- * lancamento de cada vez, por Source ID, nas colunas Aug/26..Mar/27.
+ * lancamento de cada vez, por Source ID, nas colunas Aug/26..Mar/27 e,
+ * como caso especial (MES_ANTES), na coluna "Up  to Jul/26" (E).
  *
  * Implanta como: Implementar > Nova implementacao > Aplicacao web
  *   - Executar como   : Eu (dono da folha de calculo)
@@ -8,10 +9,9 @@
  *
  * Este script tem de ter acesso a folha de calculo
  *   10q83vNULXo8o9HeAdNqibwVXkAYDazCLGy-nIQzvWms  ("India 17 weight")
- * E o UNICO escritor das colunas de mes (Aug/26..Mar/27) e de "Total weight"
- * da folha de dados — nunca escreve em S.No, Source ID, Row Number,
- * Total no.of plant nem em "Up  to Jul/26" (essa coluna e anterior a este
- * modulo e fica sempre so de leitura, so para somar no "Total weight").
+ * E o UNICO escritor das colunas de mes (Aug/26..Mar/27), de "Up  to Jul/26"
+ * e de "Total weight" da folha de dados — nunca escreve em S.No, Source ID,
+ * Row Number nem Total no.of plant.
  *
  * Propriedades do script (Definicoes do projeto > Propriedades do script):
  *   TOKEN           — codigo de activacao (sem esta propriedade vale 'jatropha')
@@ -38,8 +38,21 @@
 
 var SPREADSHEET_ID = '10q83vNULXo8o9HeAdNqibwVXkAYDazCLGy-nIQzvWms';
 
-var MESES_VALIDOS = ['Aug/26', 'Sep/26', 'Oct/26', 'Nov/26', 'Dec/26',
+// Os 8 meses com coluna propria na folha (F..M) — usados para resolver
+// cols.meses e para somar o "Total weight". "Up to Jul/26" (MES_ANTES,
+// abaixo) NAO entra aqui: e um caso especial, mapeado para a coluna E
+// (cols.antes) em vez de uma entrada de cols.meses.
+var MESES_COLUNAS = ['Aug/26', 'Sep/26', 'Oct/26', 'Nov/26', 'Dec/26',
                       'Jan/27', 'Feb/27', 'Mar/27'];
+
+// Valor "mes" especial para a coluna E ("Up  to Jul/26" na folha, com dois
+// espacos): o cliente manda este texto exacto (sem o espaco duplo) tanto no
+// GET (?action=master&mes=...) como no POST (entries[].mes). Nunca aparece
+// em cols.meses — so em cols.antes, tratado a parte em toda a parte que
+// precisar de saber a coluna de um mes (ver colunaDoMes_).
+var MES_ANTES = 'Up to Jul/26';
+
+var MESES_VALIDOS = MESES_COLUNAS.concat([MES_ANTES]);
 
 var FOLHA_LOG = 'Harvest17_Log';
 var FOLHA_AUDIT = 'Harvest17_Audit';
@@ -226,18 +239,30 @@ function colunasDados_(folha) {
   if (iPlantas < 0) throw new Error('Coluna "' + NOME_COL_PLANTAS + '" não encontrada na folha de dados.');
 
   var meses = {};
-  MESES_VALIDOS.forEach(function (m) {
+  MESES_COLUNAS.forEach(function (m) {
     var i = indiceDe(m);
     if (i < 0) throw new Error('Coluna do mês "' + m + '" não encontrada na folha de dados.');
     meses[m] = i;
   });
 
+  // "Up to Jul/26" (MES_ANTES) escreve na coluna E — tal como os 8 meses
+  // acima, e obrigatoria: e um destino de escrita activo (o cliente deixa
+  // escolher), nao so um valor de referencia.
+  var iAntes = indiceDe(NOME_COL_ANTES);
+  if (iAntes < 0) throw new Error('Coluna "' + NOME_COL_ANTES + '" não encontrada na folha de dados.');
+
   return {
     source: iSource, rowNum: iRowNum, plantas: iPlantas, meses: meses,
-    antes: indiceDe(NOME_COL_ANTES),
-    total: indiceDe(NOME_COL_TOTAL),
+    antes: iAntes,
+    total: indiceDe(NOME_COL_TOTAL),   // só cache do total geral — opcional
     largura: largura
   };
+}
+
+/** Devolve o índice de coluna (1-based) do "mes" pedido — cols.antes para
+ * MES_ANTES, ou cols.meses[mes] para os 8 meses normais. */
+function colunaDoMes_(cols, mes) {
+  return (mes === MES_ANTES) ? cols.antes : cols.meses[mes];
 }
 
 /**
@@ -268,9 +293,9 @@ function linhasDados_(folha, cols) {
 /**
  * Recalcula a partir do Harvest17_Log (fonte da verdade) o peso desse mes
  * para esse Source ID, e escreve o resultado na coluna do mes da folha de
- * dados. Tambem actualiza "Total weight" (soma de todos os meses rastreados
- * mais o que ja estava em "Up  to Jul/26", lido mas nunca escrito) — se
- * alguma das duas colunas nao existir na folha, essa parte fica sem se
+ * dados — os 8 meses (F..M) ou, se "mes" for MES_ANTES, a coluna E ("Up  to
+ * Jul/26"), ver colunaDoMes_. Tambem actualiza "Total weight" (soma de E ate
+ * M) quando essa coluna existir — se nao existir, so essa parte fica sem se
  * actualizar (nao e essencial ao contrato, so uma comodidade). Se o Source
  * ID nao constar da folha de dados (ainda), nao escreve nada — o Log ja
  * ficou correcto de qualquer forma.
@@ -290,16 +315,13 @@ function atualizarResumo17_(folhaD, cols, mes, sourceId, linhasLog) {
     if (!igual_(L[COL_SOURCE - 1], sourceId)) continue;
     soma += Number(L[COL_KG - 1]) || 0;
   }
-  folhaD.getRange(alvo.linha, cols.meses[mes]).setValue(arred_(soma, 3));
+  folhaD.getRange(alvo.linha, colunaDoMes_(cols, mes)).setValue(arred_(soma, 3));
 
   if (cols.total > 0) {
-    var somaTudo = 0;
-    MESES_VALIDOS.forEach(function (m) {
+    var somaTudo = Number(folhaD.getRange(alvo.linha, cols.antes).getValue()) || 0;
+    MESES_COLUNAS.forEach(function (m) {
       somaTudo += Number(folhaD.getRange(alvo.linha, cols.meses[m]).getValue()) || 0;
     });
-    if (cols.antes > 0) {
-      somaTudo += Number(folhaD.getRange(alvo.linha, cols.antes).getValue()) || 0;
-    }
     folhaD.getRange(alvo.linha, cols.total).setValue(arred_(somaTudo, 3));
   }
 }

@@ -54,6 +54,7 @@ var TEXTOS = {
     'local.faltaLocal': 'Escolha o local.',
     'local.mes': 'Mês',
     'local.ano': 'Ano',
+    'local.india17Info': 'O mês escolhe-se no ecrã seguinte.',
     'local.botao': 'Continuar',
     'local.aCarregar': 'A carregar o cadastro…',
     'local.semCadastro': 'Não foi possível descarregar o cadastro deste local e ainda não há cópia neste aparelho. Ligue-se à internet uma vez.',
@@ -139,7 +140,8 @@ var TEXTOS = {
     'sitio.blocks.naoExiste': 'Bloco {v} não existe no cadastro.',
     'sitio.blocks.jaRegistado': 'Este bloco já tem um registo neste mês. Um novo lançamento será somado ao histórico.',
     'sitio.blocks.plural': 'blocos',
-    'sitio.blocks.unico': 'Bloco único'
+    'sitio.blocks.unico': 'Bloco único',
+    'sitio.india17.plural': 'Source ID',
   },
 
   en: {
@@ -177,6 +179,7 @@ var TEXTOS = {
     'local.faltaLocal': 'Choose the site.',
     'local.mes': 'Month',
     'local.ano': 'Year',
+    'local.india17Info': 'The month is chosen on the next screen.',
     'local.botao': 'Continue',
     'local.aCarregar': 'Loading the register…',
     'local.semCadastro': 'The register for this site could not be downloaded and there is no copy on this phone yet. Connect to the internet once.',
@@ -260,7 +263,8 @@ var TEXTOS = {
     'sitio.blocks.naoExiste': 'Block {v} is not in the register.',
     'sitio.blocks.jaRegistado': 'This block already has an entry this month. A new one will be added to the history.',
     'sitio.blocks.plural': 'blocks',
-    'sitio.blocks.unico': 'Single block'
+    'sitio.blocks.unico': 'Single block',
+    'sitio.india17.plural': 'Source ID',
   },
 
   ja: {
@@ -298,6 +302,7 @@ var TEXTOS = {
     'local.faltaLocal': '拠点を選んでください。',
     'local.mes': '月',
     'local.ano': '年',
+    'local.india17Info': '月は次の画面で選びます。',
     'local.botao': '次へ',
     'local.aCarregar': '台帳を読み込んでいます…',
     'local.semCadastro': 'この拠点の台帳を取得できず、この端末にも控えがありません。一度だけ通信できる場所で開いてください。',
@@ -381,6 +386,7 @@ var TEXTOS = {
     'sitio.blocks.naoExiste': 'ブロック {v} は台帳にありません。',
     'sitio.blocks.jaRegistado': 'このブロックは今月すでに記録があります。新しい記録は履歴に追加されます。',
     'sitio.blocks.plural': 'ブロック',
-    'sitio.blocks.unico': '単一ブロック'
+    'sitio.blocks.unico': '単一ブロック',
+    'sitio.india17.plural': 'Source ID',
   }
 };

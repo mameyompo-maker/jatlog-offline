@@ -43,10 +43,11 @@
     <div class="painel">
       <div class="banner error" id="avisoMes" hidden></div>
 
-      <!-- O mês escolhe-se sempre, sem nada pré-marcado: com um valor por
-           omissão era fácil registar no mês errado. -->
-      <div class="campo" data-t="mes.campo"></div>
-      <div id="escolhaMes" class="escolhas-local escolhas-mes"></div>
+      <!-- Pulldown, tal como o mês/ano da colheita (Tanheia/7 de Abril) — mesmo
+           formato de ecrã em todos os locais. Sem nada pré-marcado: com um
+           valor por omissão era fácil registar no mês errado. -->
+      <label class="campo" for="selMes" data-t="mes.campo"></label>
+      <select id="selMes"></select>
 
       <button class="btn principal" id="btnContinuar" data-t="mes.botao"></button>
     </div>

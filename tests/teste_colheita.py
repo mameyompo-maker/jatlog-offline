@@ -463,6 +463,22 @@ with sync_playwright() as p:
     check("M2 sobe quando o servidor volta", len(estado()["log"]["blocks"]) == 3,
           estado()["log"]["blocks"])
 
+    # ------------------------------------------- N. Índia 17 na hierarquia
+    # Índia 17 vive na mesma escolha de local que Tanheia e 7 de Abril (não
+    # tem cartão próprio no menu); escolhê-lo e continuar só redirecciona
+    # para o módulo próprio (../india17/), que trata do resto sozinho.
+    page.click("#btnMudarLocal")
+    esperar_ecra(page, "ecraLocal")
+    check("N1 Índia 17 aparece como 3ª opção, ao lado de Tanheia/7 de Abril",
+          page.locator('.escolha-local[data-site="india17"]').count() == 1)
+    page.click('.escolha-local[data-site="india17"]')
+    check("N2 escolher Índia 17 esconde mês/ano e mostra o aviso do redireccionamento",
+          not visivel(page, "#linhaMesAno") and visivel(page, "#avisoIndia17"))
+    page.click("#btnContinuar")
+    page.wait_for_load_state("load")
+    check("N3 Continuar leva ao módulo do Índia 17", "/india17/" in page.url, page.url)
+    check("N4 abre já na escolha do mês", esperar_ecra(page, "ecraMes"), ecra_actual(page))
+
     check("Z sem erros de JavaScript", not erros_js, erros_js)
     browser.close()
 

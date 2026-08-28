@@ -21,7 +21,7 @@ var CFG_INDIA = self.INDIAREC_CONFIG || {};
 var CFG_PESAGEM = self.PESAGEM_CONFIG || {};
 var CFG_INDIA17 = self.INDIA17_CONFIG || {};
 
-var CACHE = 'jatlog-v27';
+var CACHE = 'jatlog-v28';
 var CACHE_FONTES = 'jatlog-fontes-v1';
 
 var FICHEIROS = [

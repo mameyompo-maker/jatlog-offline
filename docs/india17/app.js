@@ -36,20 +36,22 @@ var GRAMAS_MIN = 100;
  * encontrar o seu registo original. */
 var LIMITE_LOG = 200;
 
-/* Os oito meses da folha "India 17 weight" (colunas F..M, Aug/26 .. Mar/27):
- * o texto é exactamente o do cabeçalho da folha, para o Apps Script poder
- * resolver a coluna pelo nome sem tradução nenhuma no meio — o mesmo truque
- * já usado no separador de resumo da pesagem (colunasResumo_). Tal como os
- * meses da colheita (Jan..Dec), este token NÃO se traduz consoante o idioma
- * do ecrã. */
-var MESES = ['Aug/26', 'Sep/26', 'Oct/26', 'Nov/26', 'Dec/26', 'Jan/27', 'Feb/27', 'Mar/27'];
+/* Os meses da folha "India 17 weight": "Up to Jul/26" é a coluna E (o total
+ * acumulado até essa data, anterior a este módulo) e Aug/26..Mar/27 são as
+ * colunas F..M. O texto de cada um é o que o Apps Script espera para
+ * resolver a coluna certa (colunasDados_/MES_ANTES do Codigo.gs) — tal como
+ * os meses da colheita (Jan..Dec), este token NÃO se traduz consoante o
+ * idioma do ecrã. Lista fixa por agora: quando a folha ganhar novas colunas
+ * (nova campanha), acrescenta-se aqui e no Codigo.gs. */
+var MESES = ['Up to Jul/26', 'Aug/26', 'Sep/26', 'Oct/26', 'Nov/26', 'Dec/26', 'Jan/27', 'Feb/27', 'Mar/27'];
+var MES_ANTES = 'Up to Jul/26';
 
 // ------------------------------------------------------------------- estado
 
 var S = {
   ecra: '',
   idioma: 'pt',
-  mes: MESES[0],
+  mes: MESES[1],
   escolha: null,        // o mês marcado no ecrã de entrada, antes de confirmar
   nome: '',
   master: {},            // mes -> [{id, rowNumber, totalPlantas, registos, pesoKg}]
@@ -672,19 +674,20 @@ function irParaMes() {
   $('subMes').innerHTML = t(Admin.activo() ? 'mes.usuarioAdmin' : 'mes.usuario',
                             { nome: esc(S.nome) });
 
-  /* Sem nada pré-marcado: a mesma razão da pesagem para a época — com um
-   * valor por omissão era fácil registar no mês errado sem dar por isso. */
-  var caixa = $('escolhaMes');
-  caixa.innerHTML = '';
+  /* Pulldown com os meses da folha (Up to Jul/26 primeiro, depois Aug/26 em
+   * diante) — sem nada pré-marcado da primeira vez: a mesma razão da pesagem
+   * para a época, com um valor por omissão era fácil registar no mês errado
+   * sem dar por isso. Da segunda vez em diante, fica no que já estava. */
+  var sel = $('selMes');
+  sel.innerHTML = '';
   MESES.forEach(function (m) {
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'escolha-local' + (S.escolha === m ? ' activo' : '');
-    b.setAttribute('data-mes', m);
-    b.innerHTML = '<b>' + esc(m) + '</b>';
-    b.onclick = function () { S.escolha = m; irParaMes(); };
-    caixa.appendChild(b);
+    var o = document.createElement('option');
+    o.value = m;
+    o.textContent = (m === MES_ANTES) ? t('mes.antes') : m;
+    sel.appendChild(o);
   });
+  sel.value = S.escolha || S.mes || MESES[1];
+  S.escolha = sel.value;
   $('btnContinuar').disabled = !S.escolha;
 
   mostrar('ecraMes');
@@ -1030,7 +1033,7 @@ function voltarDaEdicao() {
 // ------------------------------------------------------------------ entrada
 
 function continuarDoMes() {
-  var mes = S.escolha;
+  var mes = $('selMes').value;
   if (!mes || MESES.indexOf(mes) < 0) { aviso('avisoMes', t('mes.falta')); return; }
 
   S.mes = mes;
@@ -1066,6 +1069,7 @@ function ligarEventos() {
   // mês
   $('btnContinuar').onclick = continuarDoMes;
   $('btnMenu2').onclick = irParaMenu;
+  $('selMes').onchange = function () { S.escolha = $('selMes').value; };
 
   // lista de Source ID
   $('btnMudarMes').onclick = function () {
@@ -1160,8 +1164,8 @@ function arrancar() {
   pedirArmazenamentoPersistente();
 
   definirIdioma(Def.get('idioma', 'pt'));
-  S.mes = Def.get('mes', MESES[0]);
-  if (MESES.indexOf(S.mes) < 0) S.mes = MESES[0];
+  S.mes = Def.get('mes', MESES[1]);   // MESES[0] é "Up to Jul/26" — a omissão é o mês corrente, não o acumulado
+  if (MESES.indexOf(S.mes) < 0) S.mes = MESES[1];
   S.nome = Def.get('nome', '');
 
   MESES.forEach(function (m) {

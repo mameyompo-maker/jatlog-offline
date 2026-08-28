@@ -391,21 +391,26 @@ function pintarMenu() {
 
 /** Quantos registos de cada módulo ainda não subiram — visível já no menu. */
 function contarFilas() {
-  function contar(promessaBase, id) {
+  function pendentesDe(promessaBase) {
     return promessaBase
       .then(function (d) { return lerTudo(d, 'envios'); })
-      .then(function (l) {
-        var n = l.filter(function (e) { return e.estado === 'pendente'; }).length;
-        var el = $(id);
-        el.hidden = n === 0;
-        el.textContent = t('menu.porEnviar', { n: n });
-      })
-      .catch(function () { $(id).hidden = true; });
+      .then(function (l) { return l.filter(function (e) { return e.estado === 'pendente'; }).length; })
+      .catch(function () { return 0; });
   }
-  contar(baseColheita(), 'filaColheita');
-  contar(baseIndia(), 'filaIndia');
-  contar(basePesagem(), 'filaPesagem');
-  contar(baseIndia17(), 'filaIndia17');
+  function contar(promessas, id) {
+    return Promise.all(promessas).then(function (ns) {
+      var n = ns.reduce(function (a, b) { return a + b; }, 0);
+      var el = $(id);
+      el.hidden = n === 0;
+      el.textContent = t('menu.porEnviar', { n: n });
+    }).catch(function () { $(id).hidden = true; });
+  }
+  // O cartão da colheita cobre Tanheia, 7 de Abril e Índia 17 (esta última
+  // é escolhida lá dentro, na mesma "escolha do local" — já não tem cartão
+  // próprio no menu, mas continua com a fila em IndexedDB própria).
+  contar([pendentesDe(baseColheita()), pendentesDe(baseIndia17())], 'filaColheita');
+  contar([pendentesDe(baseIndia())], 'filaIndia');
+  contar([pendentesDe(basePesagem())], 'filaPesagem');
 }
 
 // ------------------------------------------------------------------ entrada

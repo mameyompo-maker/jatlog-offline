@@ -110,23 +110,37 @@ def ir_entrada(page):
         esperar_ecra(page, "ecraEntrada")
 
 
+def ir_para_india17(page):
+    """A partir do menu, chega ao módulo do Índia 17 — que não tem cartão
+    próprio: vive como 3ª opção na escolha de local da colheita, ao lado de
+    Tanheia e 7 de Abril. Escolhê-la e continuar só redirecciona para
+    ../india17/, que trata do resto (a escolha do mês) sozinho."""
+    esperar_ecra(page, "ecraMenu")
+    page.click("#cartaoColheita")
+    page.wait_for_load_state("load")
+    esperar_ecra(page, "ecraLocal")
+    page.click('.escolha-local[data-site="india17"]')
+    page.click("#btnContinuar")
+    page.wait_for_load_state("load")
+    esperar_ecra(page, "ecraMes")
+
+
 def entrar_como(page, nome, senha=None):
     """Troca de utilizador na entrada comum e volta ao módulo do Índia 17,
-    na escolha do mês (sem nada marcado)."""
+    na escolha do mês."""
     ir_entrada(page)
     page.fill("#inpNome", nome)
     if senha is not None:
         page.locator("#blocoAdmin summary").click()
         page.fill("#inpSenha", senha)
     page.click("#btnComecar")
-    esperar_ecra(page, "ecraMenu")
-    page.click("#cartaoIndia17")
-    page.wait_for_load_state("load")
-    esperar_ecra(page, "ecraMes")
+    ir_para_india17(page)
 
 
 def escolher_mes(page, mes):
-    page.click('.escolha-local[data-mes="%s"]' % mes)
+    """Pulldown de mês, mesmo formato do local/mês da colheita (Tanheia/7 de
+    Abril): select_option em vez de clicar num botão."""
+    page.select_option("#selMes", mes)
     page.click("#btnContinuar")
     esperar_ecra(page, "ecraLista")
 
@@ -150,21 +164,25 @@ with sync_playwright() as p:
     page.fill("#inpNome", "Op1")
     page.click("#btnComecar")
     check("A1 nome leva ao menu", esperar_ecra(page, "ecraMenu"), ecra_actual(page))
-    check("A2 cartão do Índia 17 existe no menu", visivel(page, "#cartaoIndia17"))
 
-    page.click("#cartaoIndia17")
+    page.click("#cartaoColheita")
     page.wait_for_load_state("load")
-    check("A3 abre na escolha do mês", esperar_ecra(page, "ecraMes"), ecra_actual(page))
-    check("A4 nada vem marcado (é preciso escolher)",
-          page.locator(".escolha-local.activo").count() == 0 and
-          page.locator("#btnContinuar").is_disabled())
+    esperar_ecra(page, "ecraLocal")
+    check("A2 Índia 17 aparece na escolha de local, junto de Tanheia/7 de Abril",
+          page.locator('.escolha-local[data-site="india17"]').count() == 1)
+
+    page.click('.escolha-local[data-site="india17"]')
+    page.click("#btnContinuar")
+    page.wait_for_load_state("load")
+    check("A3 chega ao módulo do Índia 17, na escolha do mês",
+          esperar_ecra(page, "ecraMes"), ecra_actual(page))
+    check("A4 pulldown tem os 9 meses (Up to Jul/26 + Aug/26..Mar/27)",
+          page.locator("#selMes option").count() == 9)
     page.screenshot(path=os.path.join(OUT, "01_mes.png"), full_page=True)
 
     # ------------------------------------------------------------ B. escolha
-    page.click('.escolha-local[data-mes="Aug/26"]')
-    check("B1 fica marcado e o botão liberta",
-          page.locator('.escolha-local[data-mes="Aug/26"].activo').count() == 1 and
-          not page.locator("#btnContinuar").is_disabled())
+    page.select_option("#selMes", "Aug/26")
+    check("B1 fica marcado no pulldown", page.input_value("#selMes") == "Aug/26")
     page.click("#btnContinuar")
     check("B2 chega à lista de Source ID", esperar_ecra(page, "ecraLista"), ecra_actual(page))
     check("B3 lista tem os 17 Source ID", page.locator("#listaIds .cartao").count() == 17,
@@ -302,10 +320,9 @@ with sync_playwright() as p:
     # --------------------------------------------------------- F. mudar mês
     page.click("#btnMudarMes")
     check("F1 volta à escolha, já com o mês actual marcado",
-          esperar_ecra(page, "ecraMes") and
-          page.locator('.escolha-local[data-mes="Aug/26"].activo').count() == 1,
+          esperar_ecra(page, "ecraMes") and page.input_value("#selMes") == "Aug/26",
           ecra_actual(page))
-    page.click('.escolha-local[data-mes="Sep/26"]')
+    page.select_option("#selMes", "Sep/26")
     page.click("#btnContinuar")
     esperar_ecra(page, "ecraLista")
     check("F2 Sep/26 começa sem registos",
@@ -317,6 +334,35 @@ with sync_playwright() as p:
           len(estado()["india17"]["Sep/26"]) == 1 and len(estado()["india17"]["Aug/26"]) == 3,
           estado()["india17"])
     page.screenshot(path=os.path.join(OUT, "05_outro_mes.png"), full_page=True)
+
+    # ------------------------------------------------- F4-F6. "Up to Jul/26"
+    # O mês especial que soma tudo o que foi colhido até essa data (coluna E
+    # "Up  to Jul/26" na folha) funciona como qualquer outro mês — só entra no
+    # pulldown com o texto "Up to Jul/26" a identificá-lo (pedido do Kaz:
+    # basta esse texto aparecer na opção).
+    page.click("#btnMudarMes")
+    esperar_ecra(page, "ecraMes")
+    check("F4 pulldown mostra o texto 'Up to Jul/26' na opção especial",
+          "Up to Jul/26" in page.locator('#selMes option[value="Up to Jul/26"]').inner_text())
+    page.select_option("#selMes", "Up to Jul/26")
+    page.click("#btnContinuar")
+    esperar_ecra(page, "ecraLista")
+    check("F5 'Up to Jul/26' começa sem registos",
+          "ainda sem registo" in cartaoId(page, "India #bag01").inner_text())
+    pesar(page, "India #bag01", "2.2")
+    time.sleep(1.2)
+    check("F6 grava em 'Up to Jul/26' sem misturar com os outros meses",
+          len(estado()["india17"]["Up to Jul/26"]) == 1 and
+          len(estado()["india17"]["Sep/26"]) == 1 and
+          len(estado()["india17"]["Aug/26"]) == 3,
+          estado()["india17"])
+    page.screenshot(path=os.path.join(OUT, "05b_up_to.png"), full_page=True)
+
+    # volta a Sep/26: o resto do fluxo (offline, permissões, admin) conta
+    # com esse mês continuar a ser o actual.
+    page.click("#btnMudarMes")
+    esperar_ecra(page, "ecraMes")
+    escolher_mes(page, "Sep/26")
 
     # ---------------------------------------------------- G. trabalho offline
     ctx.set_offline(True)
@@ -363,10 +409,7 @@ with sync_playwright() as p:
     page.locator("#blocoAdmin summary").click()
     page.fill("#inpSenha", "JatRD2026")
     page.click("#btnComecar")
-    esperar_ecra(page, "ecraMenu")
-    page.click("#cartaoIndia17")
-    page.wait_for_load_state("load")
-    esperar_ecra(page, "ecraMes")
+    ir_para_india17(page)
     escolher_mes(page, "Sep/26")
     check("I1 crachá ADMIN", "ADMIN" in page.inner_text("#topoNome"))
     check("I2 admin pode editar tudo",

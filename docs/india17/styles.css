@@ -1,20 +1,12 @@
 /* JatLog — módulo do peso da colheita (Índia 17): só o que este ecrã
  * acrescenta à folha comum (../styles.css, carregada antes desta). As classes
  * .ecra, .painel, .banner, .cartao, .mostrador, .segmento, .histrow, .accoes,
- * .escolha-local, .topbar, .eyebrow, etc. já existem lá — não se repetem
- * aqui, só se usam.
+ * .topbar, .eyebrow, etc. já existem lá — não se repetem aqui, só se usam.
  *
- * Duas coisas novas neste módulo: a grelha de dois meses por linha na
- * escolha do mês (são 8, não cabem numa coluna só sem scroll) e a linha de
- * contexto "Linha · plantas" nos cartões da lista de Source ID.
+ * A escolha do mês é um <select> comum (mesmo formato da colheita); a única
+ * coisa nova aqui é a linha de contexto "Linha · plantas" nos cartões da
+ * lista de Source ID.
  */
-
-/* 8 meses: em vez de empilhar um por linha (a herança de .escolhas-local),
- * duas colunas cabem quase sempre num só ecrã, sem scroll — a mesma
- * preocupação que já levou a lista de planta-mãe da pesagem a virar grelha. */
-.escolhas-mes {
-  grid-template-columns: repeat(2, 1fr);
-}
 
 /* Caixa de pesquisa por cima da lista: filtra os cartões à medida que se
  * escreve (id.indexOf() em app.js). */
