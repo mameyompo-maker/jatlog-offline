@@ -59,8 +59,10 @@ def master_lines():
 
 
 def master_blocks():
-    return [[str(i), "SB%03d" % i, "GJ-0%d" % (1 + i % 2), str(30 + i), "MB-%03d" % i]
-            for i in range(1, 16)]
+    linhas = [[str(i), "SB%03d" % i, "GJ-0%d" % (1 + i % 2), str(30 + i), "MB-%03d" % i]
+              for i in range(1, 16)]
+    linhas.append(["?", "", "", "", ""])   # bloco desconhecido, mesma ideia do "?" da pesagem
+    return linhas
 
 
 def estado_inicial():

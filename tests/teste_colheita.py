@@ -421,6 +421,31 @@ with sync_playwright() as p:
     check("L4 não mexeu nas linhas", len(st["log"]["lines"]) == 3)
     page.screenshot(path=os.path.join(OUT, "12_blocos.png"), full_page=True)
 
+    # ---------------------------------------- L5. bloco desconhecido ("?")
+    check("L5 botão do bloco \"?\" visível em 7 de Abril", visivel(page, "#btnHatena"))
+    page.click("#btnHatena")
+    esperar_ecra(page, "ecraPeso")
+    check("L6 abre o peso do bloco \"?\"", page.inner_text("#pesoLinha").strip() == "?",
+          page.inner_text("#pesoLinha"))
+    page.fill("#inpPeso", "4.2")
+    page.press("#inpPeso", "Enter")
+    esperar_ecra(page, "ecraBusca")
+    time.sleep(1.0)
+    st = estado()
+    check("L7 grava o bloco \"?\" no log", "?" in [r[3] for r in st["log"]["blocks"]], st["log"]["blocks"])
+
+    page.click("#btnMudarLocal")
+    esperar_ecra(page, "ecraLocal")
+    page.click('.escolha-local[data-site="lines"]')
+    page.click("#btnContinuar")
+    esperar_ecra(page, "ecraBusca")
+    check("L8 botão do bloco \"?\" escondido em Tanheia", not visivel(page, "#btnHatena"))
+    page.click("#btnMudarLocal")
+    esperar_ecra(page, "ecraLocal")
+    page.click('.escolha-local[data-site="blocks"]')
+    page.click("#btnContinuar")
+    esperar_ecra(page, "ecraBusca")
+
     # --------------------------------------------------- M. servidor em baixo
     api("/__falhar?on=1")
     registar(page, 8, 3.3)
@@ -432,10 +457,10 @@ with sync_playwright() as p:
     page.evaluate("() => window.dispatchEvent(new Event('online'))")
     fim = time.time() + 25
     while time.time() < fim:
-        if len(estado()["log"]["blocks"]) >= 2:
+        if len(estado()["log"]["blocks"]) >= 3:
             break
         time.sleep(1)
-    check("M2 sobe quando o servidor volta", len(estado()["log"]["blocks"]) == 2,
+    check("M2 sobe quando o servidor volta", len(estado()["log"]["blocks"]) == 3,
           estado()["log"]["blocks"])
 
     check("Z sem erros de JavaScript", not erros_js, erros_js)

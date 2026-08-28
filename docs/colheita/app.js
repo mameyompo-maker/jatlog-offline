@@ -25,9 +25,13 @@ var MESES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 
 /* Acrescentar um local aqui (e no Codigo.gs, e em i18n.js) basta para ele
  * aparecer no menu. Os nomes dos sítios são próprios, não se traduzem. */
+/* "hatena": true liga o botão "Bloco desconhecido (?)" no ecrã de busca — só
+ * faz sentido onde o cadastro pode mesmo ter uma linha com Block = "?" (o
+ * Kaz acrescenta essa linha à mão na folha Master; o resto é automático,
+ * igual ao "?" que já existe na pesagem). */
 var LOCAIS = {
-  lines:  { rotulo: 'Tanheia (Linhas)',    curto: 'Tanheia',    campo: 'Line Number', prefixo: 'L' },
-  blocks: { rotulo: '7 de Abril (Blocos)', curto: '7 de Abril', campo: 'Block',       prefixo: ''  }
+  lines:  { rotulo: 'Tanheia (Linhas)',    curto: 'Tanheia',    campo: 'Line Number', prefixo: 'L', hatena: false },
+  blocks: { rotulo: '7 de Abril (Blocos)', curto: '7 de Abril', campo: 'Block',       prefixo: ''  , hatena: true  }
 };
 
 // ------------------------------------------------------------------- estado
@@ -718,6 +722,7 @@ function irParaBusca() {
   aviso('avisoBusca', '');
   $('rotuloBusca').textContent = tSitio('busca');
   $('inpBusca').value = '';
+  $('btnHatena').hidden = !local_().hatena;
 
   var adm = Admin.activo();
   $('linhaMesAdmin').hidden = !adm;
@@ -774,6 +779,31 @@ function mostrarErrosDaFila() {
       });
     };
   }
+}
+
+/**
+ * Botão "Bloco desconhecido (?)": vai direito para o peso do Block = "?",
+ * sem precisar de digitar nada (o teclado do campo de busca é numérico, "?"
+ * nem dá para escrever nele). A linha "?" em si vem do cadastro (Master) tal
+ * e qual as outras — nenhuma lógica especial no servidor, igual à pesagem.
+ */
+function buscarHatena() {
+  aviso('avisoBusca', '');
+  S.ultimoGravado = null;
+  aviso('avisoGravado', '');
+
+  var lista = S.master[S.site] || [];
+  if (!lista.length) {
+    aviso('avisoBusca', t('busca.semCadastro'));
+    return;
+  }
+
+  var item = lista.filter(function (it) { return String(it.campo).trim() === '?'; })[0];
+  if (!item) {
+    aviso('avisoBusca', t('busca.hatenaAusente'));
+    return;
+  }
+  abrirPeso(item);
 }
 
 function buscar(valorBruto) {
@@ -1122,6 +1152,7 @@ function ligarEventos() {
   $('inpBusca').onkeydown = function (e) {
     if (e.key === 'Enter') { buscar($('inpBusca').value); $('inpBusca').value = ''; }
   };
+  $('btnHatena').onclick = buscarHatena;
   /* Aqui o local actual vem marcado: quem carrega neste botão costuma querer
    * mudar o mês, e já sabe onde está. À entrada do módulo é que não há nada
    * marcado. */
