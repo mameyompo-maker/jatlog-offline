@@ -45,7 +45,7 @@ var TEXTOS = {
     'lista.semRegisto': 'ainda sem registo',
     'lista.semCadastro': 'A lista de Source ID ainda não foi carregada neste aparelho.',
     'lista.semResultado': 'Nenhum Source ID encontrado para "{filtro}".',
-    'lista.contexto': 'Linha {linha} · {plantas} plantas',
+    'lista.contexto': 'Linha {linha}',
     'lista.gravado': '<span class="tick">✓</span><b>{id}</b> — {valor} {unidade} guardado às {hora}',
     'lista.gravadoLocal': '<span class="tick">✓</span><b>{id}</b> — {valor} {unidade} guardado às {hora} (no aparelho)',
 
@@ -123,7 +123,7 @@ var TEXTOS = {
     'lista.semRegisto': 'no entries yet',
     'lista.semCadastro': 'The Source ID list has not been loaded on this phone yet.',
     'lista.semResultado': 'No Source ID found for "{filtro}".',
-    'lista.contexto': 'Row {linha} · {plantas} plants',
+    'lista.contexto': 'Row {linha}',
     'lista.gravado': '<span class="tick">✓</span><b>{id}</b> — {valor} {unidade} saved at {hora}',
     'lista.gravadoLocal': '<span class="tick">✓</span><b>{id}</b> — {valor} {unidade} saved at {hora} (on this phone)',
 
@@ -201,7 +201,7 @@ var TEXTOS = {
     'lista.semRegisto': 'まだ記録なし',
     'lista.semCadastro': 'この端末にはまだ Source ID リストがありません。',
     'lista.semResultado': '「{filtro}」に一致する Source ID が見つかりません。',
-    'lista.contexto': '{linha} 行目 · {plantas} 株',
+    'lista.contexto': '{linha} 行目',
     'lista.gravado': '<span class="tick">✓</span><b>{id}</b> — {valor} {unidade} を {hora} に保存しました',
     'lista.gravadoLocal': '<span class="tick">✓</span><b>{id}</b> — {valor} {unidade} を {hora} に端末へ保存しました',
 

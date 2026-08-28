@@ -769,14 +769,13 @@ function pintarLista() {
     var badge = ag.contagem > 0
       ? t('lista.badge', { n: ag.contagem, kg: mostrarNumero(ag.pesoKg.toFixed(1)) })
       : t('lista.semRegisto');
-    var contexto = t('lista.contexto', {
-      linha: esc(ouTraco(item.rowNumber)), plantas: esc(ouTraco(item.totalPlantas))
-    });
+    var contexto = t('lista.contexto', { linha: esc(ouTraco(item.rowNumber)) });
+    var rotuloId = esc(item.id) + ' (' + esc(ouTraco(item.totalPlantas)) + ')';
 
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'cartao';
-    b.innerHTML = '<span class="idSrc">' + esc(item.id) + '</span>' +
+    b.innerHTML = '<span class="idSrc">' + rotuloId + '</span>' +
                   '<span class="ctxSrc">' + contexto + '</span>' +
                   '<span class="totalSrc' + (ag.contagem > 0 ? '' : ' vazio') + '">' + esc(badge) + '</span>';
     b.onclick = function () { abrirPeso(item); };
@@ -828,7 +827,8 @@ function abrirPeso(item) {
   S.unidade = 'kg';
   aviso('avisoPeso', '');
 
-  $('pesoId').textContent = item.id;
+  $('pesoId').textContent = item.id +
+      (item.totalPlantas !== '' && item.totalPlantas != null ? ' (' + item.totalPlantas + ')' : '');
   $('pesoSub').textContent = t('peso.subMes', { mes: rotuloMes(S.mes) });
 
   $('inpPeso').value = '';

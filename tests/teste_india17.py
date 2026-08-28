@@ -77,7 +77,8 @@ def _idNoInicio(sourceId):
 def cartaoId(page, sourceId):
     """O cartão de um Source ID concreto na lista (não depender da ordem)."""
     return page.locator("#listaIds .cartao").filter(
-        has=page.locator(".idSrc", has_text=re.compile(r'^\s*' + re.escape(sourceId) + r'\s*$'))
+        has=page.locator(".idSrc", has_text=re.compile(
+            r'^\s*' + re.escape(sourceId) + r'(\s*\([^)]*\))?\s*$'))
     ).first
 
 
@@ -196,8 +197,9 @@ with sync_playwright() as p:
           page.locator("#listaIds .cartao").count())
     check("B2 sem registo mostra o texto neutro",
           "ainda sem registo" in cartaoId(page, "India #bag05").inner_text())
-    check("B3 mostra a linha e o n.º de plantas de contexto",
-          "Linha" in cartaoId(page, "India #bag05").inner_text(),
+    check("B3 mostra a linha de contexto e o n.º de plantas junto ao ID",
+          "Linha" in cartaoId(page, "India #bag05").inner_text()
+          and "(15)" in cartaoId(page, "India #bag05").inner_text(),
           cartaoId(page, "India #bag05").inner_text())
     page.screenshot(path=os.path.join(OUT, "02_lista.png"), full_page=True)
 
