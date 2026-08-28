@@ -889,8 +889,8 @@ function pintarHistorico() {
     return;
   }
 
-  // os oito mais recentes, do mais novo para o mais antigo
-  var ultimos = lista.slice(-8).reverse();
+  // todos os registos, do mais novo para o mais antigo
+  var ultimos = lista.slice().reverse();
   ultimos.forEach(function (r) {
     var carimbo = String(r.ts || '').slice(5, 16);
     var selo = r.local ? '<span class="selo">' + t('historico.porEnviar') + '</span>' : '';

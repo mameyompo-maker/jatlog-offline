@@ -104,7 +104,7 @@ var TEXTOS = {
     'apagar.sim': 'Sim, eliminar',
     'apagar.nao': 'Não, voltar',
 
-    'historico.titulo': 'Últimos registos',
+    'historico.titulo': 'Todos os registos',
     'historico.vazio': 'Nenhum registo em {mes} ainda.',
     'historico.toque': 'toque para corrigir',
     /* Aqui entra sozinho, no lugar de um nome ("08-15 06:54 · {quem} · …"),
@@ -225,7 +225,7 @@ var TEXTOS = {
     'apagar.sim': 'Yes, delete',
     'apagar.nao': 'No, go back',
 
-    'historico.titulo': 'Latest entries',
+    'historico.titulo': 'All entries',
     'historico.vazio': 'No entries in {mes} yet.',
     'historico.toque': 'tap to correct',
     'historico.voce': 'you',
@@ -344,7 +344,7 @@ var TEXTOS = {
     'apagar.sim': 'はい、削除する',
     'apagar.nao': 'いいえ、戻る',
 
-    'historico.titulo': '最近の記録',
+    'historico.titulo': 'すべての記録',
     'historico.vazio': '{mes} の記録はまだありません。',
     'historico.toque': 'タップして修正',
     'historico.voce': 'あなた',
