@@ -5,6 +5,9 @@
  *     JATLOG_CONFIG   -> colheita  (Tanheia/Linhas e 7 de Abril/Blocos)
  *     INDIAREC_CONFIG -> medições  (NBF (Tanheia) 26)
  *     PESAGEM_CONFIG  -> pesagem de sacos de sementes (Tanheia, temporário)
+ *     INDIA17_CONFIG  -> peso da colheita por mês (Índia 17) — ENDPOINT vazio
+ *                        até o Kaz publicar o Apps Script deste separador
+ *                        (ele próprio escreve e implanta este, ver HANDOVER.md)
  *
  *   Ao voltar a publicar um script use "Gerir implementações > editar > nova
  *   versão", NUNCA "Nova implementação" — isso muda o URL e os telemóveis já
@@ -27,5 +30,10 @@ self.INDIAREC_CONFIG = {
 
 self.PESAGEM_CONFIG = {
   ENDPOINT: 'https://script.google.com/macros/s/AKfycbwyl19ZOvaDkrAY6SYCYBWoF_8O1e1GjRkYddM9HhJ-qFCSXvjdIA84zjQv6U5jCUdQ/exec',
+  VERSAO: '1.0.0'
+};
+
+self.INDIA17_CONFIG = {
+  ENDPOINT: '',
   VERSAO: '1.0.0'
 };

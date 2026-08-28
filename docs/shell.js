@@ -1,6 +1,6 @@
-/* JatLog — entrada comum aos dois registos.
+/* JatLog — entrada comum aos quatro registos.
  *
- *   activação -> nome (+ administrador) -> menu -> colheita/ ou india/
+ *   activação -> nome (+ administrador) -> menu -> colheita/, india/, pesagem/ ou india17/
  *
  * Esta página não regista nada: só guarda quem está a usar o aparelho e manda
  * a pessoa para o módulo certo. Os módulos vivem em pastas separadas porque
@@ -16,6 +16,7 @@
 var CFG_COLHEITA = window.JATLOG_CONFIG || {};
 var CFG_INDIA = window.INDIAREC_CONFIG || {};
 var CFG_PESAGEM = window.PESAGEM_CONFIG || {};
+var CFG_INDIA17 = window.INDIA17_CONFIG || {};
 
 /* O modo administrador expira sozinho: uma fila por enviar com correcções de
  * outra pessoa deixa de poder subir se a permissão desaparecer a meio, por
@@ -37,8 +38,8 @@ var Def = {
   del: function (k) { try { localStorage.removeItem('jat.' + k); } catch (e) {} }
 };
 
-/* A senha do administrador vale para os dois módulos: o mesmo valor está nas
- * propriedades dos dois scripts (ADMIN_PASSWORD). Se um dia deixarem de ser
+/* A senha do administrador vale para todos os módulos: o mesmo valor está nas
+ * propriedades de cada script (ADMIN_PASSWORD). Se um dia deixarem de ser
  * iguais, é aqui e no Codigo.gs de cada um que se acerta. */
 var Admin = {
   activo: function () {
@@ -60,9 +61,9 @@ var Admin = {
 };
 
 // -------------------------------------------------------------- IndexedDB
-/* Duas bases, uma por módulo, tal como cada um a criou. Aqui só se lê (para
- * contar o que falta enviar) e se escreve a configuração que o Service Worker
- * precisa para enviar sozinho. */
+/* Uma base por módulo, tal como cada um a criou. Aqui só se lê (para contar o
+ * que falta enviar) e se escreve a configuração que o Service Worker precisa
+ * para enviar sozinho. */
 
 function abrirBase(nome, versao, criar) {
   return new Promise(function (ok, mau) {
@@ -91,6 +92,15 @@ function baseIndia() {
 
 function basePesagem() {
   return abrirBase('pesagem', 1, function (d) {
+    if (!d.objectStoreNames.contains('envios')) {
+      var s = d.createObjectStore('envios', { keyPath: 'uuid' });
+      s.createIndex('estado', 'estado');
+    }
+  });
+}
+
+function baseIndia17() {
+  return abrirBase('india17', 1, function (d) {
     if (!d.objectStoreNames.contains('envios')) {
       var s = d.createObjectStore('envios', { keyPath: 'uuid' });
       s.createIndex('estado', 'estado');
@@ -245,7 +255,8 @@ function pedirGet(endpoint, params) {
 var MODULOS = [
   { chave: 'colheita', endpoint: CFG_COLHEITA.ENDPOINT, nome: 'menu.colheita' },
   { chave: 'india', endpoint: CFG_INDIA.ENDPOINT, nome: 'menu.india' },
-  { chave: 'pesagem', endpoint: CFG_PESAGEM.ENDPOINT, nome: 'menu.pesagem' }
+  { chave: 'pesagem', endpoint: CFG_PESAGEM.ENDPOINT, nome: 'menu.pesagem' },
+  { chave: 'india17', endpoint: CFG_INDIA17.ENDPOINT, nome: 'menu.india17' }
 ];
 
 function provarCodigo(endpoint, codigo) {
@@ -333,6 +344,12 @@ function verificarAdmin(pw) {
       return pedirGet(CFG_PESAGEM.ENDPOINT, { action: 'admin', pw: pw })
         .then(function (m) { return !!(m && m.admin); })
         .catch(function () { return false; });
+    })
+    .then(function (ok) {
+      if (ok) return true;
+      return pedirGet(CFG_INDIA17.ENDPOINT, { action: 'admin', pw: pw })
+        .then(function (n) { return !!(n && n.admin); })
+        .catch(function () { return false; });
     });
 }
 
@@ -388,6 +405,7 @@ function contarFilas() {
   contar(baseColheita(), 'filaColheita');
   contar(baseIndia(), 'filaIndia');
   contar(basePesagem(), 'filaPesagem');
+  contar(baseIndia17(), 'filaIndia17');
 }
 
 // ------------------------------------------------------------------ entrada
@@ -496,7 +514,7 @@ function arrancar() {
 }
 
 /* O Service Worker é um só para a aplicação toda (âmbito './'), por isso
- * apanha também as páginas de colheita/ e india/. */
+ * apanha também as páginas de colheita/, india/, pesagem/ e india17/. */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
     navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function () {});

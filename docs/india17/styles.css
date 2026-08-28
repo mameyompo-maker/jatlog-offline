@@ -1,0 +1,116 @@
+/* JatLog — módulo do peso da colheita (Índia 17): só o que este ecrã
+ * acrescenta à folha comum (../styles.css, carregada antes desta). As classes
+ * .ecra, .painel, .banner, .cartao, .mostrador, .segmento, .histrow, .accoes,
+ * .escolha-local, .topbar, .eyebrow, etc. já existem lá — não se repetem
+ * aqui, só se usam.
+ *
+ * Duas coisas novas neste módulo: a grelha de dois meses por linha na
+ * escolha do mês (são 8, não cabem numa coluna só sem scroll) e a linha de
+ * contexto "Linha · plantas" nos cartões da lista de Source ID.
+ */
+
+/* 8 meses: em vez de empilhar um por linha (a herança de .escolhas-local),
+ * duas colunas cabem quase sempre num só ecrã, sem scroll — a mesma
+ * preocupação que já levou a lista de planta-mãe da pesagem a virar grelha. */
+.escolhas-mes {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* Caixa de pesquisa por cima da lista: filtra os cartões à medida que se
+ * escreve (id.indexOf() em app.js). */
+.busca-mae {
+  display: block;
+  width: 100%;
+  margin: 10px 0 12px;
+  padding: 12px 14px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--card);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 16px;
+}
+.busca-mae::placeholder { color: var(--ink-fraco); }
+.busca-mae:focus { border-color: var(--green); outline: none; }
+
+/* Grelha em vez de lista de uma coluna: com 17 Source ID, uma coluna só
+ * obriga a scroll para chegar às últimas. */
+#listaIds {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+#listaIds .cartao {
+  min-height: 64px;
+  padding: 14px 16px;
+  margin-bottom: 0;
+  white-space: normal;
+}
+
+#listaIds .empty { grid-column: 1 / -1; }
+
+/* Confirmação antes de gravar: janela pequena por cima do ecrã (dialog nativo
+ * do navegador), não um ecrã inteiro — o mesmo formato da pesagem/India Rec. */
+dialog#dlgConfirmar {
+  width: min(420px, calc(100vw - 36px));
+  padding: 22px;
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line-forte);
+  border-radius: var(--r-card);
+}
+dialog#dlgConfirmar::backdrop { background: rgba(0, 0, 0, .68); }
+dialog#dlgConfirmar h3 {
+  margin: 0 0 12px;
+  font-family: var(--font-ui);
+  font-size: 18px;
+  color: var(--ink);
+}
+.alvoConfirmar {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  background: var(--card2);
+  border-radius: var(--r-ctl);
+  font-family: var(--font-mono);
+  font-size: 17px;
+}
+dialog#dlgConfirmar .banner.warn { margin: 0 0 12px; }
+.dialogoBotoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+.dialogoBotoes .btn { margin: 0; }
+
+.idSrc {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Linha (Row Number) e n.º de plantas: contexto só de leitura, vindo do
+ * cadastro — ajuda a confirmar que se escolheu a linha certa sem ter de sair
+ * do ecrã. Nunca é escrito por este módulo. */
+.ctxSrc {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.totalSrc {
+  display: inline-block;
+  margin-top: 7px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: #CFE8B4;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+}
+.totalSrc.vazio {
+  padding-left: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-weight: 600;
+}

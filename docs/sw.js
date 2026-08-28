@@ -1,9 +1,9 @@
-/* Service Worker do JatLog (entrada comum + os dois módulos).
+/* Service Worker do JatLog (entrada comum + os quatro módulos).
  *
  * Duas regras apenas:
  *   1. Os ficheiros da própria aplicação são servidos da cache (é isto que
  *      permite abrir sem rede). Actualizam-se em segundo plano.
- *   2. Tudo o resto — em especial os dois Apps Script — vai sempre à rede.
+ *   2. Tudo o resto — em especial os Apps Script — vai sempre à rede.
  *      NUNCA cachear as respostas da API: já aconteceu no India Rec e os
  *      dados deixaram de actualizar.
  *
@@ -19,8 +19,9 @@ importScripts('./config.js');
 var CFG_COLHEITA = self.JATLOG_CONFIG || {};
 var CFG_INDIA = self.INDIAREC_CONFIG || {};
 var CFG_PESAGEM = self.PESAGEM_CONFIG || {};
+var CFG_INDIA17 = self.INDIA17_CONFIG || {};
 
-var CACHE = 'jatlog-v25';
+var CACHE = 'jatlog-v26';
 var CACHE_FONTES = 'jatlog-fontes-v1';
 
 var FICHEIROS = [
@@ -51,7 +52,13 @@ var FICHEIROS = [
   './pesagem/index.html',
   './pesagem/app.js',
   './pesagem/i18n.js',
-  './pesagem/styles.css'
+  './pesagem/styles.css',
+
+  './india17/',
+  './india17/index.html',
+  './india17/app.js',
+  './india17/i18n.js',
+  './india17/styles.css'
 ];
 
 var HOSTS_FONTES = ['fonts.googleapis.com', 'fonts.gstatic.com'];
@@ -92,13 +99,13 @@ self.addEventListener('activate', function (e) {
  * envia a fila mesmo com a aplicação fechada. No iOS isto não existe, por isso
  * lá continua a valer a regra de abrir a aplicação uma vez onde há rede.
  *
- * Há duas filas, uma por módulo, em duas bases de dados diferentes — cada uma
- * fala com o seu Apps Script e o formato dos registos não é o mesmo.
+ * Há uma fila por módulo, cada uma na sua base de dados — cada uma fala com o
+ * seu Apps Script e o formato dos registos não é o mesmo.
  *
  * O código de activação não pode vir do localStorage (o Service Worker não lhe
  * chega), por isso a entrada comum deixa-o na store 'config' da base 'jatlog'.
- * Serve as duas filas: o nome da base é histórico, não quer dizer que só valha
- * para a colheita.
+ * Serve todas as filas: o nome da base é histórico, não quer dizer que só
+ * valha para a colheita.
  *
  * Não faz mal que a página e o Service Worker enviem ao mesmo tempo: os
  * servidores desprezam os UUID que já processaram. */
@@ -132,6 +139,15 @@ function baseIndia() {
 
 function basePesagem() {
   return abrirBase('pesagem', 1, function (d) {
+    if (!d.objectStoreNames.contains('envios')) {
+      var s = d.createObjectStore('envios', { keyPath: 'uuid' });
+      s.createIndex('estado', 'estado');
+    }
+  });
+}
+
+function baseIndia17() {
+  return abrirBase('india17', 1, function (d) {
     if (!d.objectStoreNames.contains('envios')) {
       var s = d.createObjectStore('envios', { keyPath: 'uuid' });
       s.createIndex('estado', 'estado');
@@ -398,11 +414,64 @@ function enviarPesagemEmSegundoPlano() {
   });
 }
 
+// -------------------------------------------------------------- india17
+/* Mesmo desenho da pesagem (fila simples, apagada da base ao ser aceite),
+ * só com "mes" em vez de "season" e "sourceId" em vez de "motherId" — ver
+ * india17/app.js. */
+
+function enviarIndia17EmSegundoPlano() {
+  if (!CFG_INDIA17.ENDPOINT) return Promise.resolve();
+  var base;
+
+  return baseIndia17().then(function (d) {
+    base = d;
+    return Promise.all([credenciais(), pendentesDe(d)]);
+  }).then(function (r) {
+    var token = r[0][0], adminPw = r[0][1], fila = r[1];
+    if (!fila.length) return;
+    if (!token) return desistir('sem código de activação', 0, fila.length);
+
+    return porLotes(fila, function (lote) {
+      var corpo = {
+        token: token,
+        entries: lote.map(function (e) {
+          return {
+            uuid: e.uuid, tipo: e.tipo, mes: e.mes, sourceId: e.sourceId,
+            weight: e.weight, unit: e.unit,
+            recorder: e.recorder, tsLocal: e.tsLocal, alvo: e.alvo || null
+          };
+        })
+      };
+      if (adminPw) corpo.adminPassword = adminPw;
+
+      return postar(CFG_INDIA17.ENDPOINT, corpo).then(function (porUuid) {
+        return Promise.all(lote.map(function (e) {
+          var x = porUuid[e.uuid];
+          if (!x) return Promise.resolve();
+          if (x.ok) {
+            return comLoja(base, 'envios', 'readwrite', function (s) { return s.delete(e.uuid); });
+          }
+          e.estado = 'erro';
+          e.erro = x.erro || 'Erro desconhecido';
+          return comLoja(base, 'envios', 'readwrite', function (s) { return s.put(e); });
+        }));
+      });
+    }).then(function () {
+      return pendentesDe(base).then(function (sobram) {
+        if (sobram.length) throw new Error('ficaram ' + sobram.length + ' por enviar');
+      });
+    }, function (e) {
+      return desistir((e && e.message) || 'falhou o envio', 0, fila.length);
+    });
+  });
+}
+
 function enviarTudoEmSegundoPlano() {
   return Promise.all([
     enviarColheitaEmSegundoPlano().catch(function () {}),
     enviarIndiaEmSegundoPlano().catch(function () {}),
-    enviarPesagemEmSegundoPlano().catch(function () {})
+    enviarPesagemEmSegundoPlano().catch(function () {}),
+    enviarIndia17EmSegundoPlano().catch(function () {})
   ]);
 }
 
@@ -410,6 +479,7 @@ self.addEventListener('sync', function (e) {
   if (e.tag === 'jatlog-enviar') e.waitUntil(enviarColheitaEmSegundoPlano());
   if (e.tag === 'indiarec-enviar') e.waitUntil(enviarIndiaEmSegundoPlano());
   if (e.tag === 'pesagem-enviar') e.waitUntil(enviarPesagemEmSegundoPlano());
+  if (e.tag === 'india17-enviar') e.waitUntil(enviarIndia17EmSegundoPlano());
 });
 
 // atalho para a própria página (e para os testes) mandarem tentar já

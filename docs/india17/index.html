@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>JatLog — Índia 17</title>
+
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#12140F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JatLog">
+<link rel="apple-touch-icon" href="../icon-192.png">
+<link rel="icon" type="image/png" href="../icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+<!-- barra de rede / fila de envio -->
+<div id="barra" hidden></div>
+
+<main id="palco">
+
+  <!-- escolha do idioma (só no ecrã de entrada) -->
+  <div class="idiomas" id="idiomas" hidden></div>
+
+  <!-- A activação e o nome são pedidos no menu (../index.html), comum aos
+       quatro módulos. Este módulo começa já na escolha do mês. -->
+
+  <!-- --------------------------------------------------------- 1. mês ---- -->
+  <section class="ecra" id="ecraMes" hidden>
+    <div class="login-head">
+      <div class="mark">JatLog</div>
+      <h1 data-t="mes.titulo"></h1>
+      <p id="subMes"></p>
+    </div>
+    <div class="painel">
+      <div class="banner error" id="avisoMes" hidden></div>
+
+      <!-- O mês escolhe-se sempre, sem nada pré-marcado: com um valor por
+           omissão era fácil registar no mês errado. -->
+      <div class="campo" data-t="mes.campo"></div>
+      <div id="escolhaMes" class="escolhas-local escolhas-mes"></div>
+
+      <button class="btn principal" id="btnContinuar" data-t="mes.botao"></button>
+    </div>
+    <div class="accoes">
+      <button class="btn ligacao" id="btnMenu2" data-t="geral.menu"></button>
+    </div>
+    <div class="appfoot" data-t="app.rodape"></div>
+  </section>
+
+  <!-- ------------------------------------------------ barra de contexto ---- -->
+  <div class="topbar" id="topo" hidden>
+    <div class="who">
+      <div class="name" id="topoNome"></div>
+      <div class="month" id="topoMes"></div>
+    </div>
+    <div class="counter">
+      <div class="num" id="topoNum">0</div>
+      <div class="lbl" data-t="topo.registos"></div>
+    </div>
+  </div>
+
+  <!-- ----------------------------------------------------- 2. Source ID ---- -->
+  <section class="ecra" id="ecraLista" hidden>
+    <div class="banner error" id="avisoLista" hidden></div>
+    <div class="banner ok" id="avisoGravado" hidden></div>
+
+    <div class="eyebrow" data-t="lista.titulo"></div>
+    <input type="text" id="buscaId" class="busca-mae" autocomplete="off"
+           inputmode="text" enterkeyhint="go">
+    <div id="listaIds"></div>
+
+    <div class="accoes">
+      <button class="btn ligacao" id="btnMudarMes" data-t="lista.mudarMes"></button>
+      <button class="btn ligacao" id="btnMenu" data-t="geral.menu"></button>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------- 3. peso ---- -->
+  <section class="ecra" id="ecraPeso" hidden>
+    <div class="banner error" id="avisoPeso" hidden></div>
+
+    <div class="readout">
+      <div class="tag" data-t="peso.tag"></div>
+      <div class="line-code" id="pesoId"></div>
+      <div class="sub" id="pesoSub"></div>
+    </div>
+
+    <input type="text" id="inpPeso" class="mostrador" placeholder="0.00"
+           inputmode="decimal" enterkeyhint="done" autocomplete="off">
+
+    <div class="segmento" id="segPeso">
+      <button type="button" data-unidade="kg" class="activo">kg</button>
+      <button type="button" data-unidade="g">g</button>
+    </div>
+
+    <div class="duas">
+      <button class="btn principal" id="btnRegistar" data-t="peso.registar"></button>
+      <button class="btn cancelar" id="btnCancelarPeso" data-t="peso.cancelar"></button>
+    </div>
+  </section>
+
+  <!-- -------------------------------------------------------- 5. editar ---- -->
+  <section class="ecra" id="ecraEditar" hidden>
+    <div class="banner error" id="avisoEditar" hidden></div>
+    <div class="banner warn" id="cabecalhoEditar"></div>
+
+    <div class="readout">
+      <div class="tag" data-t="editar.tag"></div>
+      <div class="line-code" id="editarId"></div>
+      <div class="sub" id="editarSub"></div>
+    </div>
+
+    <input type="text" id="inpEditar" class="mostrador" inputmode="decimal"
+           enterkeyhint="done" autocomplete="off">
+
+    <div class="segmento" id="segEditar">
+      <button type="button" data-unidade="kg" class="activo">kg</button>
+      <button type="button" data-unidade="g">g</button>
+    </div>
+
+    <div class="duas">
+      <button class="btn principal" id="btnGuardarEdicao" data-t="editar.guardar"></button>
+      <button class="btn cancelar" id="btnCancelarEdicao" data-t="editar.cancelar"></button>
+    </div>
+
+    <div class="accoes">
+      <button class="btn apagar" id="btnApagar" data-t="editar.apagar"></button>
+    </div>
+  </section>
+
+  <!-- -------------------------------------------------------- 6. apagar ---- -->
+  <section class="ecra" id="ecraApagar" hidden>
+    <div class="banner error" id="avisoApagarTexto"></div>
+    <div class="readout">
+      <div class="tag" data-t="apagar.tag"></div>
+      <div class="line-code" id="apagarId"></div>
+      <div class="sub" id="apagarSub"></div>
+    </div>
+    <div class="duas">
+      <button class="btn cancelar" id="btnApagarNao" data-t="apagar.nao"></button>
+      <button class="btn perigo" id="btnApagarSim" data-t="apagar.sim"></button>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------- histórico ---- -->
+  <div id="historico" hidden>
+    <div class="eyebrow" style="margin-top:26px" data-t="historico.titulo"></div>
+    <div id="listaHistorico"></div>
+  </div>
+
+</main>
+
+<div id="brinde" hidden></div>
+
+<!-- ----------------------------------------- confirmar antes de gravar ---- -->
+<!-- Janela pequena por cima do ecrã de peso, não um ecrã inteiro novo — o
+     mesmo formato usado na pesagem/India Rec. -->
+<dialog id="dlgConfirmar">
+  <h3 data-t="confirmar.tag"></h3>
+  <p class="alvoConfirmar" id="alvoConfirmar"></p>
+  <div class="banner warn" id="avisoConfirmar" hidden></div>
+  <div class="dialogoBotoes">
+    <button class="btn cancelar" id="btnCorrigir" data-t="confirmar.corrigir"></button>
+    <!-- o texto muda consoante haja ou não aviso de faixa — ver submeterPeso() em app.js -->
+    <button class="btn principal" id="btnRegistarAssim"></button>
+  </div>
+</dialog>
+
+<script src="../config.js"></script>
+<script src="./i18n.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>

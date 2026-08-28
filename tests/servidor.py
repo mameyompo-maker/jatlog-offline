@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 """Servidor de teste do JatLog unificado.
 
-Serve docs/ e imita OS TRES Apps Script:
+Serve docs/ e imita OS QUATRO Apps Script:
   /exec-colheita  -> Codigo.gs da colheita   (peso por linha/bloco)
   /exec-india     -> Codigo.gs do India Rec  (medicoes das plantas)
   /exec-pesagem   -> Codigo.gs da pesagem de sacos (Tanheia, temporario)
+  /exec-india17   -> Codigo.gs do peso da colheita por mes (Indice 17) —
+                     imitacao local so para teste: o Kaz escreve e implanta
+                     o Apps Script real (ver HANDOVER.md), este endpoint
+                     nunca vai para producao.
 
-O config.js e reescrito para apontar para estes tres caminhos.
-Token e senha de administrador sao os mesmos nos tres, como na producao.
+O config.js e reescrito para apontar para estes quatro caminhos.
+Token e senha de administrador sao os mesmos nos quatro, como na producao.
 
   python servidor.py <docs-dir> [porta]
 
@@ -27,6 +31,8 @@ PORTA = int(sys.argv[2]) if len(sys.argv) > 2 else 8810
 
 TOKEN = "jatropha"
 ADMIN_PW = "JatRD2026"
+
+MESES_17 = ['Aug/26', 'Sep/26', 'Oct/26', 'Nov/26', 'Dec/26', 'Jan/27', 'Feb/27', 'Mar/27']
 
 TRAVA = threading.Lock()
 
@@ -68,6 +74,9 @@ def estado_inicial():
         # [ts, user, season, motherId, peso, unid, pesoKg, uuid]
         "pesagem": {"25-26": [], "26-27": []},
         "pesagemAudit": {"25-26": [], "26-27": []},
+        # [ts, user, mes, sourceId, peso, unid, pesoKg, uuid]
+        "india17": {m: [] for m in MESES_17},
+        "india17Audit": {m: [] for m in MESES_17},
         "falhar": False,
     }
 
@@ -295,6 +304,121 @@ def resumo_pesagem(season):
     return saida
 
 
+# ------------------------------------------------------------------ india17
+# Reutiliza os mesmos 17 Source ID (e o mesmo n.o de plantas) ja usados no
+# mock do India Rec (LOTES, definido mais abaixo) — sao a mesma folha real.
+
+def source_ids_17():
+    return [nome for nome, _ in LOTES]
+
+
+def linhas_referencia_17():
+    """[(sourceId, rowNumber, totalPlantas), ...] pela ordem da folha (mock)."""
+    return [(nome, i + 1, n) for i, (nome, n) in enumerate(LOTES)]
+
+
+def ids_processados_india17(mes):
+    vistos = set()
+    for linha in E["india17"][mes]:
+        if linha[7]:
+            vistos.add(linha[7])
+    for a in E["india17Audit"][mes]:
+        if a[11]:
+            vistos.add(a[11])
+    return vistos
+
+
+def procurar_india17(mes, alvo):
+    alvo = alvo or {}
+    u = str(alvo.get("uuid") or "").strip()
+    if u:
+        for i, linha in enumerate(E["india17"][mes]):
+            if linha[7] == u:
+                return i
+    return -1
+
+
+def aplicar_india17(ent, admin):
+    uid = str(ent.get("uuid") or "").strip()
+    mes = ent.get("mes")
+    if mes not in E["india17"]:
+        return {"uuid": uid, "ok": False, "erro": "Mês desconhecido: %s" % mes}
+    if not uid:
+        return {"uuid": "", "ok": False, "erro": "Falta o ID do envio."}
+    if uid in ids_processados_india17(mes):
+        return {"uuid": uid, "ok": True, "duplicado": True}
+
+    tipo = ent.get("tipo", "criar")
+    quem = str(ent.get("recorder") or "").strip()
+    papel = "admin" if admin else "worker"
+    sourceId = str(ent.get("sourceId") or "").strip()
+
+    if tipo == "criar":
+        if sourceId not in source_ids_17():
+            return {"uuid": uid, "ok": False, "erro": "Source ID desconhecido: %s" % sourceId}
+        try:
+            peso = float(ent.get("weight"))
+        except (TypeError, ValueError):
+            return {"uuid": uid, "ok": False, "erro": "Peso inválido."}
+        if peso <= 0:
+            return {"uuid": uid, "ok": False, "erro": "Peso inválido."}
+        unidade = "g" if ent.get("unit") == "g" else "kg"
+        ts = str(ent.get("tsLocal") or "").strip() or agora()
+        E["india17"][mes].append([ts, quem, mes, sourceId, "%.2f" % peso, unidade,
+                                  peso_kg(peso, unidade), uid])
+        E["india17Audit"][mes].append([agora(), "CREATE", quem, papel, quem, mes, sourceId,
+                                       "", "", "%.2f" % peso, unidade, uid])
+        return {"uuid": uid, "ok": True, "tipo": tipo, "sourceId": sourceId}
+
+    idx = procurar_india17(mes, ent.get("alvo"))
+    if idx < 0:
+        E["india17Audit"][mes].append([agora(), "DELETE" if tipo == "apagar" else "EDIT",
+                                       quem, papel, "", mes,
+                                       str((ent.get("alvo") or {}).get("sourceId") or ""),
+                                       "", "", "", "", uid])
+        return {"uuid": uid, "ok": True, "tipo": tipo, "ausente": True}
+
+    linha = E["india17"][mes][idx]
+    dono = linha[1]
+    if not admin and dono and not igual(dono, quem):
+        return {"uuid": uid, "ok": False,
+                "erro": "Só o autor (%s) ou um administrador pode alterar este registo." % dono}
+
+    if tipo == "apagar":
+        E["india17"][mes].pop(idx)
+        E["india17Audit"][mes].append([agora(), "DELETE", quem, papel, dono, mes, linha[3],
+                                       linha[4], linha[5], "", "", uid])
+        return {"uuid": uid, "ok": True, "tipo": tipo, "sourceId": linha[3]}
+
+    if tipo == "editar":
+        try:
+            peso = float(ent.get("weight"))
+        except (TypeError, ValueError):
+            return {"uuid": uid, "ok": False, "erro": "Peso inválido."}
+        if peso <= 0:
+            return {"uuid": uid, "ok": False, "erro": "Peso inválido."}
+        unidade = "g" if ent.get("unit") == "g" else "kg"
+        antigo, unidade_antiga = linha[4], linha[5]
+        linha[4] = "%.2f" % peso
+        linha[5] = unidade
+        linha[6] = peso_kg(peso, unidade)
+        E["india17Audit"][mes].append([agora(), "EDIT", quem, papel, dono, mes, linha[3],
+                                       antigo, unidade_antiga, linha[4], unidade, uid])
+        return {"uuid": uid, "ok": True, "tipo": tipo, "sourceId": linha[3]}
+
+    return {"uuid": uid, "ok": False, "erro": "Operação desconhecida: %s" % tipo}
+
+
+def resumo_india17(mes):
+    """[[sourceId, rowNumber, totalPlantas, registos, pesoKg], ...] pela ordem da folha."""
+    saida = []
+    for sourceId, rowNumber, totalPlantas in linhas_referencia_17():
+        linhas = [l for l in E["india17"][mes] if l[3] == sourceId]
+        saida.append([sourceId, rowNumber, totalPlantas, len(linhas),
+                       round(sum(l[6] for l in linhas), 3)])
+    return saida
+
+
 # ------------------------------------------------------------------ india
 
 def letra(n):
@@ -414,6 +538,7 @@ CONFIG_JS = (
     "self.JATLOG_CONFIG={ENDPOINT:'/exec-colheita',VERSAO:'teste'};\n"
     "self.INDIAREC_CONFIG={ENDPOINT:'/exec-india',VERSAO:'teste'};\n"
     "self.PESAGEM_CONFIG={ENDPOINT:'/exec-pesagem',VERSAO:'teste'};\n"
+    "self.INDIA17_CONFIG={ENDPOINT:'/exec-india17',VERSAO:'teste'};\n"
 )
 
 
@@ -455,7 +580,8 @@ class H(SimpleHTTPRequestHandler):
             with TRAVA:
                 return self._json({"ok": True, "log": E["log"], "audit": E["audit"],
                                    "india": E["india"], "pesagem": E["pesagem"],
-                                   "pesagemAudit": E["pesagemAudit"]})
+                                   "pesagemAudit": E["pesagemAudit"],
+                                   "india17": E["india17"], "india17Audit": E["india17Audit"]})
         if caminho == "/__falhar":
             E["falhar"] = q.get("on", "1") == "1"
             return self._json({"ok": True, "falhar": E["falhar"]})
@@ -476,6 +602,8 @@ class H(SimpleHTTPRequestHandler):
             return self._get_india(q)
         if caminho == "/exec-pesagem":
             return self._get_pesagem(q)
+        if caminho == "/exec-india17":
+            return self._get_india17(q)
 
         return super().do_GET()
 
@@ -578,10 +706,31 @@ class H(SimpleHTTPRequestHandler):
                                    "registos": saida})
             return self._json({"ok": False, "erro": "Acção desconhecida: %s" % accao})
 
+    def _get_india17(self, q):
+        if E["falhar"]:
+            return self._json({"ok": False, "erro": "servidor em baixo"}, 500)
+        if q.get("token") != TOKEN:
+            return self._json({"ok": False, "erro": "Não autorizado."})
+        accao = q.get("action", "master")
+        with TRAVA:
+            if accao == "admin":
+                return self._json({"ok": True, "admin": q.get("pw") == ADMIN_PW})
+            mes = q.get("mes", MESES_17[0])
+            if mes not in E["india17"]:
+                return self._json({"ok": False, "erro": "Mês desconhecido: %s" % mes})
+            if accao == "master":
+                return self._json({"ok": True, "hora": agora(), "mes": mes,
+                                   "linhas": resumo_india17(mes)})
+            if accao == "log":
+                saida = [[l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7]]
+                         for l in E["india17"][mes]]
+                return self._json({"ok": True, "hora": agora(), "mes": mes, "registos": saida})
+            return self._json({"ok": False, "erro": "Acção desconhecida: %s" % accao})
+
     # ----------------------------------------------------------------- POST
     def do_POST(self):
         caminho = urlparse(self.path).path
-        if caminho not in ("/exec-colheita", "/exec-india", "/exec-pesagem"):
+        if caminho not in ("/exec-colheita", "/exec-india", "/exec-pesagem", "/exec-india17"):
             return self._json({"ok": False, "erro": "nao encontrado"}, 404)
         if E["falhar"]:
             return self._json({"ok": False, "erro": "servidor em baixo"}, 500)
@@ -600,8 +749,10 @@ class H(SimpleHTTPRequestHandler):
             aplicar = aplicar_colheita
         elif caminho == "/exec-india":
             aplicar = aplicar_india
-        else:
+        elif caminho == "/exec-pesagem":
             aplicar = aplicar_pesagem
+        else:
+            aplicar = aplicar_india17
         with TRAVA:
             resultados = [aplicar(e, admin) for e in (pedido.get("entries") or [])]
         return self._json({"ok": True, "hora": agora(), "resultados": resultados})
