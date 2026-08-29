@@ -79,9 +79,9 @@ dialog#dlgConfirmar .banner.warn { margin: 0 0 12px; }
   color: var(--ink);
 }
 
-/* Linha (Row Number): contexto só de leitura, vindo do cadastro — ajuda a
- * confirmar que se escolheu a linha certa sem ter de sair do ecrã. Nunca é
- * escrito por este módulo. */
+/* Linha (Row Number) e n.º de plantas: contexto só de leitura, vindo do
+ * cadastro — ajuda a confirmar que se escolheu a linha certa sem ter de sair
+ * do ecrã. Nunca é escrito por este módulo. */
 .ctxSrc {
   display: block;
   margin-top: 2px;

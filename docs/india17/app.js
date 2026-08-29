@@ -730,6 +730,18 @@ function irParaLista() {
 }
 
 /**
+ * N.º de ordem do Source ID na folha (1, 2, 3...) — não é o rowNumber (que
+ * pode ter várias linhas, ex. "r15,16") nem o totalPlantas, é só a posição
+ * fixa em S.master[mes], igual em qualquer filtro de busca. Devolve null
+ * para o "?" (não está em S.master).
+ */
+function numeroDaLista(item) {
+  var todas = S.master[S.mes] || [];
+  var i = todas.indexOf(item);
+  return i >= 0 ? (i + 1) : null;
+}
+
+/**
  * Filtra a lista pelo que está escrito em S.filtroId — substring, sem
  * distinguir maiúsculas — antes de desenhar os cartões. Com 17 Source ID,
  * escrever "bag05" já chega a um só cartão sem tocar no ecrã; S.filtrados
@@ -769,8 +781,11 @@ function pintarLista() {
     var badge = ag.contagem > 0
       ? t('lista.badge', { n: ag.contagem, kg: mostrarNumero(ag.pesoKg.toFixed(1)) })
       : t('lista.semRegisto');
-    var contexto = t('lista.contexto', { linha: esc(ouTraco(item.rowNumber)) });
-    var rotuloId = esc(item.id) + ' (' + esc(ouTraco(item.totalPlantas)) + ')';
+    var contexto = t('lista.contexto', {
+      linha: esc(ouTraco(item.rowNumber)), plantas: esc(ouTraco(item.totalPlantas))
+    });
+    var numero = numeroDaLista(item);
+    var rotuloId = esc(item.id) + (numero ? ' (' + numero + ')' : '');
 
     var b = document.createElement('button');
     b.type = 'button';
@@ -827,8 +842,8 @@ function abrirPeso(item) {
   S.unidade = 'kg';
   aviso('avisoPeso', '');
 
-  $('pesoId').textContent = item.id +
-      (item.totalPlantas !== '' && item.totalPlantas != null ? ' (' + item.totalPlantas + ')' : '');
+  var numeroPeso = numeroDaLista(item);
+  $('pesoId').textContent = item.id + (numeroPeso ? ' (' + numeroPeso + ')' : '');
   $('pesoSub').textContent = t('peso.subMes', { mes: rotuloMes(S.mes) });
 
   $('inpPeso').value = '';
