@@ -108,6 +108,8 @@ var TEXTOS = {
     'apagar.nao': 'Não, voltar',
 
     'historico.titulo': 'Todos os registos',
+    'historico.enviarAgora': 'Enviar agora',
+    'historico.jaEnviado': 'Já está tudo enviado.',
     'historico.vazio': 'Nenhum registo em {mes} ainda.',
     'historico.toque': 'toque para corrigir',
     /* Aqui entra sozinho, no lugar de um nome ("08-15 06:54 · {quem} · …"),
@@ -115,6 +117,13 @@ var TEXTOS = {
     'historico.voce': 'você',
     'historico.trancado': '🔒 só o autor ou o admin',
     'historico.porEnviar': 'POR ENVIAR',
+
+    'histLocal.titulo': 'Histórico — todos os meses',
+    'histLocal.aCarregar': 'A carregar o histórico…',
+    'histLocal.vazio': 'Ainda não há registos deste local.',
+    'histLocal.semRede': 'Sem ligação — a mostrar o que está guardado neste aparelho.',
+    'histLocal.maisRecentes': 'A mostrar os {n} mais recentes.',
+    'histLocal.india17': 'O histórico do Índia 17 aparece depois de Continuar.',
 
     'rede.semRede': 'SEM LIGAÇÃO — pode continuar a registar',
     'rede.semRedeFila': 'SEM LIGAÇÃO — {n} registo(s) guardado(s) no aparelho',
@@ -233,11 +242,20 @@ var TEXTOS = {
     'apagar.nao': 'No, go back',
 
     'historico.titulo': 'All entries',
+    'historico.enviarAgora': 'Send now',
+    'historico.jaEnviado': 'Everything is already sent.',
     'historico.vazio': 'No entries in {mes} yet.',
     'historico.toque': 'tap to correct',
     'historico.voce': 'you',
     'historico.trancado': '🔒 only the author or an admin',
     'historico.porEnviar': 'NOT SENT',
+
+    'histLocal.titulo': 'History — all months',
+    'histLocal.aCarregar': 'Loading the history…',
+    'histLocal.vazio': 'No records for this site yet.',
+    'histLocal.semRede': 'No connection — showing what is stored on this phone.',
+    'histLocal.maisRecentes': 'Showing the {n} most recent.',
+    'histLocal.india17': 'The Índia 17 history appears after Continue.',
 
     'rede.semRede': 'NO CONNECTION — you can keep recording',
     'rede.semRedeFila': 'NO CONNECTION — {n} entry(ies) held on this phone',
@@ -356,11 +374,20 @@ var TEXTOS = {
     'apagar.nao': 'いいえ、戻る',
 
     'historico.titulo': 'すべての記録',
+    'historico.enviarAgora': '今すぐ送信',
+    'historico.jaEnviado': 'すでにすべて送信済みです。',
     'historico.vazio': '{mes} の記録はまだありません。',
     'historico.toque': 'タップして修正',
     'historico.voce': 'あなた',
     'historico.trancado': '🔒 本人と管理者のみ',
     'historico.porEnviar': '未送信',
+
+    'histLocal.titulo': '履歴(全期間)',
+    'histLocal.aCarregar': '履歴を読み込んでいます…',
+    'histLocal.vazio': 'この場所の記録はまだありません。',
+    'histLocal.semRede': '圏外のため、この端末に保存されている分を表示しています。',
+    'histLocal.maisRecentes': '直近 {n} 件を表示しています。',
+    'histLocal.india17': 'Índia 17 の履歴は「続行」の後の画面に表示されます。',
 
     'rede.semRede': '圏外 — このまま記録を続けられます',
     'rede.semRedeFila': '圏外 — {n} 件を端末に保存しています',

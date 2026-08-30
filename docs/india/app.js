@@ -51,7 +51,7 @@ var SEM_MEDIDA = 'X';
 function valorPorOmissao(c) {
   return (c.tipo === 'cor' || c.tipo === 'habito') ? SEM_MEDIDA : 0;
 }
-var INTERVALO_TENTATIVA = 60000;
+var INTERVALO_TENTATIVA = 20000;
 var VALIDADE_ADMIN = 12 * 3600 * 1000;   // o modo administrador expira ao fim de 12 h
 
 // ------------------------------------------------------------------- campos
@@ -1912,6 +1912,12 @@ function desenharHistorico() {
   pintarAvisoEnvio();
   desenharGrelhaHistorico();
   desenharPlantasDaFileira();
+
+  // o "enviar agora" só aparece quando há fila para enviar — sem nada por
+  // enviar não teria nada para fazer (mesma regra dos outros módulos, 2026-08-30)
+  DB.pendentes().then(function (fila) {
+    $('btnForcarEnvio').hidden = !fila.length;
+  }).catch(function () {});
 
   if (S.abaHistorico === 'aparelho') {
     DB.todos().then(function (l) {

@@ -21,7 +21,7 @@
 
 var CFG = window.INDIA17_CONFIG || {};
 var LOTE_ENVIO = 25;
-var INTERVALO_TENTATIVA = 60000;
+var INTERVALO_TENTATIVA = 20000;
 
 /* Faixa plausível para UM lançamento de peso colhido de uma linha, num mês —
  * valores escolhidos por bom senso, sem tabela de referência: entre 100 g e
@@ -504,6 +504,10 @@ function pintarBarra() {
   } else {
     b.hidden = true;
   }
+
+  // o "enviar agora" do histórico só aparece quando há fila para enviar
+  var btnAgora = $('btnEnviarAgora');
+  if (btnAgora) btnAgora.hidden = !p;
 }
 
 function pedirGet(params) {
@@ -552,6 +556,22 @@ function enviarFila() {
     S.aEnviar = false;
     pintarBarra();
   });
+}
+
+/**
+ * "Tentar enviar agora" (botão no histórico). Manda esta página tentar e, ao
+ * mesmo tempo, acorda o Service Worker — se a página estiver a meio de outra
+ * coisa, o Service Worker continua até ao fim (mesmo padrão do India Rec,
+ * ver forcarEnvio() em india/app.js).
+ */
+function forcarEnvio() {
+  if (!pendentes().length) { brinde(t('historico.jaEnviado')); return Promise.resolve(); }
+  if (foraDeAlcance()) { brinde(t('rede.semRede'), true); return Promise.resolve(); }
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    try { navigator.serviceWorker.controller.postMessage({ tipo: 'enviar-agora' }); } catch (e) {}
+  }
+  pedirSincronizacaoEmSegundoPlano();
+  return enviarFila();
 }
 
 function enviarLote(lote, token) {
@@ -1204,10 +1224,16 @@ function ligarEventos() {
   $('btnApagarSim').onclick = apagarRegisto;
   $('btnApagarNao').onclick = function () { mostrar('ecraEditar'); };
 
+  $('btnEnviarAgora').onclick = forcarEnvio;
+
   // rede
   window.addEventListener('online', function () { pintarBarra(); voltarATentar(); });
   window.addEventListener('offline', pintarBarra);
   setInterval(voltarATentar, INTERVALO_TENTATIVA);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) voltarATentar();
+  });
+  window.addEventListener('pageshow', voltarATentar);
 }
 
 // ------------------------------------------------------------------ arranque

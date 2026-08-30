@@ -168,7 +168,9 @@ function aplicarIdioma() {
     dicas[j].setAttribute('placeholder', t(dicas[j].getAttribute('data-tph')));
   }
   pintarBotoesIdioma();
-  if (S.ecra === 'ecraMenu') pintarMenu();
+  // Os textos com contagem ("{n} por enviar") não têm data-t: repintam-se
+  // contando de novo, senão ficavam na língua anterior ao trocar de idioma.
+  if (S.ecra === 'ecraMenu') { pintarMenu(); contarFilas(); }
 }
 
 function pintarBotoesIdioma() {
@@ -389,7 +391,10 @@ function pintarMenu() {
   $('btnSairAdmin2').hidden = !Admin.activo();
 }
 
-/** Quantos registos de cada módulo ainda não subiram — visível já no menu. */
+/** Quantos registos de cada módulo ainda não subiram — visível já no menu.
+ * As quatro bases lêem-se uma vez só, e a mesma leitura pinta os crachás dos
+ * cartões e a faixa de estado lá de cima (com fila: total + botão de enviar;
+ * sem fila: só o visto "tudo enviado"). */
 function contarFilas() {
   function pendentesDe(promessaBase) {
     return promessaBase
@@ -403,14 +408,125 @@ function contarFilas() {
       var el = $(id);
       el.hidden = n === 0;
       el.textContent = t('menu.porEnviar', { n: n });
-    }).catch(function () { $(id).hidden = true; });
+      return n;
+    }).catch(function () { $(id).hidden = true; return 0; });
   }
   // O cartão da colheita cobre Tanheia, 7 de Abril e Índia 17 (esta última
   // é escolhida lá dentro, na mesma "escolha do local" — já não tem cartão
   // próprio no menu, mas continua com a fila em IndexedDB própria).
-  contar([pendentesDe(baseColheita()), pendentesDe(baseIndia17())], 'filaColheita');
-  contar([pendentesDe(baseIndia())], 'filaIndia');
-  contar([pendentesDe(basePesagem())], 'filaPesagem');
+  var pColheita = pendentesDe(baseColheita());
+  var pIndia17 = pendentesDe(baseIndia17());
+  var pIndia = pendentesDe(baseIndia());
+  var pPesagem = pendentesDe(basePesagem());
+
+  Promise.all([
+    contar([pColheita, pIndia17], 'filaColheita'),
+    contar([pIndia], 'filaIndia'),
+    contar([pPesagem], 'filaPesagem')
+  ]).then(function (ns) {
+    var total = ns.reduce(function (a, b) { return a + b; }, 0);
+    $('estadoEnvio').hidden = total === 0;
+    $('estadoOk').hidden = total !== 0;
+    $('estadoEnvioTexto').textContent = t('menu.porEnviar', { n: total });
+  });
+}
+
+/** Soma de tudo por enviar nos quatro módulos, para o botão "Enviar agora". */
+function totalPendente() {
+  function pendentesDe(promessaBase) {
+    return promessaBase
+      .then(function (d) { return lerTudo(d, 'envios'); })
+      .then(function (l) { return l.filter(function (e) { return e.estado === 'pendente'; }).length; })
+      .catch(function () { return 0; });
+  }
+  return Promise.all([
+    pendentesDe(baseColheita()), pendentesDe(baseIndia17()),
+    pendentesDe(baseIndia()), pendentesDe(basePesagem())
+  ]).then(function (ns) { return ns.reduce(function (a, b) { return a + b; }, 0); });
+}
+
+/**
+ * "Enviar agora" na entrada comum: não há aqui uma fila própria para enviar
+ * (cada módulo tem a sua, em IndexedDB separado), por isso pede-se ao Service
+ * Worker — que já sabe falar com os quatro Apps Script — para tentar já, tal
+ * como o `forcarEnvio()` do módulo India Rec já fazia. Sem Service Worker a
+ * controlar a página (primeiro arranque, por exemplo) não há como pedir isto
+ * daqui; nesse caso mostra-se apenas o total, sem tentar.
+ */
+function enviarAgoraDeTodos() {
+  totalPendente().then(function (n) {
+    if (!n) { brinde(t('menu.semPendentes')); return; }
+    if (!navigator.onLine) { brinde(t('menu.enviarSemRede'), true); return; }
+    if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+      brinde(t('menu.enviarSemRede'), true);
+      return;
+    }
+    brinde(t('menu.aEnviarAgora'));
+    try { navigator.serviceWorker.controller.postMessage({ tipo: 'enviar-agora' }); } catch (e) {}
+    // Sem confirmação exacta de quando o SW termina (pesagem/india17 não
+    // avisam as páginas), por isso repinta a contagem pouco depois — o
+    // suficiente para filas deste tamanho (LOTE_ENVIO=25 por módulo).
+    setTimeout(function () {
+      if (S.ecra === 'ecraMenu') contarFilas();
+    }, 4000);
+  });
+}
+
+// -------------------------------------------------------- actualização
+
+/**
+ * "Verificar actualização": força o navegador a ir buscar o sw.js de novo
+ * (reg.update()) e diz o que aconteceu. O nosso Service Worker já chama
+ * skipWaiting()/clients.claim() sozinho (ver sw.js), por isso não é preciso
+ * pedir confirmação ao utilizador para activar a versão nova — só recarregar
+ * a página quando o 'controllerchange' disser que já está activa, para o
+ * HTML/JS em memória deixar de ser o antigo.
+ *
+ * `houveNovo` regista se updatefound disparou; sem isso não há forma de
+ * distinguir "já está actualizado" de "encontrou uma versão nova e ainda está
+ * a instalar" — reg.update() resolve-se em ambos os casos.
+ *
+ * As respostas aparecem como brinde (toast) e não num banner do ecrã: é uma
+ * pergunta rara com resposta de uma linha, e o banner fixo era mais um bloco
+ * a pesar no menu (2026-08-30).
+ */
+function verificarAtualizacao() {
+  brinde(t('atualizar.aVerificar'));
+
+  if (!('serviceWorker' in navigator)) {
+    brinde(t('atualizar.naoSuportado'), true);
+    return;
+  }
+  if (!navigator.onLine) {
+    brinde(t('atualizar.semRede'), true);
+    return;
+  }
+
+  navigator.serviceWorker.getRegistration('./').then(function (reg) {
+    if (!reg) { brinde(t('atualizar.naoSuportado'), true); return; }
+
+    var houveNovo = false;
+    reg.addEventListener('updatefound', function () { houveNovo = true; });
+
+    var jaRecarregou = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function recarregar() {
+      navigator.serviceWorker.removeEventListener('controllerchange', recarregar);
+      if (jaRecarregou) return;
+      jaRecarregou = true;
+      location.reload();
+    });
+
+    reg.update().then(function () {
+      setTimeout(function () {
+        if (jaRecarregou) return;
+        brinde(houveNovo ? t('atualizar.aAtualizar') : t('atualizar.jaAtualizado'));
+      }, 1000);
+    }).catch(function () {
+      brinde(t('atualizar.semRede'), true);
+    });
+  }).catch(function () {
+    brinde(t('atualizar.naoSuportado'), true);
+  });
 }
 
 // ------------------------------------------------------------------ entrada
@@ -480,6 +596,9 @@ function ligarEventos() {
   $('inpSenha').onkeydown = function (e) { if (e.key === 'Enter') entrar(); };
   $('btnSairAdmin').onclick = function () { Admin.sair(); irParaEntrada(); };
 
+  $('btnVerificarAtualizacao').onclick = verificarAtualizacao;
+  $('btnEnviarAgoraMenu').onclick = enviarAgoraDeTodos;
+
   $('btnSairAdmin2').onclick = function () { Admin.sair(); pintarMenu(); };
   $('btnTrocarUsuario').onclick = function () {
     S.nome = ''; Def.del('nome'); irParaEntrada();
@@ -523,6 +642,13 @@ function arrancar() {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
     navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function () {});
+  });
+  // Confirmação do "Enviar agora" (ver enviarAgoraDeTodos) — chega mais cedo
+  // que o setTimeout de segurança quando o envio é rápido.
+  navigator.serviceWorker.addEventListener('message', function (e) {
+    if (e.data && e.data.tipo === 'enviar-agora-concluido' && S.ecra === 'ecraMenu') {
+      contarFilas();
+    }
   });
 }
 

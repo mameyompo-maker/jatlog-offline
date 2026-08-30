@@ -76,6 +76,8 @@ var TEXTOS = {
     'apagar.nao': 'Não, voltar',
 
     'historico.titulo': 'Todos os registos',
+    'historico.enviarAgora': 'Enviar agora',
+    'historico.jaEnviado': 'Já está tudo enviado.',
     'historico.vazio': 'Nenhum registo em {mes} ainda.',
     'historico.toque': 'toque para corrigir',
     'historico.voce': 'você',
@@ -154,6 +156,8 @@ var TEXTOS = {
     'apagar.nao': 'No, go back',
 
     'historico.titulo': 'All entries',
+    'historico.enviarAgora': 'Send now',
+    'historico.jaEnviado': 'Everything is already sent.',
     'historico.vazio': 'No entries in {mes} yet.',
     'historico.toque': 'tap to correct',
     'historico.voce': 'you',
@@ -232,6 +236,8 @@ var TEXTOS = {
     'apagar.nao': 'いいえ、戻る',
 
     'historico.titulo': 'すべての記録',
+    'historico.enviarAgora': '今すぐ送信',
+    'historico.jaEnviado': 'すでにすべて送信済みです。',
     'historico.vazio': '{mes} の記録はまだありません。',
     'historico.toque': 'タップして修正',
     'historico.voce': 'あなた',

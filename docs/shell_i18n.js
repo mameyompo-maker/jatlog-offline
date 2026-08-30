@@ -59,6 +59,20 @@ var TEXTOS = {
     'menu.desactivar': 'Desactivar este aparelho',
     'menu.confirmarDesactivar': 'Apagar o código de activação deste aparelho? Os registos por enviar não se perdem.',
 
+    'menu.enviarAgora': 'Enviar agora',
+    'menu.tudoEnviado': '✓ Tudo enviado',
+    'menu.aEnviarAgora': 'A tentar enviar tudo…',
+    'menu.semPendentes': 'Já está tudo enviado.',
+    'menu.enviarSemRede': 'Sem ligação — vai enviar sozinho quando voltar a rede.',
+    'menu.enviarConcluido': 'Envio concluído.',
+
+    'atualizar.botao': 'Verificar actualização',
+    'atualizar.aVerificar': 'A verificar…',
+    'atualizar.aAtualizar': 'Nova versão encontrada — a actualizar. A aplicação vai recarregar sozinha…',
+    'atualizar.jaAtualizado': 'Já está na versão mais recente.',
+    'atualizar.semRede': 'Sem ligação — não é possível verificar agora.',
+    'atualizar.naoSuportado': 'Este aparelho/navegador não suporta actualização automática.',
+
     'geral.trocarUsuario': 'Trocar de utilizador'
   },
 
@@ -105,6 +119,20 @@ var TEXTOS = {
     'menu.desactivar': 'Deactivate this phone',
     'menu.confirmarDesactivar': 'Erase the activation code from this phone? Records waiting to be sent are kept.',
 
+    'menu.enviarAgora': 'Send now',
+    'menu.tudoEnviado': '✓ All sent',
+    'menu.aEnviarAgora': 'Trying to send everything…',
+    'menu.semPendentes': 'Everything is already sent.',
+    'menu.enviarSemRede': 'No connection — it will send automatically once you are back online.',
+    'menu.enviarConcluido': 'Sending finished.',
+
+    'atualizar.botao': 'Check for update',
+    'atualizar.aVerificar': 'Checking…',
+    'atualizar.aAtualizar': 'New version found — updating. The app will reload on its own…',
+    'atualizar.jaAtualizado': 'You already have the latest version.',
+    'atualizar.semRede': 'No connection — cannot check right now.',
+    'atualizar.naoSuportado': 'This device/browser does not support automatic updates.',
+
     'geral.trocarUsuario': 'Switch user'
   },
 
@@ -150,6 +178,20 @@ var TEXTOS = {
     'menu.porEnviar': '未送信 {n} 件',
     'menu.desactivar': 'この端末を無効にする',
     'menu.confirmarDesactivar': 'この端末のアクティベーションコードを消しますか。未送信の記録は消えません。',
+
+    'menu.enviarAgora': '今すぐ送信',
+    'menu.tudoEnviado': '✓ すべて送信済み',
+    'menu.aEnviarAgora': 'すべての送信を試みています…',
+    'menu.semPendentes': 'すでにすべて送信済みです。',
+    'menu.enviarSemRede': '圏外です。電波が戻れば自動で送信されます。',
+    'menu.enviarConcluido': '送信が完了しました。',
+
+    'atualizar.botao': '最新のバージョンにする',
+    'atualizar.aVerificar': '確認しています…',
+    'atualizar.aAtualizar': '新しいバージョンが見つかりました。更新しています。まもなく自動で再読み込みされます…',
+    'atualizar.jaAtualizado': 'すでに最新バージョンです。',
+    'atualizar.semRede': '圏外のため、今は確認できません。',
+    'atualizar.naoSuportado': 'この端末・ブラウザは自動更新に対応していません。',
 
     'geral.trocarUsuario': 'ユーザーを切り替える'
   }

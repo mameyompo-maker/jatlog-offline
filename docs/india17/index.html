@@ -156,7 +156,13 @@
 
   <!-- ------------------------------------------------------- histórico ---- -->
   <div id="historico" hidden>
-    <div class="eyebrow" style="margin-top:26px" data-t="historico.titulo"></div>
+    <!-- O "enviar agora" mora ao lado do título e só aparece quando há fila
+         (ver pintarBarra em app.js): sem nada por enviar não teria nada para
+         fazer, e era mais uma faixa a pesar no ecrã (2026-08-30). -->
+    <div class="linha-eyebrow" style="margin-top:26px">
+      <div class="eyebrow" data-t="historico.titulo"></div>
+      <button class="btn mini" id="btnEnviarAgora" data-t="historico.enviarAgora" hidden></button>
+    </div>
     <div id="listaHistorico"></div>
   </div>
 

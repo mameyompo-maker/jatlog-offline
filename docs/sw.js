@@ -21,7 +21,7 @@ var CFG_INDIA = self.INDIAREC_CONFIG || {};
 var CFG_PESAGEM = self.PESAGEM_CONFIG || {};
 var CFG_INDIA17 = self.INDIA17_CONFIG || {};
 
-var CACHE = 'jatlog-v33';
+var CACHE = 'jatlog-v35';
 var CACHE_FONTES = 'jatlog-fontes-v1';
 
 var FICHEIROS = [
@@ -483,9 +483,17 @@ self.addEventListener('sync', function (e) {
   if (e.tag === 'india17-enviar') e.waitUntil(enviarIndia17EmSegundoPlano());
 });
 
-// atalho para a própria página (e para os testes) mandarem tentar já
+/* atalho para a própria página (e para os testes) mandarem tentar já — usado
+ * pelo botão "Enviar agora" da entrada comum (shell.js) e dos módulos
+ * (forcarEnvio()). Avisa as páginas quando acaba, para a entrada comum saber
+ * a hora certa de repintar a contagem em vez de adivinhar com um temporizador
+ * (pesagem/india17 não avisam progresso a meio, só este fim). */
 self.addEventListener('message', function (e) {
-  if (e.data && e.data.tipo === 'enviar-agora') e.waitUntil(enviarTudoEmSegundoPlano());
+  if (e.data && e.data.tipo === 'enviar-agora') {
+    e.waitUntil(enviarTudoEmSegundoPlano().then(function () {
+      return avisarPaginas({ tipo: 'enviar-agora-concluido' });
+    }));
+  }
 });
 
 self.addEventListener('fetch', function (e) {

@@ -81,6 +81,18 @@
       <p id="subMenu"></p>
     </div>
 
+    <!-- Estado do envio numa linha só (2026-08-30). Antes eram dois botões
+         de faixa inteira ("Verificar actualização" no topo, "Enviar agora"
+         no fundo) mais os crachás dos cartões — o Kaz pediu o ecrã mais
+         leve. Com fila: faixa âmbar com o total e o botão de enviar. Sem
+         fila: um visto discreto, e nenhum botão — enviar sem nada por
+         enviar só dizia "já está tudo enviado". -->
+    <div class="estado-envio" id="estadoEnvio" hidden>
+      <span id="estadoEnvioTexto"></span>
+      <button class="btn mini" id="btnEnviarAgoraMenu" data-t="menu.enviarAgora"></button>
+    </div>
+    <div class="estado-ok" id="estadoOk" data-t="menu.tudoEnviado" hidden></div>
+
     <div class="painel">
       <a class="cartao-menu" id="cartaoColheita" href="./colheita/">
         <span class="cartao-t" data-t="menu.colheita"></span>
@@ -101,10 +113,14 @@
       </a>
     </div>
 
-    <div class="accoes">
-      <button class="btn ligacao" id="btnSairAdmin2" data-t="entrada.sairAdmin" hidden></button>
-      <button class="btn ligacao" id="btnTrocarUsuario" data-t="geral.trocarUsuario"></button>
-      <button class="btn ligacao" id="btnDesactivar" data-t="menu.desactivar"></button>
+    <!-- Manutenção rara, em comprimidos pequenos e não em faixas: quatro
+         faixas cinzentas iguais liam-se como quatro decisões do mesmo peso
+         que os cartões. O desactivar é o único a vermelho (destrói). -->
+    <div class="accoes-mini">
+      <button class="btn mini" id="btnSairAdmin2" data-t="entrada.sairAdmin" hidden></button>
+      <button class="btn mini" id="btnTrocarUsuario" data-t="geral.trocarUsuario"></button>
+      <button class="btn mini" id="btnVerificarAtualizacao" data-t="atualizar.botao"></button>
+      <button class="btn mini perigoso" id="btnDesactivar" data-t="menu.desactivar"></button>
     </div>
 
     <div class="appfoot" data-t="app.rodape"></div>

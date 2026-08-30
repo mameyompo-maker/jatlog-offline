@@ -15,7 +15,7 @@
 
 var CFG = window.JATLOG_CONFIG || {};
 var LOTE_ENVIO = 25;
-var INTERVALO_TENTATIVA = 60000;
+var INTERVALO_TENTATIVA = 20000;
 
 var GRAMAS_MAX = 30000;   // acima disto pede confirmação
 var GRAMAS_MIN = 5;       // abaixo disto também
@@ -105,6 +105,7 @@ var S = {
   mes: '',
   master: {},          // site -> [{campo, saco, variedade, plantas, mae}]
   registos: [],        // o que o servidor sabe do site+mês actual
+  registosTodos: {},   // site -> registos de TODOS os meses (histórico do ecrã do local)
   fila: [],            // envios pendentes/erro deste aparelho
   seleccionado: null,
   candidatos: [],
@@ -537,6 +538,10 @@ function pintarBarra() {
   } else {
     b.hidden = true;
   }
+
+  // o "enviar agora" do histórico só aparece quando há fila para enviar
+  var btnAgora = $('btnEnviarAgora');
+  if (btnAgora) btnAgora.hidden = !p;
 }
 
 // ------------------------------------------------------------------- rede
@@ -580,11 +585,30 @@ function enviarFila() {
     return lerFila();
   }).then(function () {
     pintarBarra();
+    // no ecrã do local o histórico é o de todos os meses: recarrega-se esse,
+    // senão o registo acabado de subir sumia da lista até à próxima visita
+    if (S.ecra === 'ecraLocal') carregarRegistosTodos();
     return carregarRegistos(true).catch(function () {});
   }).catch(function () {
     S.aEnviar = false;
     pintarBarra();
   });
+}
+
+/**
+ * "Tentar enviar agora" (botão no histórico). Manda esta página tentar e, ao
+ * mesmo tempo, acorda o Service Worker — se a página estiver a meio de outra
+ * coisa, o Service Worker continua até ao fim (mesmo padrão do India Rec,
+ * ver forcarEnvio() em india/app.js).
+ */
+function forcarEnvio() {
+  if (!pendentes().length) { brinde(t('historico.jaEnviado')); return Promise.resolve(); }
+  if (foraDeAlcance()) { brinde(t('rede.semRede'), true); return Promise.resolve(); }
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    try { navigator.serviceWorker.controller.postMessage({ tipo: 'enviar-agora' }); } catch (e) {}
+  }
+  pedirSincronizacaoEmSegundoPlano();
+  return enviarFila();
 }
 
 function enviarLote(lote, token) {
@@ -709,6 +733,123 @@ function carregarRegistos(silencioso) {
   });
 }
 
+/* ---------------------------------------- histórico no ecrã do local
+ *
+ * Kaz (2026-08-30): mal se marca o local, aparece por baixo o histórico dele
+ * com os meses todos misturados, do mais novo para o mais velho, corrigível
+ * como o do mês. O servidor já respondia a isto (action=log, month vazio);
+ * guarda-se a última resposta por local para o ecrã ter algo para mostrar
+ * antes da rede responder (e quando ela não responde). */
+
+var LIMITE_HIST_LOCAL = 100;
+
+function chaveLogTodos(site) { return 'logTodos_' + site; }
+
+function carregarRegistosTodos() {
+  var site = S.escolha;
+  if (!site || !LOCAIS[site] || LOCAIS[site].redirecionar) return;
+
+  if (!S.registosTodos[site]) {
+    var guardado = Def.get(chaveLogTodos(site), '');
+    if (guardado) {
+      try { S.registosTodos[site] = JSON.parse(guardado); } catch (e) {}
+    }
+  }
+
+  pedirGet({ action: 'log', site: site, month: '' }).then(function (j) {
+    S.registosTodos[site] = j.registos || [];
+    Def.set(chaveLogTodos(site), JSON.stringify(S.registosTodos[site]));
+    // só repinta se o utilizador ainda está a olhar para este local
+    if (S.ecra === 'ecraLocal' && S.escolha === site) pintarHistoricoLocal();
+  }).catch(function () {
+    if (S.ecra === 'ecraLocal' && S.escolha === site) pintarHistoricoLocal(true);
+  });
+}
+
+/** Como registosVisiveis(), mas sobre todos os meses de um local, do mais
+ *  novo para o mais velho. Cada linha leva site e mês próprios: é com eles
+ *  que uma correcção feita daqui aponta ao sítio certo. */
+function registosVisiveisDoLocal(site) {
+  var lista = (S.registosTodos[site] || []).map(function (r) {
+    return { ts: r[0], user: r[1], mes: r[2], campo: r[3], peso: r[4],
+             unidade: r[5], uuid: r[6], site: site, local: false };
+  });
+
+  S.fila.forEach(function (e) {
+    if (e.site !== site || e.estado === 'erro') return;
+    if (e.tipo === 'criar') {
+      lista.push({ ts: e.tsLocal, user: e.recorder, mes: e.month, campo: e.line,
+                   peso: Number(e.weight).toFixed(2), unidade: e.unit,
+                   uuid: e.uuid, site: site, local: true });
+      return;
+    }
+    var k = chaveAlvo(e.alvo);
+    for (var i = 0; i < lista.length; i++) {
+      if (chaveRegisto(lista[i]) !== k) continue;
+      if (e.tipo === 'apagar') { lista.splice(i, 1); }
+      else {
+        lista[i].peso = Number(e.weight).toFixed(2);
+        lista[i].unidade = e.unit;
+        lista[i].local = true;
+      }
+      return;
+    }
+  });
+
+  // "na ordem em que foram lançados": o carimbo local é ISO, ordena por texto
+  lista.sort(function (a, b) {
+    return String(b.ts || '').localeCompare(String(a.ts || ''));
+  });
+  return lista;
+}
+
+function pintarHistoricoLocal(semRede) {
+  var bloco = $('historicoLocal');
+  if (!bloco) return;
+
+  var site = S.escolha;
+  if (!site || !LOCAIS[site]) { bloco.hidden = true; return; }
+  bloco.hidden = false;
+
+  var nota = $('histLocalNota');
+  var caixa = $('listaHistoricoLocal');
+  caixa.innerHTML = '';
+
+  // Índia 17 é outro módulo (outra folha, outro ecrã de correcção): o
+  // histórico dele vive lá; aqui só se diz onde está.
+  if (LOCAIS[site].redirecionar) {
+    nota.hidden = false;
+    nota.textContent = t('histLocal.india17');
+    return;
+  }
+
+  var lista = registosVisiveisDoLocal(site);
+  var temServidor = Array.isArray(S.registosTodos[site]);
+
+  if (!lista.length) {
+    nota.hidden = false;
+    nota.textContent = t(temServidor ? 'histLocal.vazio'
+                         : (semRede || foraDeAlcance()) ? 'histLocal.semRede'
+                         : 'histLocal.aCarregar');
+    return;
+  }
+
+  if ((semRede || foraDeAlcance()) && !temServidor) {
+    nota.hidden = false;
+    nota.textContent = t('histLocal.semRede');
+  } else if (lista.length > LIMITE_HIST_LOCAL) {
+    nota.hidden = false;
+    nota.textContent = t('histLocal.maisRecentes', { n: LIMITE_HIST_LOCAL });
+  } else {
+    nota.hidden = true;
+  }
+
+  lista.slice(0, LIMITE_HIST_LOCAL).forEach(function (r) {
+    // os meses vêm misturados, por isso cada cartão diz o seu
+    caixa.appendChild(cartaoDeRegisto(r, rotuloMesAno(r.mes) + ' · ' + String(r.ts || '').slice(5, 16)));
+  });
+}
+
 // ------------------------------------------------------------------- ecrãs
 
 function pintarTopo() {
@@ -722,6 +863,7 @@ function pintarTudo() {
   pintarTopo();
   pintarHistorico();
   pintarBarra();
+  if (S.ecra === 'ecraLocal') pintarHistoricoLocal();
 }
 
 /** Volta ao menu comum. O nome e o código ficam; a fila também. */
@@ -746,7 +888,8 @@ function irParaLocal() {
     b.setAttribute('data-site', k);
     b.innerHTML = '<b>' + esc(LOCAIS[k].rotulo) + '</b>' +
                   '<span>' + esc(t('local.registoPor', { o: t('sitio.' + k + '.plural') })) + '</span>';
-    b.onclick = function () { S.escolha = k; irParaLocal(); };
+    // tocar de novo no local já marcado desfaz a escolha (Kaz, 2026-08-30)
+    b.onclick = function () { S.escolha = (S.escolha === k) ? null : k; irParaLocal(); };
     caixa.appendChild(b);
   });
   $('btnContinuar').disabled = !S.escolha;
@@ -754,6 +897,8 @@ function irParaLocal() {
   popularMesAno();
 
   mostrar('ecraLocal');
+  pintarHistoricoLocal();
+  carregarRegistosTodos();
 }
 
 /**
@@ -1069,6 +1214,31 @@ function gravarPeso(peso, unidade) {
 
 // ------------------------------------------------------------- histórico
 
+/** Um cartão de histórico: tocável quando o registo pode ser alterado por
+ *  quem está a usar (autor ou administrador), estático quando não. É o mesmo
+ *  desenho no histórico do mês e no do ecrã do local — só o carimbo muda. */
+function cartaoDeRegisto(r, carimbo) {
+  var selo = r.local ? '<span class="selo">' + t('historico.porEnviar') + '</span>' : '';
+
+  if (podeAlterar(r.user)) {
+    var quem = igual(r.user, S.nome) ? t('historico.voce') : r.user;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'cartao' + (r.local ? ' porenviar' : '');
+    b.innerHTML = esc(r.campo) + '    ' + esc(mostrarNumero(r.peso)) + ' ' + esc(r.unidade) + selo +
+                  '<span class="hs">' + esc(carimbo) + ' · ' + esc(quem) +
+                  ' · ' + t('historico.toque') + '</span>';
+    b.onclick = function () { abrirEdicao(r); };
+    return b;
+  }
+  var d = document.createElement('div');
+  d.className = 'histrow';
+  d.innerHTML = esc(r.campo) + ' &nbsp;&nbsp; ' + esc(mostrarNumero(r.peso)) + ' ' + esc(r.unidade) + selo +
+                '<span class="hs">' + esc(carimbo) + ' · ' + esc(r.user) +
+                ' · ' + t('historico.trancado') + '</span>';
+  return d;
+}
+
 function pintarHistorico() {
   var caixa = $('listaHistorico');
   caixa.innerHTML = '';
@@ -1085,27 +1255,7 @@ function pintarHistorico() {
   // todos os registos, do mais novo para o mais antigo
   var ultimos = lista.slice().reverse();
   ultimos.forEach(function (r) {
-    var carimbo = String(r.ts || '').slice(5, 16);
-    var selo = r.local ? '<span class="selo">' + t('historico.porEnviar') + '</span>' : '';
-
-    if (podeAlterar(r.user)) {
-      var quem = igual(r.user, S.nome) ? t('historico.voce') : r.user;
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'cartao' + (r.local ? ' porenviar' : '');
-      b.innerHTML = esc(r.campo) + '    ' + esc(mostrarNumero(r.peso)) + ' ' + esc(r.unidade) + selo +
-                    '<span class="hs">' + esc(carimbo) + ' · ' + esc(quem) +
-                    ' · ' + t('historico.toque') + '</span>';
-      b.onclick = function () { abrirEdicao(r); };
-      caixa.appendChild(b);
-    } else {
-      var d = document.createElement('div');
-      d.className = 'histrow';
-      d.innerHTML = esc(r.campo) + ' &nbsp;&nbsp; ' + esc(mostrarNumero(r.peso)) + ' ' + esc(r.unidade) + selo +
-                    '<span class="hs">' + esc(carimbo) + ' · ' + esc(r.user) +
-                    ' · ' + t('historico.trancado') + '</span>';
-      caixa.appendChild(d);
-    }
+    caixa.appendChild(cartaoDeRegisto(r, String(r.ts || '').slice(5, 16)));
   });
 }
 
@@ -1160,8 +1310,10 @@ function guardarEdicao() {
   } else {
     accao = enfileirar({
       tipo: 'editar',
-      site: S.site,
-      month: S.mes,
+      // as coordenadas são as do registo, não as do ecrã: do histórico do
+      // local corrige-se qualquer mês, e S.site/S.mes podem nem estar certos
+      site: r.site || S.site,
+      month: r.mes || S.mes,
       line: r.campo,
       weight: peso,
       unit: S.unidadeEdicao,
@@ -1192,8 +1344,8 @@ function apagarRegisto() {
     ? DB.apagar(pendente.uuid).then(lerFila)
     : enfileirar({
         tipo: 'apagar',
-        site: S.site,
-        month: S.mes,
+        site: r.site || S.site,
+        month: r.mes || S.mes,
         line: r.campo,
         tsLocal: agoraLocal(),
         alvo: { uuid: r.uuid || '', tsFull: r.ts || '', line: r.campo }
@@ -1208,6 +1360,8 @@ function apagarRegisto() {
 }
 
 function voltarDaEdicao() {
+  // quem veio do histórico do ecrã do local volta para lá, não para a busca
+  if (S.regressar === 'ecraLocal') { irParaLocal(); return; }
   if (S.regressar === 'ecraPeso' && S.seleccionado) {
     pintarTudo();
     $('avisoJaRegistado').hidden = !jaRegistado(S.seleccionado.campo);
@@ -1350,10 +1504,19 @@ function ligarEventos() {
   $('btnApagarSim').onclick = apagarRegisto;
   $('btnApagarNao').onclick = function () { mostrar('ecraEditar'); };
 
+  $('btnEnviarAgora').onclick = forcarEnvio;
+
   // rede
   window.addEventListener('online', function () { pintarBarra(); voltarATentar(); });
   window.addEventListener('offline', pintarBarra);
   setInterval(voltarATentar, INTERVALO_TENTATIVA);
+  // Reabrir a aplicação (ou voltar a esta aba) pode ter passado por uma zona
+  // com rede sem o temporizador ter tido oportunidade de correr — em Android/
+  // iOS os temporizadores ficam suspensos com a página em segundo plano.
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) voltarATentar();
+  });
+  window.addEventListener('pageshow', voltarATentar);
 }
 
 // ------------------------------------------------------------------ arranque

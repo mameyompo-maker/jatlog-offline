@@ -53,6 +53,19 @@
     <div class="accoes">
       <button class="btn ligacao" id="btnMenu2" data-t="geral.menu"></button>
     </div>
+
+    <!-- Mal se marca uma época, aparece aqui o histórico com as duas épocas
+         misturadas, do mais novo para o mais velho, com os mesmos toques
+         para corrigir do histórico normal (Kaz, 2026-08-30 — o mesmo que o
+         ecrã do local da colheita). action=log com season vazia. -->
+    <div id="historicoEpoca" hidden>
+      <div class="linha-eyebrow" style="margin-top:26px">
+        <div class="eyebrow" data-t="histEpoca.titulo"></div>
+      </div>
+      <div class="banner info" id="histEpocaNota" hidden></div>
+      <div id="listaHistoricoEpoca"></div>
+    </div>
+
     <div class="appfoot" data-t="app.rodape"></div>
   </section>
 
@@ -157,7 +170,13 @@
 
   <!-- ------------------------------------------------------- histórico ---- -->
   <div id="historico" hidden>
-    <div class="eyebrow" style="margin-top:26px" data-t="historico.titulo"></div>
+    <!-- O "enviar agora" mora ao lado do título e só aparece quando há fila
+         (ver pintarBarra em app.js): sem nada por enviar não teria nada para
+         fazer, e era mais uma faixa a pesar no ecrã (2026-08-30). -->
+    <div class="linha-eyebrow" style="margin-top:26px">
+      <div class="eyebrow" data-t="historico.titulo"></div>
+      <button class="btn mini" id="btnEnviarAgora" data-t="historico.enviarAgora" hidden></button>
+    </div>
     <div id="listaHistorico"></div>
   </div>
 

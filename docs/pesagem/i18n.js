@@ -79,6 +79,8 @@ var TEXTOS = {
     'apagar.nao': 'Não, voltar',
 
     'historico.titulo': 'Todos os registos',
+    'historico.enviarAgora': 'Enviar agora',
+    'historico.jaEnviado': 'Já está tudo enviado.',
     'historico.vazio': 'Nenhum registo em {epoca} ainda.',
     'historico.toque': 'toque para corrigir',
     /* Aqui entra sozinho, no lugar de um nome ("08-15 06:54 · {quem} · …"),
@@ -86,6 +88,12 @@ var TEXTOS = {
     'historico.voce': 'você',
     'historico.trancado': '🔒 só o autor ou o admin',
     'historico.porEnviar': 'POR ENVIAR',
+
+    'histEpoca.titulo': 'Histórico — todas as épocas',
+    'histEpoca.aCarregar': 'A carregar o histórico…',
+    'histEpoca.vazio': 'Ainda não há sacos registados.',
+    'histEpoca.semRede': 'Sem ligação — a mostrar o que está guardado neste aparelho.',
+    'histEpoca.maisRecentes': 'A mostrar os {n} mais recentes.',
 
     'rede.semRede': 'SEM LIGAÇÃO — pode continuar a registar',
     'rede.semRedeFila': 'SEM LIGAÇÃO — {n} registo(s) guardado(s) no aparelho',
@@ -159,11 +167,19 @@ var TEXTOS = {
     'apagar.nao': 'No, go back',
 
     'historico.titulo': 'All entries',
+    'historico.enviarAgora': 'Send now',
+    'historico.jaEnviado': 'Everything is already sent.',
     'historico.vazio': 'No entries in {epoca} yet.',
     'historico.toque': 'tap to correct',
     'historico.voce': 'you',
     'historico.trancado': '🔒 only the author or an admin',
     'historico.porEnviar': 'NOT SENT',
+
+    'histEpoca.titulo': 'History — all seasons',
+    'histEpoca.aCarregar': 'Loading the history…',
+    'histEpoca.vazio': 'No sacks recorded yet.',
+    'histEpoca.semRede': 'No connection — showing what is stored on this phone.',
+    'histEpoca.maisRecentes': 'Showing the {n} most recent.',
 
     'rede.semRede': 'NO CONNECTION — you can keep recording',
     'rede.semRedeFila': 'NO CONNECTION — {n} entry(ies) held on this phone',
@@ -237,11 +253,19 @@ var TEXTOS = {
     'apagar.nao': 'いいえ、戻る',
 
     'historico.titulo': 'すべての記録',
+    'historico.enviarAgora': '今すぐ送信',
+    'historico.jaEnviado': 'すでにすべて送信済みです。',
     'historico.vazio': '{epoca} の記録はまだありません。',
     'historico.toque': 'タップして修正',
     'historico.voce': 'あなた',
     'historico.trancado': '🔒 本人と管理者のみ',
     'historico.porEnviar': '未送信',
+
+    'histEpoca.titulo': '履歴(全シーズン)',
+    'histEpoca.aCarregar': '履歴を読み込んでいます…',
+    'histEpoca.vazio': '袋の記録はまだありません。',
+    'histEpoca.semRede': '圏外のため、この端末に保存されている分を表示しています。',
+    'histEpoca.maisRecentes': '直近 {n} 件を表示しています。',
 
     'rede.semRede': '圏外 — このまま記録を続けられます',
     'rede.semRedeFila': '圏外 — {n} 件を端末に保存しています',

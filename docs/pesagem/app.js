@@ -18,7 +18,7 @@
 
 var CFG = window.PESAGEM_CONFIG || {};
 var LOTE_ENVIO = 25;
-var INTERVALO_TENTATIVA = 60000;
+var INTERVALO_TENTATIVA = 20000;
 
 /* Faixa plausível para o peso de UM SACO de sementes (não de uma linha
  * inteira, como na colheita) — valores escolhidos por bom senso, sem tabela
@@ -45,6 +45,7 @@ var S = {
   nome: '',
   master: {},            // season -> [{id, sacos, pesoKg}]
   registos: [],           // o que o servidor sabe da época actual (os mais recentes)
+  registosTodos: null,    // as duas épocas juntas (histórico do ecrã da época)
   fila: [],               // envios pendentes/erro deste aparelho
   seleccionado: null,     // a planta-mãe escolhida, ao pesar
   filtroMae: '',           // o que se escreveu na busca da lista
@@ -441,6 +442,108 @@ function carregarRegistos(silencioso) {
   });
 }
 
+/* ---------------------------------------- histórico no ecrã da época
+ *
+ * Kaz (2026-08-30): mal se marca uma época, aparece por baixo o histórico
+ * com as duas épocas misturadas, do mais novo para o mais velho, corrigível
+ * como o normal — o mesmo desenho do ecrã do local da colheita. O servidor
+ * já respondia (action=log com season vazia devolve todas). */
+
+var LIMITE_HIST_EPOCA = 100;
+
+function carregarRegistosTodos() {
+  if (S.registosTodos === null) {
+    var guardado = Def.get('logTodos', '');
+    if (guardado) {
+      try { S.registosTodos = JSON.parse(guardado); } catch (e) {}
+    }
+  }
+
+  pedirGet({ action: 'log', season: '', limite: LIMITE_LOG }).then(function (j) {
+    S.registosTodos = j.registos || [];
+    Def.set('logTodos', JSON.stringify(S.registosTodos));
+    if (S.ecra === 'ecraEpoca') pintarHistoricoEpoca();
+  }).catch(function () {
+    if (S.ecra === 'ecraEpoca') pintarHistoricoEpoca(true);
+  });
+}
+
+/** Como registosVisiveis(), mas sobre as duas épocas, do mais novo para o
+ *  mais velho. Cada linha leva a época própria: é com ela que uma correcção
+ *  feita daqui aponta à época certa (e ao resumo certo no servidor). */
+function registosVisiveisDeTodas() {
+  var lista = (S.registosTodos || []).map(function (r) {
+    return { ts: r[0], user: r[1], season: r[2], motherId: r[3], peso: r[4],
+             unidade: r[5], pesoKg: r[6], uuid: r[7], local: false };
+  });
+
+  S.fila.forEach(function (e) {
+    if (e.estado === 'erro') return;
+    if (e.tipo === 'criar') {
+      lista.push({ ts: e.tsLocal, user: e.recorder, season: e.season, motherId: e.motherId,
+                   peso: Number(e.weight).toFixed(2), unidade: e.unit,
+                   pesoKg: gramas(e.weight, e.unit) / 1000, uuid: e.uuid, local: true });
+      return;
+    }
+    var k = chaveAlvo(e.alvo);
+    for (var i = 0; i < lista.length; i++) {
+      if (chaveRegisto(lista[i]) !== k) continue;
+      if (e.tipo === 'apagar') { lista.splice(i, 1); }
+      else {
+        lista[i].peso = Number(e.weight).toFixed(2);
+        lista[i].unidade = e.unit;
+        lista[i].pesoKg = gramas(e.weight, e.unit) / 1000;
+        lista[i].local = true;
+      }
+      return;
+    }
+  });
+
+  lista.sort(function (a, b) {
+    return String(b.ts || '').localeCompare(String(a.ts || ''));
+  });
+  return lista;
+}
+
+function pintarHistoricoEpoca(semRede) {
+  var bloco = $('historicoEpoca');
+  if (!bloco) return;
+
+  if (!S.escolha) { bloco.hidden = true; return; }
+  bloco.hidden = false;
+
+  var nota = $('histEpocaNota');
+  var caixa = $('listaHistoricoEpoca');
+  caixa.innerHTML = '';
+
+  var lista = registosVisiveisDeTodas();
+  var temServidor = Array.isArray(S.registosTodos);
+
+  if (!lista.length) {
+    nota.hidden = false;
+    nota.textContent = t(temServidor ? 'histEpoca.vazio'
+                         : (semRede || foraDeAlcance()) ? 'histEpoca.semRede'
+                         : 'histEpoca.aCarregar');
+    return;
+  }
+
+  if ((semRede || foraDeAlcance()) && !temServidor) {
+    nota.hidden = false;
+    nota.textContent = t('histEpoca.semRede');
+  } else if (lista.length > LIMITE_HIST_EPOCA) {
+    nota.hidden = false;
+    nota.textContent = t('histEpoca.maisRecentes', { n: LIMITE_HIST_EPOCA });
+  } else {
+    nota.hidden = true;
+  }
+
+  lista.slice(0, LIMITE_HIST_EPOCA).forEach(function (r) {
+    // as épocas vêm misturadas, por isso cada cartão diz a sua
+    caixa.appendChild(cartaoDeRegisto(r, t('epoca.rotulo.' + r.season) + ' · ' +
+                                         String(r.ts || '').slice(5, 16)));
+  });
+}
+
 // ------------------------------------------------------------------- rede
 
 /* navigator.onLine só diz se há ligação à rede local: dá "true" com wi-fi sem
@@ -478,6 +581,10 @@ function pintarBarra() {
   } else {
     b.hidden = true;
   }
+
+  // o "enviar agora" do histórico só aparece quando há fila para enviar
+  var btnAgora = $('btnEnviarAgora');
+  if (btnAgora) btnAgora.hidden = !p;
 }
 
 function pedirGet(params) {
@@ -523,6 +630,9 @@ function enviarFila() {
      * servidor: sem isto, um saco que acabou de sair da fila (porque já foi
      * aceite) deixava de ser contado em lado nenhum até à próxima vez que o
      * cadastro fosse recarregado — o número da lista "piscava" para trás. */
+    // no ecrã da época o histórico é o das duas épocas: recarrega-se esse
+    // também, senão o saco acabado de subir sumia da lista até à próxima vez
+    if (S.ecra === 'ecraEpoca') carregarRegistosTodos();
     return Promise.all([
       carregarMaster(true).catch(function () {}),
       carregarRegistos(true).catch(function () {})
@@ -531,6 +641,22 @@ function enviarFila() {
     S.aEnviar = false;
     pintarBarra();
   });
+}
+
+/**
+ * "Tentar enviar agora" (botão no histórico). Manda esta página tentar e, ao
+ * mesmo tempo, acorda o Service Worker — se a página estiver a meio de outra
+ * coisa, o Service Worker continua até ao fim (mesmo padrão do India Rec,
+ * ver forcarEnvio() em india/app.js).
+ */
+function forcarEnvio() {
+  if (!pendentes().length) { brinde(t('historico.jaEnviado')); return Promise.resolve(); }
+  if (foraDeAlcance()) { brinde(t('rede.semRede'), true); return Promise.resolve(); }
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    try { navigator.serviceWorker.controller.postMessage({ tipo: 'enviar-agora' }); } catch (e) {}
+  }
+  pedirSincronizacaoEmSegundoPlano();
+  return enviarFila();
 }
 
 function enviarLote(lote, token) {
@@ -659,6 +785,7 @@ function pintarTudo() {
   pintarTopo();
   pintarHistorico();
   pintarBarra();
+  if (S.ecra === 'ecraEpoca') pintarHistoricoEpoca();
 }
 
 /** Volta ao menu comum. O nome e o código ficam; a fila também. */
@@ -683,12 +810,15 @@ function irParaEpoca() {
     b.className = 'escolha-local' + (S.escolha === code ? ' activo' : '');
     b.setAttribute('data-season', code);
     b.innerHTML = '<b>' + esc(t('epoca.rotulo.' + code)) + '</b>';
-    b.onclick = function () { S.escolha = code; irParaEpoca(); };
+    // tocar de novo na época já marcada desfaz a escolha (Kaz, 2026-08-30)
+    b.onclick = function () { S.escolha = (S.escolha === code) ? null : code; irParaEpoca(); };
     caixa.appendChild(b);
   });
   $('btnContinuar').disabled = !S.escolha;
 
   mostrar('ecraEpoca');
+  pintarHistoricoEpoca();
+  if (S.escolha) carregarRegistosTodos();
 }
 
 function irParaLista() {
@@ -876,6 +1006,31 @@ function gravarPeso(peso, unidade) {
 
 // ------------------------------------------------------------- histórico
 
+/** Um cartão de histórico: tocável quando o registo pode ser alterado por
+ *  quem está a usar (autor ou administrador), estático quando não. É o mesmo
+ *  desenho no histórico da época e no do ecrã da época — só o carimbo muda. */
+function cartaoDeRegisto(r, carimbo) {
+  var selo = r.local ? '<span class="selo">' + t('historico.porEnviar') + '</span>' : '';
+
+  if (podeAlterar(r.user)) {
+    var quem = igual(r.user, S.nome) ? t('historico.voce') : r.user;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'cartao' + (r.local ? ' porenviar' : '');
+    b.innerHTML = esc(r.motherId) + '    ' + esc(mostrarNumero(r.peso)) + ' ' + esc(r.unidade) + selo +
+                  '<span class="hs">' + esc(carimbo) + ' · ' + esc(quem) +
+                  ' · ' + t('historico.toque') + '</span>';
+    b.onclick = function () { abrirEdicao(r); };
+    return b;
+  }
+  var d = document.createElement('div');
+  d.className = 'histrow';
+  d.innerHTML = esc(r.motherId) + ' &nbsp;&nbsp; ' + esc(mostrarNumero(r.peso)) + ' ' + esc(r.unidade) + selo +
+                '<span class="hs">' + esc(carimbo) + ' · ' + esc(r.user) +
+                ' · ' + t('historico.trancado') + '</span>';
+  return d;
+}
+
 function pintarHistorico() {
   var caixa = $('listaHistorico');
   caixa.innerHTML = '';
@@ -892,27 +1047,7 @@ function pintarHistorico() {
   // todos os registos, do mais novo para o mais antigo
   var ultimos = lista.slice().reverse();
   ultimos.forEach(function (r) {
-    var carimbo = String(r.ts || '').slice(5, 16);
-    var selo = r.local ? '<span class="selo">' + t('historico.porEnviar') + '</span>' : '';
-
-    if (podeAlterar(r.user)) {
-      var quem = igual(r.user, S.nome) ? t('historico.voce') : r.user;
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'cartao' + (r.local ? ' porenviar' : '');
-      b.innerHTML = esc(r.motherId) + '    ' + esc(mostrarNumero(r.peso)) + ' ' + esc(r.unidade) + selo +
-                    '<span class="hs">' + esc(carimbo) + ' · ' + esc(quem) +
-                    ' · ' + t('historico.toque') + '</span>';
-      b.onclick = function () { abrirEdicao(r); };
-      caixa.appendChild(b);
-    } else {
-      var d = document.createElement('div');
-      d.className = 'histrow';
-      d.innerHTML = esc(r.motherId) + ' &nbsp;&nbsp; ' + esc(mostrarNumero(r.peso)) + ' ' + esc(r.unidade) + selo +
-                    '<span class="hs">' + esc(carimbo) + ' · ' + esc(r.user) +
-                    ' · ' + t('historico.trancado') + '</span>';
-      caixa.appendChild(d);
-    }
+    caixa.appendChild(cartaoDeRegisto(r, String(r.ts || '').slice(5, 16)));
   });
 }
 
@@ -967,7 +1102,9 @@ function guardarEdicao() {
   } else {
     accao = enfileirar({
       tipo: 'editar',
-      season: S.season,
+      // a época é a do registo, não a do ecrã: do histórico do ecrã da época
+      // corrige-se qualquer uma das duas, e S.season pode nem estar certa
+      season: r.season || S.season,
       motherId: r.motherId,
       weight: peso,
       unit: S.unidadeEdicao,
@@ -1000,7 +1137,7 @@ function apagarRegisto() {
     ? DB.apagar(pendente.uuid).then(lerFila)
     : enfileirar({
         tipo: 'apagar',
-        season: S.season,
+        season: r.season || S.season,
         motherId: r.motherId,
         tsLocal: agoraLocal(),
         alvo: { uuid: r.uuid || '', tsFull: r.ts || '', motherId: r.motherId },
@@ -1016,6 +1153,8 @@ function apagarRegisto() {
 }
 
 function voltarDaEdicao() {
+  // quem veio do histórico do ecrã da época volta para lá, não para a lista
+  if (S.regressar === 'ecraEpoca') { irParaEpoca(); return; }
   if (S.regressar === 'ecraPeso' && S.seleccionado) {
     pintarTudo();
     mostrar('ecraPeso');
@@ -1140,10 +1279,16 @@ function ligarEventos() {
   $('btnApagarSim').onclick = apagarRegisto;
   $('btnApagarNao').onclick = function () { mostrar('ecraEditar'); };
 
+  $('btnEnviarAgora').onclick = forcarEnvio;
+
   // rede
   window.addEventListener('online', function () { pintarBarra(); voltarATentar(); });
   window.addEventListener('offline', pintarBarra);
   setInterval(voltarATentar, INTERVALO_TENTATIVA);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) voltarATentar();
+  });
+  window.addEventListener('pageshow', voltarATentar);
 }
 
 // ------------------------------------------------------------------ arranque
