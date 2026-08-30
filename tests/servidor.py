@@ -369,7 +369,7 @@ def aplicar_india17(ent, admin):
         unidade = "g" if ent.get("unit") == "g" else "kg"
         ts = str(ent.get("tsLocal") or "").strip() or agora()
         E["india17"][mes].append([ts, quem, mes, sourceId, "%.2f" % peso, unidade,
-                                  peso_kg(peso, unidade), uid])
+                                  peso_kg(peso, unidade), uid, gramas(peso, unidade)])
         E["india17Audit"][mes].append([agora(), "CREATE", quem, papel, quem, mes, sourceId,
                                        "", "", "%.2f" % peso, unidade, uid])
         return {"uuid": uid, "ok": True, "tipo": tipo, "sourceId": sourceId}
@@ -406,6 +406,7 @@ def aplicar_india17(ent, admin):
         linha[4] = "%.2f" % peso
         linha[5] = unidade
         linha[6] = peso_kg(peso, unidade)
+        linha[8] = gramas(peso, unidade)
         E["india17Audit"][mes].append([agora(), "EDIT", quem, papel, dono, mes, linha[3],
                                        antigo, unidade_antiga, linha[4], unidade, uid])
         return {"uuid": uid, "ok": True, "tipo": tipo, "sourceId": linha[3]}
@@ -414,12 +415,12 @@ def aplicar_india17(ent, admin):
 
 
 def resumo_india17(mes):
-    """[[sourceId, rowNumber, totalPlantas, registos, pesoKg], ...] pela ordem da folha."""
+    """[[sourceId, rowNumber, totalPlantas, registos, pesoG], ...] pela ordem da folha."""
     saida = []
     for sourceId, rowNumber, totalPlantas in linhas_referencia_17():
         linhas = [l for l in E["india17"][mes] if l[3] == sourceId]
         saida.append([sourceId, rowNumber, totalPlantas, len(linhas),
-                       round(sum(l[6] for l in linhas), 3)])
+                       round(sum(l[8] for l in linhas))])
     return saida
 
 
@@ -726,7 +727,7 @@ class H(SimpleHTTPRequestHandler):
                 return self._json({"ok": True, "hora": agora(), "mes": mes,
                                    "linhas": resumo_india17(mes)})
             if accao == "log":
-                saida = [[l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7]]
+                saida = [[l[0], l[1], l[2], l[3], l[4], l[5], l[8], l[7]]
                          for l in E["india17"][mes]]
                 return self._json({"ok": True, "hora": agora(), "mes": mes, "registos": saida})
             return self._json({"ok": False, "erro": "Acção desconhecida: %s" % accao})

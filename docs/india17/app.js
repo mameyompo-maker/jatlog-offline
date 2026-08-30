@@ -69,7 +69,7 @@ var S = {
   mes: MESES[1],
   escolha: null,        // o mês marcado no ecrã de entrada, antes de confirmar
   nome: '',
-  master: {},            // mes -> [{id, rowNumber, totalPlantas, registos, pesoKg}]
+  master: {},            // mes -> [{id, rowNumber, totalPlantas, registos, pesoG}]
   registos: [],           // o que o servidor sabe do mês actual (os mais recentes)
   fila: [],               // envios pendentes/erro deste aparelho
   seleccionado: null,     // o Source ID escolhido, ao pesar
@@ -355,12 +355,14 @@ function gramas(peso, unidade) {
 }
 
 /**
- * O total (registos, kg) de um Source ID no mês actual: o que o cadastro em
- * cache já sabe (o servidor, na última vez que se conseguiu perguntar) mais o
- * que ainda está na fila deste aparelho por enviar.
+ * O total (registos, gramas) de um Source ID no mês actual: o que o cadastro
+ * em cache já sabe (o servidor, na última vez que se conseguiu perguntar)
+ * mais o que ainda está na fila deste aparelho por enviar. Sempre em gramas,
+ * mesmo que o lançamento tenha sido feito em kg — tal como colheita/pesagem
+ * (2026-08-30, a pedido do Kaz).
  *
  * Uma edição ou eliminação sobre um registo já contado no cadastro tira
- * primeiro a contribuição antiga (guardada em e._antigoPesoKg quando se pôs
+ * primeiro a contribuição antiga (guardada em e._antigoPesoG quando se pôs
  * o pedido na fila — ver guardarEdicao/apagarRegisto) e só depois soma a
  * nova, se for o caso. Isto evita contar a mesma correcção duas vezes: uma no
  * cadastro (só depois de reenviado e recarregado) e outra na fila.
@@ -368,7 +370,7 @@ function gramas(peso, unidade) {
 function agregado(mes, sourceId) {
   var base = (S.master[mes] || []).filter(function (m) { return igual(m.id, sourceId); })[0];
   var contagem = base ? Number(base.registos) || 0 : 0;
-  var pesoKg = base ? Number(base.pesoKg) || 0 : 0;
+  var pesoG = base ? Number(base.pesoG) || 0 : 0;
 
   S.fila.forEach(function (e) {
     if (e.mes !== mes || e.estado === 'erro') return;
@@ -376,21 +378,21 @@ function agregado(mes, sourceId) {
     if (e.tipo === 'criar') {
       if (!igual(e.sourceId, sourceId)) return;
       contagem += 1;
-      pesoKg += gramas(e.weight, e.unit) / 1000;
+      pesoG += gramas(e.weight, e.unit);
       return;
     }
 
     var alvoId = e.alvo && e.alvo.sourceId;
     if (!igual(alvoId, sourceId)) return;
     contagem -= 1;
-    pesoKg -= Number(e._antigoPesoKg) || 0;
+    pesoG -= Number(e._antigoPesoG) || 0;
     if (e.tipo === 'editar') {
       contagem += 1;
-      pesoKg += gramas(e.weight, e.unit) / 1000;
+      pesoG += gramas(e.weight, e.unit);
     }
   });
 
-  return { contagem: Math.max(0, Math.round(contagem)), pesoKg: Math.max(0, pesoKg) };
+  return { contagem: Math.max(0, Math.round(contagem)), pesoG: Math.max(0, pesoG) };
 }
 
 /** Soma de registos de todos os Source ID do mês — o número da barra do topo. */
@@ -423,14 +425,15 @@ function carregarMaster(forcar) {
 }
 
 /* Cada linha vem do servidor como
- * [sourceId, rowNumber, totalPlantas, registos, pesoKg]. rowNumber e
- * totalPlantas são só contexto (mostrados nos cartões) — este módulo nunca
- * os escreve, só os lê. */
+ * [sourceId, rowNumber, totalPlantas, registos, pesoG] — pesoG já em gramas
+ * (o servidor converte, mesmo que o lançamento original tenha sido em kg).
+ * rowNumber e totalPlantas são só contexto (mostrados nos cartões) — este
+ * módulo nunca os escreve, só os lê. */
 function mapearMaster(linhas) {
   return linhas.map(function (l) {
     return {
       id: l[0], rowNumber: l[1], totalPlantas: Number(l[2]) || 0,
-      registos: Number(l[3]) || 0, pesoKg: Number(l[4]) || 0
+      registos: Number(l[3]) || 0, pesoG: Number(l[4]) || 0
     };
   });
 }
@@ -631,7 +634,7 @@ function chaveAlvo(a) {
 function registosVisiveis() {
   var lista = S.registos.map(function (r) {
     return { ts: r[0], user: r[1], mes: r[2], sourceId: r[3], peso: r[4],
-             unidade: r[5], pesoKg: r[6], uuid: r[7], local: false };
+             unidade: r[5], pesoG: r[6], uuid: r[7], local: false };
   });
 
   S.fila.forEach(function (e) {
@@ -639,7 +642,7 @@ function registosVisiveis() {
     if (e.tipo === 'criar') {
       lista.push({ ts: e.tsLocal, user: e.recorder, mes: e.mes, sourceId: e.sourceId,
                    peso: Number(e.weight).toFixed(2), unidade: e.unit,
-                   pesoKg: gramas(e.weight, e.unit) / 1000, uuid: e.uuid, local: true });
+                   pesoG: gramas(e.weight, e.unit), uuid: e.uuid, local: true });
       return;
     }
     var k = chaveAlvo(e.alvo);
@@ -649,7 +652,7 @@ function registosVisiveis() {
       else {
         lista[i].peso = Number(e.weight).toFixed(2);
         lista[i].unidade = e.unit;
-        lista[i].pesoKg = gramas(e.weight, e.unit) / 1000;
+        lista[i].pesoG = gramas(e.weight, e.unit);
         lista[i].local = true;
       }
       return;
@@ -779,7 +782,7 @@ function pintarLista() {
   lista.forEach(function (item) {
     var ag = agregado(S.mes, item.id);
     var badge = ag.contagem > 0
-      ? t('lista.badge', { n: ag.contagem, kg: mostrarNumero(ag.pesoKg.toFixed(1)) })
+      ? t('lista.badge', { n: ag.contagem, g: mostrarNumero(String(Math.round(ag.pesoG))) })
       : t('lista.semRegisto');
     var contexto = t('lista.contexto', {
       linha: esc(ouTraco(item.rowNumber)), plantas: esc(ouTraco(item.totalPlantas))
@@ -1025,7 +1028,7 @@ function guardarEdicao() {
       tsLocal: agoraLocal(),
       alvo: { uuid: r.uuid || '', tsFull: r.ts || '', sourceId: r.sourceId },
       // só para agregado() não contar a correcção duas vezes — não vai no envio
-      _antigoPesoKg: Number(r.pesoKg) || 0
+      _antigoPesoG: Number(r.pesoG) || 0
     });
   }
 
@@ -1055,7 +1058,7 @@ function apagarRegisto() {
         sourceId: r.sourceId,
         tsLocal: agoraLocal(),
         alvo: { uuid: r.uuid || '', tsFull: r.ts || '', sourceId: r.sourceId },
-        _antigoPesoKg: Number(r.pesoKg) || 0
+        _antigoPesoG: Number(r.pesoG) || 0
       });
 
   accao.then(function () {

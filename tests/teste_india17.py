@@ -233,9 +233,9 @@ with sync_playwright() as p:
     # ---------------------------------------------------------------- C. peso
     pesar(page, "India #bag01", "12.4")
     check("C1 volta à lista depois de gravar", ecra_actual(page) == "ecraLista")
-    check("C2 badge actualiza com 1 registo",
+    check("C2 badge actualiza com 1 registo (12,4 kg = 12400 g)",
           "1" in cartaoId(page, "India #bag01").inner_text() and
-          "12,4" in cartaoId(page, "India #bag01").inner_text(),
+          "12400" in cartaoId(page, "India #bag01").inner_text(),
           cartaoId(page, "India #bag01").inner_text())
     check("C3 banner de gravado", "12,40" in page.inner_text("#avisoGravado"),
           page.inner_text("#avisoGravado"))
@@ -257,9 +257,9 @@ with sync_playwright() as p:
     # (1200 g = 1.2 kg -- tem de ficar dentro da faixa 0.1-300 kg, senão pede confirmação)
     pesar(page, "India #bag01", "1200", unidade="g")
     time.sleep(1.5)
-    check("C8 dois lançamentos somados",
+    check("C8 dois lançamentos somados (12400 + 1200 = 13600 g)",
           "2" in cartaoId(page, "India #bag01").inner_text() and
-          "13,6" in cartaoId(page, "India #bag01").inner_text(),
+          "13600" in cartaoId(page, "India #bag01").inner_text(),
           cartaoId(page, "India #bag01").inner_text())
     st = estado()
     check("C9 dois registos no servidor",
@@ -302,8 +302,8 @@ with sync_playwright() as p:
     check("D2 uma das linhas foi editada",
           any(l[4] == "5.00" for l in linhasBag01), linhasBag01)
     check("D3 auditoria EDIT", any(a[1] == "EDIT" for a in st["india17Audit"]["Aug/26"]))
-    check("D4 badge reflecte a edição (12.4 + 5 = 17.4)",
-          "17,4" in cartaoId(page, "India #bag01").inner_text(), cartaoId(page, "India #bag01").inner_text())
+    check("D4 badge reflecte a edição (12400 + 5000 = 17400 g)",
+          "17400" in cartaoId(page, "India #bag01").inner_text(), cartaoId(page, "India #bag01").inner_text())
 
     # ------------------------------------------------------------ E. exclusão
     linhasBag02 = [l for l in estado()["india17"]["Aug/26"] if l[3] == "India #bag02"]
@@ -384,8 +384,8 @@ with sync_playwright() as p:
           "2 registo(s) guardado" in page.inner_text("#barra"), page.inner_text("#barra"))
     check("G3 aparecem no histórico com selo",
           page.locator("#listaHistorico .selo").count() >= 2)
-    check("G4 badges já reflectem a fila local",
-          "9,5" in cartaoId(page, "India #bag03").inner_text())
+    check("G4 badges já reflectem a fila local (9.5 kg = 9500 g)",
+          "9500" in cartaoId(page, "India #bag03").inner_text())
     check("G5 servidor ainda não os tem", len(estado()["india17"]["Sep/26"]) == 1)
     page.screenshot(path=os.path.join(OUT, "06_offline.png"), full_page=True)
 

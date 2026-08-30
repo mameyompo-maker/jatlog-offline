@@ -65,14 +65,19 @@ var FUSO = 'Africa/Maputo';
 // ver folhaHatena_/atualizarHatena17_.
 var SOURCE_HATENA = '?';
 var FOLHA_HATENA = 'Harvest17_Hatena';
-var CABECALHO_HATENA = ['Month', 'Records', 'Total weight (kg)'];
+var CABECALHO_HATENA = ['Month', 'Records', 'Total weight (g)'];
 
-// Harvest17_Log: A..H.
+// Harvest17_Log: A..I. Weight_kg (coluna G) e um campo antigo — mantido tal
+// e qual pelos registos ja gravados; Weight_g (coluna I, 2026-08-30) e o novo
+// campo "fonte da verdade" para tudo o que este script calcula sozinho (as
+// colunas mensais e "Total weight" da folha de dados, e o total do "?" em
+// Harvest17_Hatena), para ficar consistente com colheita/pesagem (gramas).
+// Ver garantirColunaG_ para a migracao automatica de uma folha ja existente.
 var COL_TS = 1, COL_USER = 2, COL_MES = 3, COL_SOURCE = 4;
-var COL_PESO = 5, COL_UNIDADE = 6, COL_KG = 7, COL_UUID = 8;
-var LARGURA_LOG = 8;
+var COL_PESO = 5, COL_UNIDADE = 6, COL_KG = 7, COL_UUID = 8, COL_G = 9;
+var LARGURA_LOG = 9;
 var CABECALHO_LOG = ['Timestamp', 'Username', 'Month', 'Source ID',
-                      'Weight', 'Unit', 'Weight_kg', 'Record ID'];
+                      'Weight', 'Unit', 'Weight_kg', 'Record ID', 'Weight_g'];
 
 var CABECALHO_AUDIT = ['Timestamp', 'Action', 'By User', 'Role', 'Record Owner',
                        'Month', 'Source ID', 'Old Value', 'Old Unit',
@@ -122,6 +127,11 @@ function paraQuilos_(peso, unidade) {
   return arred_(unidade === 'g' ? peso / 1000 : peso, 3);
 }
 
+/** Numero do peso -> gramas, do mesmo modo que colheita/pesagem. */
+function paraGramas_(peso, unidade) {
+  return Math.round(unidade === 'kg' ? peso * 1000 : peso);
+}
+
 function validarMes_(mes) {
   var m = String(mes || '').trim();
   if (MESES_VALIDOS.indexOf(m) < 0) {
@@ -144,9 +154,47 @@ function folhaOuCriar_(ss, nome, cabecalho) {
   return f;
 }
 
-function folhaLog_(ss) { return folhaOuCriar_(ss, FOLHA_LOG, CABECALHO_LOG); }
+/**
+ * Harvest17_Log com a coluna I (Weight_g) garantida, sem mexer nas colunas
+ * A..H existentes (2026-08-30: Kaz pediu para os totais automaticos ficarem
+ * em gramas, tal como colheita/pesagem, sem apagar o que ja esta gravado).
+ * Se a folha ja existir sem a coluna I, acrescenta-a, preenche o cabecalho e
+ * faz o backfill de todas as linhas antigas (Weight_g = Weight_kg × 1000 —
+ * exacto, porque Weight_kg ja tem precisao de grama ao arredondar a 3 casas)
+ * e, so nessa primeira vez, também recalcula tudo o que ja estava em
+ * quilos na folha de dados e no Harvest17_Hatena (ver recalcularTudoEmGramas_).
+ */
+function folhaLog_(ss) {
+  var f = folhaOuCriar_(ss, FOLHA_LOG, CABECALHO_LOG);
+  if (f.getMaxColumns() < LARGURA_LOG) {
+    f.insertColumnsAfter(f.getMaxColumns(), LARGURA_LOG - f.getMaxColumns());
+  }
+  if (String(f.getRange(1, COL_G).getValue()).trim() === '') {
+    f.getRange(1, COL_G).setValue('Weight_g').setFontWeight('bold');
+    var ultima = f.getLastRow();
+    if (ultima >= 2) {
+      var kgVals = f.getRange(2, COL_KG, ultima - 1, 1).getValues();
+      var gVals = kgVals.map(function (linha) {
+        return [Math.round((Number(linha[0]) || 0) * 1000)];
+      });
+      f.getRange(2, COL_G, ultima - 1, 1).setValues(gVals);
+    }
+    recalcularTudoEmGramas_(ss, f);
+  }
+  return f;
+}
 function folhaAudit_(ss) { return folhaOuCriar_(ss, FOLHA_AUDIT, CABECALHO_AUDIT); }
-function folhaHatena_(ss) { return folhaOuCriar_(ss, FOLHA_HATENA, CABECALHO_HATENA); }
+
+/** Harvest17_Hatena com o cabecalho da 3.a coluna corrigido para gramas,
+ * mesmo numa folha ja existente que ainda diga "(kg)" (2026-08-30). */
+function folhaHatena_(ss) {
+  var f = folhaOuCriar_(ss, FOLHA_HATENA, CABECALHO_HATENA);
+  var c3 = CABECALHO_HATENA[2];
+  if (String(f.getRange(1, 3).getValue()).trim() !== c3) {
+    f.getRange(1, 3).setValue(c3).setFontWeight('bold');
+  }
+  return f;
+}
 
 /**
  * Folha de dados ("India 17 weight"): tenta o nome esperado primeiro; se a
@@ -315,16 +363,60 @@ function atualizarResumo17_(folhaD, cols, mes, sourceId, linhasLog) {
     var L = linhasLog[k];
     if (String(L[COL_MES - 1]).trim() !== mes) continue;
     if (!igual_(L[COL_SOURCE - 1], sourceId)) continue;
-    soma += Number(L[COL_KG - 1]) || 0;
+    soma += Number(L[COL_G - 1]) || 0;
   }
-  folhaD.getRange(alvo.linha, colunaDoMes_(cols, mes)).setValue(arred_(soma, 3));
+  folhaD.getRange(alvo.linha, colunaDoMes_(cols, mes)).setValue(Math.round(soma));
 
   if (cols.total > 0) {
     var somaTudo = 0;
     MESES_COLUNAS.forEach(function (m) {
       somaTudo += Number(folhaD.getRange(alvo.linha, cols.meses[m]).getValue()) || 0;
     });
-    folhaD.getRange(alvo.linha, cols.total).setValue(arred_(somaTudo, 3));
+    folhaD.getRange(alvo.linha, cols.total).setValue(Math.round(somaTudo));
+  }
+}
+
+/**
+ * Migração única, disparada por folhaLog_ na primeira vez que a coluna
+ * Weight_g é criada numa folha já em produção:
+ * recalcula TODAS as células de "India 17 weight" e Harvest17_Hatena a
+ * partir do Harvest17_Log (agora em gramas), para nenhum mês antigo ficar a
+ * mostrar quilos ao lado de meses novos em gramas na mesma coluna. Em lote
+ * (uma leitura do Log + uma escrita por Source ID), não célula a célula
+ * chamando atualizarResumo17_ em loop, para não estourar o tempo de
+ * execução (17 Source ID × 12 meses seria bem mais lento).
+ */
+function recalcularTudoEmGramas_(ss, folha) {
+  var folhaD = folhaDados_(ss);
+  var cols = colunasDados_(folhaD);
+  var linhasD = linhasDados_(folhaD, cols);
+  var linhasLog = lerLog_(folha);
+
+  linhasD.forEach(function (d) {
+    var somasPorMes = {};
+    MESES_COLUNAS.forEach(function (m) { somasPorMes[m] = 0; });
+    linhasLog.forEach(function (L) {
+      if (!igual_(L[COL_SOURCE - 1], d.sourceId)) return;
+      var mes = String(L[COL_MES - 1]).trim();
+      if (somasPorMes.hasOwnProperty(mes)) somasPorMes[mes] += Number(L[COL_G - 1]) || 0;
+    });
+    var somaTudo = 0;
+    MESES_COLUNAS.forEach(function (m) {
+      somaTudo += somasPorMes[m];
+      folhaD.getRange(d.linha, cols.meses[m]).setValue(Math.round(somasPorMes[m]));
+    });
+    if (cols.total > 0) folhaD.getRange(d.linha, cols.total).setValue(Math.round(somaTudo));
+  });
+
+  var mesesComHatena = {};
+  linhasLog.forEach(function (L) {
+    if (igual_(L[COL_SOURCE - 1], SOURCE_HATENA)) mesesComHatena[String(L[COL_MES - 1]).trim()] = true;
+  });
+  if (Object.keys(mesesComHatena).length) {
+    var folhaH = folhaHatena_(ss);
+    Object.keys(mesesComHatena).forEach(function (mes) {
+      atualizarHatena17_(folhaH, mes, linhasLog);
+    });
   }
 }
 
@@ -341,7 +433,7 @@ function atualizarHatena17_(folhaH, mes, linhasLog) {
     if (String(L[COL_MES - 1]).trim() !== mes) continue;
     if (!igual_(L[COL_SOURCE - 1], SOURCE_HATENA)) continue;
     conta++;
-    soma += Number(L[COL_KG - 1]) || 0;
+    soma += Number(L[COL_G - 1]) || 0;
   }
 
   var ultima = folhaH.getLastRow();
@@ -354,7 +446,7 @@ function atualizarHatena17_(folhaH, mes, linhasLog) {
   }
   if (!linha) linha = Math.max(ultima + 1, 2);
 
-  folhaH.getRange(linha, 1, 1, CABECALHO_HATENA.length).setValues([[mes, conta, arred_(soma, 3)]]);
+  folhaH.getRange(linha, 1, 1, CABECALHO_HATENA.length).setValues([[mes, conta, Math.round(soma)]]);
 }
 
 // ---------------------------------------------------------------- doGet
@@ -378,9 +470,9 @@ function doGet(e) {
 
 /**
  * Resumo em vivo de um mes: para cada Source ID da folha de dados, quantos
- * registos e quantos kg, sempre calculados a partir do Harvest17_Log (nunca
- * a confiar no que ja esta escrito na coluna do mes — essa e so a cache que
- * este proprio script mantem).
+ * registos e quantas gramas, sempre calculados a partir do Harvest17_Log
+ * (nunca a confiar no que ja esta escrito na coluna do mes — essa e so a
+ * cache que este proprio script mantem).
  */
 function master_(p) {
   var mes = validarMes_(p.mes);
@@ -401,9 +493,9 @@ function master_(p) {
       if (String(L[COL_MES - 1]).trim() !== mes) continue;
       if (!igual_(L[COL_SOURCE - 1], d.sourceId)) continue;
       conta++;
-      soma += Number(L[COL_KG - 1]) || 0;
+      soma += Number(L[COL_G - 1]) || 0;
     }
-    saida.push([d.sourceId, d.rowNumber, d.totalPlantas, conta, arred_(soma, 3)]);
+    saida.push([d.sourceId, d.rowNumber, d.totalPlantas, conta, Math.round(soma)]);
   }
 
   return { ok: true, hora: agora_(), mes: mes, linhas: saida };
@@ -431,7 +523,7 @@ function log_(p) {
       String(L[COL_SOURCE - 1]).trim(),
       String(L[COL_PESO - 1]).trim(),
       String(L[COL_UNIDADE - 1]).trim(),
-      String(L[COL_KG - 1]).trim(),
+      String(L[COL_G - 1]).trim(),
       String(L[COL_UUID - 1]).trim()
     ]);
   }
@@ -553,10 +645,11 @@ function aplicar_(ent, uuid, folha, linhas, admin, novosAudits, tocados) {
     if (!isFinite(peso) || peso <= 0) throw new Error('Peso inválido.');
     var unidade = (ent.unit === 'g') ? 'g' : 'kg';
     var pesoKg = paraQuilos_(peso, unidade);
+    var pesoG = paraGramas_(peso, unidade);
 
     // O carimbo e o do aparelho: e quando o lancamento aconteceu de facto.
     var ts = String(ent.tsLocal || '').trim() || agora_();
-    var novaLinha = [ts, quem, mes, sourceId, peso, unidade, pesoKg, uuid];
+    var novaLinha = [ts, quem, mes, sourceId, peso, unidade, pesoKg, uuid, pesoG];
     folha.getRange(folha.getLastRow() + 1, 1, 1, LARGURA_LOG).setValues([novaLinha]);
     linhas.push(novaLinha);
 
@@ -602,11 +695,14 @@ function aplicar_(ent, uuid, folha, linhas, admin, novosAudits, tocados) {
     if (!isFinite(novoPeso) || novoPeso <= 0) throw new Error('Peso inválido.');
     var novaUnidade = (ent.unit === 'g') ? 'g' : 'kg';
     var novoPesoKg = paraQuilos_(novoPeso, novaUnidade);
+    var novoPesoG = paraGramas_(novoPeso, novaUnidade);
 
     folha.getRange(idx, COL_PESO, 1, 3).setValues([[novoPeso, novaUnidade, novoPesoKg]]);
+    folha.getRange(idx, COL_G).setValue(novoPesoG);
     L[COL_PESO - 1] = novoPeso;
     L[COL_UNIDADE - 1] = novaUnidade;
     L[COL_KG - 1] = novoPesoKg;
+    L[COL_G - 1] = novoPesoG;
 
     novosAudits.push([agora_(), 'EDIT', quem, papel, dono, mesLinha, sourceIdAntigo,
                       pesoAntigo, unidadeAntiga, novoPeso, novaUnidade, uuid]);
