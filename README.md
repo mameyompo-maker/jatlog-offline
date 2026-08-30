@@ -14,32 +14,58 @@
 
 モザンビークの圃場で、**圏外でも**記録できる PWA。2026-08-10 に、それまで
 別々のアプリだった **収穫重量(JatLog offline)** と **インドの測定(India Rec)** を
-1つに統合した。
+1つに統合し、その後 **袋の計量(pesagem)** と **Índia 17 の月次収穫(india17)** が
+加わって、いまは **4モジュール**構成。
 
 ```
-活性化コード ─→ 名前(+管理者) ─→ ┌─ Colheita — peso     (ライン/ブロック別の重量)
-   (端末に1回)      (共通)         └─ Medições — India   (NBF(Tanheia)26 の測定)
+活性化コード ─→ 名前(+管理者) ─→ ┌─ Colheita — peso   (Tanheia / 7 de Abril / Índia 17)
+   (端末に1回)      (共通)         ├─ Medições — India (NBF(Tanheia)26 の測定)
+                                    └─ Pesagem de sacos (母樹ごとの袋の実測)
 ```
 
 **コードと名前を聞かれるのは入口で1回だけ**で、その後メニューで「何を登録するか」を
-選ぶ。管理者モード・表示言語・送信待ちの扱いも2つで共通。
+選ぶ。管理者モード・表示言語・送信待ちの扱いも全モジュール共通。
+india17 は独立モジュールだが、入口は colheita の拠点選択の3番目
+(Tanheia / 7 de Abril / Índia 17 が同じ画面に並ぶ)。
 
-収穫重量の側は、現行の Streamlit 版 JatLog と**同じ操作画面・同じスプレッドシート**を使う。
+旧 Streamlit 版 JatLog は退役済み(このアプリが本番唯一)。
 
-| | 現行 JatLog(Streamlit) | JatLog offline(これ) |
-|---|---|---|
-| 圏外での操作 | できない(画面が固まる) | **できる**(端末に貯めて後で自動送信) |
-| マスターの検索 | サーバー側 | **端末内**(キャッシュ済み) |
-| 配信 | Streamlit Community Cloud | GitHub Pages(静的) |
-| スリープ | 12時間で寝る | **寝ない** |
-| バックエンド | サービスアカウント + gspread | Apps Script |
+## 🚨 保守の掟(直す前に必ず読む)
 
-書き込み先は現行とまったく同じ 2 冊のスプレッドシートなので、**しばらく並走できる**。
+1. **push = 即・本番デプロイ。** `docs/` は GitHub Pages 直結で、push した瞬間に
+   現場の端末へ配信される。
+2. **`docs/` を変更したら `docs/sw.js` の `CACHE = 'jatlog-vNN'` を必ず+1する。**
+   これを忘れると端末が古いキャッシュを使い続ける。
+3. **`tests/servidor.py` を本物の `docs/` に向けて起動しない**(その場で
+   `config.js` をモック向けに書き換えてしまう)。必ずコピーに向ける。
+   手で触りたいだけなら **`preview.bat`** を使う(安全にそれをやる)。
+4. **Apps Script の更新は「デプロイを管理 → 編集(鉛筆)→ バージョン:新バージョン」。**
+   「新しいデプロイ」を選ぶと URL が変わり、配布済みの全端末が繋がらなくなる。
+5. **India(測定)のサーバー原本だけ別リポジトリ**:
+   `../jatmed_field_app/apps_script/Codigo.gs`。あちらの `docs/`(旧単独版の画面)には
+   絶対に触らない — 現場の画面はこのリポジトリの `docs/india/`。
+
+## モジュール ⇄ サーバー ⇄ スプレッドシート対応表
+
+| モジュール | 画面 | Apps Script 原本 | 書き込み先スプレッドシート(ID) | 主なタブ |
+|---|---|---|---|---|
+| colheita(収穫重量) | `docs/colheita/` | `apps_script/Codigo.gs` | Tanheia: `1ulQjYCYlhZjxGMO3iTWGPmxM7U-O-NkCs2OOm6mY1Wk` / 7 de Abril: `1lm78EHRxKQRevTTN6NqBTMY4H8-qJuPRPpjEUoy0ses` | Master / Harvest_Log / Audit_Log |
+| india(測定) | `docs/india/` | `../jatmed_field_app/apps_script/Codigo.gs` | Detail_India17: `1WSfQdkMdy_cton-Za6TGzRmpSi1cjycWqHfMCS_cDXQ` | Data_5months(ラウンドごと)/ Log |
+| pesagem(袋の計量) | `docs/pesagem/` | `apps_script_pesagem/Codigo.gs` | Tanheia_Mixed_Seed_Weight: `1TZ8wHv4N6rPr3e9I0sF4PBtZgZHTrk6npKMc6CZJ4kM` | 25-26 / 26-27 / Weighing_Log / Audit_Log |
+| india17(月次収穫) | `docs/india17/` | `apps_script_india17/Codigo.gs` | India17_Haevest: `10q83vNULXo8o9HeAdNqibwVXkAYDazCLGy-nIQzvWms` | 26-27 / Harvest17_Log / Harvest17_Audit / Harvest17_Hatena |
+
+4本の Apps Script の `.../exec` URL は `docs/config.js` にある(4つの
+`*_CONFIG.ENDPOINT`)。トークン(`TOKEN=jatropha`)と管理者パスワード
+(`ADMIN_PASSWORD=JatRD2026`)は4本ともスクリプトプロパティで同じ値。
+**Log 系タブは Apps Script が初回書き込み時に自動作成する**ので手で作らない。
+シートのタブ名を変えたら、対応する Codigo.gs を grep で点検し、
+`diagnostico()` を実行して列の解決を確認すること(2026-08-28 に
+タブ改名で沈黙破壊が起きた実績あり)。
 
 ## ファイル構成
 
-入口(shell)と2つのモジュールに分かれている。**1つの HTML に混ぜていないのは、
-2つのアプリが関数名も画面IDも大量に衝突していたため**(`S` / `t()` / `mostrar()` /
+入口(shell)と4つのモジュールに分かれている。**1つの HTML に混ぜていないのは、
+元の2アプリが関数名も画面IDも大量に衝突していたため**(`S` / `t()` / `mostrar()` /
 `enviarFila()` / `ecraEntrada` …)。別ページにすれば、テスト済みのコードをほぼ
 そのまま使える。ホーム画面のアイコン・Service Worker・manifest は1つなので、
 現場から見れば1つのアプリ。
@@ -47,30 +73,40 @@
 | パス | 中身 |
 |---|---|
 | `docs/index.html` | **入口**:活性化 → 名前(+管理者)→ メニュー |
-| `docs/shell.js` | 入口の中身。共有セッションと送信待ちの件数表示 |
+| `docs/shell.js` | 入口の中身。共有セッション・送信待ち件数・「最新版にする」「今すぐ送信」 |
 | `docs/shell_i18n.js` | 入口の文言(PT/EN/日本語) |
-| `docs/styles.css` | 入口と `colheita/` の共通デザイン(暗色) |
-| `docs/config.js` | **2つの ENDPOINT をここに書く** |
-| `docs/sw.js` | Service Worker(1つ)。全ページのキャッシュと**2本のキューの自動送信** |
+| `docs/styles.css` | 入口と `colheita/`・`pesagem/`・`india17/` の共通デザイン(暗色) |
+| `docs/config.js` | **4つの ENDPOINT をここに書く** |
+| `docs/sw.js` | Service Worker(1つ)。全ページのキャッシュと**4本のキューの自動送信**。`CACHE` のバンプを忘れない |
 | `docs/manifest.webmanifest` | アプリ名・アイコン(1つ) |
-| `docs/colheita/` | 収穫重量モジュール(`index.html` / `app.js` / `i18n.js`) |
-| `docs/india/` | インド測定モジュール(+ `styles.css` / `plants.json`) |
-| `apps_script/Codigo.gs` | 収穫側のサーバー(GET: 台帳・履歴 / POST: 登録・修正・削除) |
-| `tests/` | 統合テスト・各モジュールのE2E・バックグラウンド送信テスト |
+| `docs/colheita/` | 収穫重量モジュール(Tanheia / 7 de Abril。Índia 17 への入口もここ) |
+| `docs/india/` | インド測定モジュール(独自 `styles.css` / `plants.json` 持ち) |
+| `docs/pesagem/` | 袋の計量モジュール |
+| `docs/india17/` | Índia 17 月次収穫モジュール |
+| `apps_script/Codigo.gs` | colheita のサーバー原本(コピペでデプロイ) |
+| `apps_script_pesagem/Codigo.gs` | pesagem のサーバー原本 |
+| `apps_script_india17/Codigo.gs` | india17 のサーバー原本 |
+| `preview.bat` | どこにも書き込まれないローカルプレビュー(冒頭参照) |
+| `tests/` | モックサーバー + E2E 6スイート(下記「テスト」) |
+| `ferramentas/` | 歴史的な移植スクリプト(portar_india / portar_teste。単独版→統合版の移植手順そのもの。通常は使わない) |
 
-インドの測定側の Apps Script は **`india-rec` リポジトリの `apps_script/Codigo.gs`**
-のままで、**一切変更していない**。
+india(測定)のサーバー原本だけは **`../jatmed_field_app/apps_script/Codigo.gs`**
+(旧 `india-rec` リポジトリ)にある。
 
 ### 端末に残るデータの置き場所
 
-| | 収穫重量 | インド測定 |
-|---|---|---|
-| 送信キュー | IndexedDB `jatlog` | IndexedDB `indiarec` |
-| モジュール固有の設定 | `localStorage` `jatlog.*` | `localStorage` `indiarec.*` |
-| **共有**(コード・名前・言語・管理者) | \_\_\_\_ `localStorage` `jat.*` | \_\_\_\_(同じ) |
+| | colheita | india | pesagem | india17 |
+|---|---|---|---|---|
+| 送信キュー(IndexedDB) | `jatlog` | `indiarec` | `pesagem` | `india17` |
+| 固有設定(localStorage) | `jatlog.*` | `indiarec.*` | `pesagem.*` | `india17.*` |
+| Background Sync タグ | `jatlog-enviar` | `indiarec-enviar` | `pesagem-enviar` | `india17-enviar` |
 
-⚠ 共有するキーの一覧は `shell.js` / `colheita/app.js` / `india/app.js` の
-`PARTILHADAS` に3か所書いてある。**増やすときは3つとも直す。**
+**共有**(コード・名前・言語・管理者)は全モジュールとも `localStorage` の
+`jat.*`。SW は localStorage を読めないので、コードと管理者パスワードは
+IndexedDB `jatlog` の `config` ストアにも写している(`guardarConfigParaOSW()`)。
+
+⚠ 共有するキーの一覧は `shell.js` と各モジュールの `app.js` の `PARTILHADAS` に
+書いてある。**増やすときは全部の箇所を直す。**
 
 ### 配色(2026-08-11 に暗色へ統一)
 
@@ -113,15 +149,17 @@
 
 ### 2. URL をアプリに設定
 
-`docs/config.js` に **2つ**の ENDPOINT がある。
+`docs/config.js` に **4つ**の ENDPOINT がある(すべて記入済み)。
 
-- `JATLOG_CONFIG.ENDPOINT` … 手順1でデプロイした収穫側の URL
-- `INDIAREC_CONFIG.ENDPOINT` … インド測定側(`india-rec` リポジトリの Apps Script)の URL。
-  **既にデプロイ済みのものをそのまま使っている**ので、触る必要は無い
+- `JATLOG_CONFIG.ENDPOINT` … colheita(収穫)の URL
+- `INDIAREC_CONFIG.ENDPOINT` … india(測定)の URL(サーバー原本は
+  `../jatmed_field_app/apps_script/Codigo.gs`)
+- `PESAGEM_CONFIG.ENDPOINT` … pesagem(袋の計量)の URL
+- `INDIA17_CONFIG.ENDPOINT` … india17(月次収穫)の URL
 
-⚠ 管理者パスワードは2つの Apps Script のスクリプトプロパティにそれぞれ入っている。
-入口の画面はどちらか一方が認めれば管理者として通す(両方に順に問い合わせる)。
-**片方だけ変えると、もう片方への書き込みが管理者権限で通らなくなる。**
+⚠ 管理者パスワードは4本の Apps Script のスクリプトプロパティにそれぞれ入っている。
+入口の画面はどれか一つが認めれば管理者として通す(順に問い合わせる)。
+**一部だけ変えると、残りへの書き込みが管理者権限で通らなくなる。**
 
 ### 3. GitHub Pages で配信
 
@@ -144,9 +182,19 @@ gh repo create jatlog-offline --public --source . --remote origin --push
 
 ## 現場での使い方
 
-起動すると「何を登録しますか?」のメニューが出るので、カードを選ぶ。
+起動すると「何を登録しますか」のメニューが出るので、カードを選ぶ。
 モジュールの中からは **Menu(登録先を変える)** でいつでも戻れる。
-メニューには、それぞれ**送信待ちが何件あるか**が出る。
+
+メニューの見方(2026-08-30 の形):
+
+- タイトルの下に**送信の状態が1行**で出る。未送信があると琥珀色の帯
+  「N por enviar」+**「Enviar agora(今すぐ送信)」**ボタン、全部送信済みなら
+  「✓ Tudo enviado」だけ。各カードにもモジュール別の未送信件数が出る
+- 下の小さいボタン列に **「Verificar actualização(最新版にする)」**がある。
+  押すと新しい版があればその場で更新して自動で再読み込みされる
+- 場所(colheita)やシーズン(pesagem)を選ぶと、**その下に全期間の履歴**
+  (月・シーズン混在、新しい順)が出る。自分の記録はタップで修正でき、
+  管理者は全件修正できる。選択中のボタンをもう一度押すと選択解除
 
 収穫重量では、**まず拠点を選ぶ**(Tanheia(Linhas)/ 7 de Abril(Blocos))。
 初期選択は無く、選ぶまで「Continuar」は押せない。**入るたびに毎回選ぶ**
@@ -278,16 +326,30 @@ Fileira r02, n.º 10  ·  ← n.º 1 à direita
 
 ## テスト
 
-`tests/` に一式。先にモックサーバーを起動してから流す(2つの Apps Script を
-どちらも模倣する)。
+`tests/` に一式。先にモックサーバーを起動してから流す(4本の Apps Script を
+すべて模倣する)。
+
+🚨 **モックサーバーは、渡された docs ディレクトリの `config.js` をモック向けに
+書き換える。本物の `docs/` を渡さず、必ずコピーを渡すこと。**
 
 ```powershell
-Start-Process python -ArgumentList "tests\servidor.py","<docsの絶対パス>","8810" -WindowStyle Hidden
-python tests\teste.py            # 統合そのもの(入口・メニュー・共有セッション)  55項目
-python tests\teste_colheita.py   # 収穫モジュールの中身                            69項目
-python tests\teste_india.py      # 測定モジュールの中身                            25節
-python tests\teste_sync.py       # アプリを閉じたままの自動送信(2本のキュー)      18項目
+# docs のコピーを作る(本物には向けない)
+Copy-Item -Recurse docs $env:TEMP\jatlog_test_docs
+Start-Process python -ArgumentList "tests\servidor.py","$env:TEMP\jatlog_test_docs","8810" -WindowStyle Hidden
+
+# コンソールが cp932 で落ちるので PYTHONIOENCODING が必須
+$env:PYTHONIOENCODING = "utf-8"
+python tests\teste.py            # 統合そのもの(入口・メニュー・共有セッション)
+python tests\teste_colheita.py   # colheita(+ Índia 17 への入口、全期間履歴)
+python tests\teste_india.py      # india(測定)
+python tests\teste_pesagem.py    # pesagem(袋の計量、全期間履歴)
+python tests\teste_india17.py    # india17(月次収穫)
+python tests\teste_sync.py       # アプリを閉じたままの自動送信(4本のキュー)
 ```
+
+合格件数はスイートの末尾に出る(2026-08-30 時点: 統合 64 / colheita 92 /
+india 全項目 / pesagem 61 / india17 60 / sync 18)。**この数字は書き写さず、
+毎回実測すること。**
 
 `teste_india.py` は India Rec 単独版の `tests/teste.py` の移植版。あちらを直したら
 `ferramentas/portar_teste.py` でこちらへ持ってくる(置換が1回ずつ当たらなければ
