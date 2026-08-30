@@ -391,6 +391,45 @@ with sync_playwright() as p:
     ctx.set_offline(False)
     page.screenshot(path=os.path.join(OUT, "09_offline_reload.png"), full_page=True)
 
+    # ------------------------------------- O. histórico no ecrã da época
+    # (2026-08-30: mal se marca uma época, aparece por baixo o histórico com
+    #  as duas épocas misturadas, corrigível; tocar de novo desfaz a escolha
+    #  — o mesmo desenho do ecrã do local da colheita.)
+    print("\n[O] histórico no ecrã da época")
+    page.click("#btnMudarEpoca")
+    esperar_ecra(page, "ecraEpoca")
+    time.sleep(1.2)   # dá tempo ao action=log (season vazia) de responder
+    check("O1 com época marcada o histórico aparece",
+          visivel(page, "#historicoEpoca") and
+          page.locator("#listaHistoricoEpoca .cartao, #listaHistoricoEpoca .histrow").count() >= 1,
+          page.inner_text("#listaHistoricoEpoca")[:120])
+    texto = page.inner_text("#listaHistoricoEpoca")
+    check("O2 as duas épocas vêm misturadas, cada cartão diz a sua",
+          "2025–26" in texto and "2026–27" in texto, texto[:160])
+
+    page.click('.escolha-local[data-season="26-27"]')   # a mesma → desfaz
+    time.sleep(0.3)
+    check("O3 tocar de novo desfaz a escolha e esconde o histórico",
+          not visivel(page, "#historicoEpoca") and
+          page.locator("#btnContinuar").is_disabled() and
+          page.locator(".escolha-local.activo").count() == 0)
+
+    page.click('.escolha-local[data-season="26-27"]')
+    time.sleep(1.2)
+    page.locator("#listaHistoricoEpoca .cartao").first.click()
+    check("O4 tocar num cartão abre a edição", esperar_ecra(page, "ecraEditar"), ecra_actual(page))
+    page.fill("#inpEditar", "9.87")
+    page.click("#btnGuardarEdicao")
+    check("O5 guardar volta ao ecrã da época", esperar_ecra(page, "ecraEpoca"), ecra_actual(page))
+    time.sleep(2.0)   # a correcção sobe e o histórico recarrega
+    check("O6 o valor corrigido aparece no histórico",
+          "9,87" in page.inner_text("#listaHistoricoEpoca"),
+          page.inner_text("#listaHistoricoEpoca")[:160])
+    est = estado()
+    todas = est["pesagem"]["25-26"] + est["pesagem"]["26-27"]
+    check("O7 a correcção chegou ao servidor",
+          any(str(l[4]) == "9.87" for l in todas), todas[-3:])
+
     # -------------------------------------------------------- K. erros de JS
     check("K sem erros de JavaScript na consola", not erros_js, erros_js)
 

@@ -698,15 +698,33 @@ class H(SimpleHTTPRequestHandler):
         with TRAVA:
             if accao == "admin":
                 return self._json({"ok": True, "admin": q.get("pw") == ADMIN_PW})
-            season = q.get("season", "25-26")
-            if season not in E["pesagem"]:
-                return self._json({"ok": False, "erro": "Campanha desconhecida: %s" % season})
             if accao == "master":
+                season = q.get("season", "25-26")
+                if season not in E["pesagem"]:
+                    return self._json({"ok": False, "erro": "Campanha desconhecida: %s" % season})
                 return self._json({"ok": True, "hora": agora(), "season": season,
                                    "linhas": resumo_pesagem(season)})
             if accao == "log":
+                # como o Apps Script real: season vazia devolve as duas epocas
+                # juntas, limitadas aos `limite` mais recentes (200 por omissao)
+                season = (q.get("season") or "").strip()
+                if season and season not in E["pesagem"]:
+                    return self._json({"ok": False, "erro": "Campanha desconhecida: %s" % season})
+                if season:
+                    linhas = list(E["pesagem"][season])
+                else:
+                    linhas = sorted((l for s in E["pesagem"] for l in E["pesagem"][s]),
+                                    key=lambda l: l[0])
+                try:
+                    limite = int(q.get("limite", "200"))
+                except ValueError:
+                    limite = 200
+                if limite <= 0:
+                    limite = 200
+                if len(linhas) > limite:
+                    linhas = linhas[-limite:]
                 saida = [[l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7]]
-                         for l in E["pesagem"][season]]
+                         for l in linhas]
                 return self._json({"ok": True, "hora": agora(), "season": season,
                                    "registos": saida})
             return self._json({"ok": False, "erro": "Acção desconhecida: %s" % accao})

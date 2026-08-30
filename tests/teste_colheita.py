@@ -5,6 +5,7 @@ A activacao e o nome passaram para a entrada comum (/index.html); o resto
 do fluxo e o mesmo de antes. Correr servidor.py primeiro."""
 import json
 import os
+import re
 import sys
 import time
 import urllib.request
@@ -537,6 +538,68 @@ with sync_playwright() as p:
           esperar_ecra(page, "ecraLista") and
           "abr/26" in page.inner_text("#topoMes").lower(),
           (ecra_actual(page), page.inner_text("#topoMes")))
+
+    # ------------------------------------- O. histórico no ecrã do local
+    # (2026-08-30: mal se marca o local, aparece por baixo o histórico dele
+    #  com os meses todos misturados, corrigível; tocar de novo desfaz a
+    #  escolha. Entra-se como administrador para poder corrigir tudo.)
+    print("\n[O] histórico no ecrã do local")
+    page.goto(BASE + "/index.html", wait_until="load")
+    esperar_ecra(page, "ecraMenu")
+    page.click("#btnTrocarUsuario")
+    esperar_ecra(page, "ecraEntrada")
+    if visivel(page, "#blocoAdmin"):
+        page.locator("#blocoAdmin summary").click()
+        page.fill("#inpSenha", "JatRD2026")
+    page.fill("#inpNome", "Chefe")
+    page.click("#btnComecar")
+    esperar_ecra(page, "ecraMenu")
+    page.click("#cartaoColheita")
+    page.wait_for_load_state("load")
+    esperar_ecra(page, "ecraLocal")
+
+    check("O1 sem local marcado nao ha historico", not visivel(page, "#historicoLocal"))
+
+    page.click('.escolha-local[data-site="lines"]')
+    time.sleep(1.2)   # da tempo ao action=log (month vazio) de responder
+    check("O2 marcar Tanheia mostra o historico de todos os meses",
+          visivel(page, "#historicoLocal") and
+          page.locator("#listaHistoricoLocal .cartao, #listaHistoricoLocal .histrow").count() >= 1,
+          page.inner_text("#listaHistoricoLocal")[:120])
+
+    texto0 = page.locator("#listaHistoricoLocal .cartao, #listaHistoricoLocal .histrow").first.inner_text()
+    check("O3 cada cartao diz o seu mes (os meses vem misturados)",
+          re.search(r"[A-Za-z]\w{2}-\d{2} · \d{2}-\d{2}", texto0) is not None, texto0)
+
+    page.click('.escolha-local[data-site="lines"]')
+    time.sleep(0.3)
+    check("O4 tocar de novo desfaz a escolha e esconde o historico",
+          not visivel(page, "#historicoLocal") and
+          page.locator("#btnContinuar").is_disabled() and
+          page.locator(".escolha-local.activo").count() == 0)
+
+    page.click('.escolha-local[data-site="lines"]')
+    time.sleep(1.2)
+    page.locator("#listaHistoricoLocal .cartao").first.click()
+    check("O5 tocar num cartao abre a edicao", esperar_ecra(page, "ecraEditar"), ecra_actual(page))
+    page.fill("#inpEditar", "7.77")
+    page.click("#btnGuardarEdicao")
+    check("O6 guardar volta ao ecra do local", esperar_ecra(page, "ecraLocal"), ecra_actual(page))
+    time.sleep(2.0)   # a correccao sobe e o historico recarrega
+    check("O7 o valor corrigido aparece no historico do local",
+          "7,77" in page.inner_text("#listaHistoricoLocal"),
+          page.inner_text("#listaHistoricoLocal")[:160])
+    st = estado()
+    check("O8 a correccao chegou a folha certa no servidor",
+          any(l[4] == "7.77" for l in st["log"]["lines"]), st["log"]["lines"])
+
+    # o Índia 17 é outro módulo: no lugar do histórico aparece só a nota
+    page.click('.escolha-local[data-site="india17"]')
+    time.sleep(0.4)
+    check("O9 India 17 mostra a nota no lugar do historico",
+          visivel(page, "#histLocalNota") and
+          page.locator("#listaHistoricoLocal .cartao").count() == 0,
+          page.inner_text("#histLocalNota") if visivel(page, "#histLocalNota") else "(nota escondida)")
 
     check("Z sem erros de JavaScript", not erros_js, erros_js)
     browser.close()
