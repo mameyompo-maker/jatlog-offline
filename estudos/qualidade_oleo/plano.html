@@ -1,0 +1,1707 @@
+<title>ジャトロファ 種の中の時計</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@600;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#F3F4EE; --panel:#FBFCF7; --panel2:#EAECE1; --sunk:#E5E8DA;
+  --line:#D3D8C5; --line-soft:#E2E5D8;
+  --ink:#191C14; --ink2:#4A5142; --ink3:#78806B;
+  --accent:#4F7F22; --accent-soft:#E6EFD8; --accent-line:#A8C67F;
+  --pink:#B02E68; --pink-soft:#F8E2ED; --pink-line:#E2A8C4;
+  --amber:#9E6A12; --amber-soft:#F7EBD3; --amber-line:#DEBE7E;
+  --red:#AB2E26; --red-soft:#F8E1DF; --red-line:#E0A49F;
+  --ok:#2C7A31; --ok-soft:#E0EFE1;
+  --s1:#1F6FB2; --s2:#C1471B; --chart-surface:#FBFCF7;
+  --shadow:0 1px 2px rgba(25,28,20,.06), 0 8px 24px -16px rgba(25,28,20,.30);
+  --display:"Zen Old Mincho",'Hiragino Mincho ProN','Yu Mincho',serif;
+  --body:"Zen Kaku Gothic New",'Hiragino Sans','Yu Gothic',system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,'SFMono-Regular',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#12140F; --panel:#1E2119; --panel2:#2A2E23; --sunk:#191C15;
+    --line:#3D4234; --line-soft:#2F3428;
+    --ink:#F2F4EE; --ink2:#A8B09A; --ink3:#868E77;
+    --accent:#8CC04E; --accent-soft:#232D18; --accent-line:#4C6430;
+    --pink:#EE7BAA; --pink-soft:#31202A; --pink-line:#6D3B51;
+    --amber:#DFA83E; --amber-soft:#302713; --amber-line:#6B5424;
+    --red:#E8695F; --red-soft:#311E1C; --red-line:#71352F;
+    --ok:#5FBF63; --ok-soft:#1A2C1B;
+    --s1:#4E9AD0; --s2:#DE7043; --chart-surface:#1E2119;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12140F; --panel:#1E2119; --panel2:#2A2E23; --sunk:#191C15;
+  --line:#3D4234; --line-soft:#2F3428;
+  --ink:#F2F4EE; --ink2:#A8B09A; --ink3:#868E77;
+  --accent:#8CC04E; --accent-soft:#232D18; --accent-line:#4C6430;
+  --pink:#EE7BAA; --pink-soft:#31202A; --pink-line:#6D3B51;
+  --amber:#DFA83E; --amber-soft:#302713; --amber-line:#6B5424;
+  --red:#E8695F; --red-soft:#311E1C; --red-line:#71352F;
+  --ok:#5FBF63; --ok-soft:#1A2C1B;
+  --s1:#4E9AD0; --s2:#DE7043; --chart-surface:#1E2119;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);
+  font-size:16px;line-height:1.85;letter-spacing:.01em;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent-soft);color:var(--ink)}
+a{color:var(--accent);text-underline-offset:3px;text-decoration-thickness:1px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+
+/* ---------- masthead ---------- */
+.bar{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--ground) 88%,transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar-in{max-width:1120px;margin:0 auto;padding:9px 22px;display:flex;gap:16px;align-items:center}
+.bar-name{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.06em;white-space:nowrap}
+.bar-name span{color:var(--accent)}
+.bar-nav{display:flex;gap:2px;overflow-x:auto;margin-left:auto;scrollbar-width:none}
+.bar-nav::-webkit-scrollbar{display:none}
+.bar-nav a{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--ink3);
+  text-decoration:none;padding:5px 9px;border-radius:3px;white-space:nowrap}
+.bar-nav a:hover{color:var(--ink);background:var(--panel2)}
+.prog{height:2px;background:var(--accent);width:0;transition:width .12s linear}
+
+/* ---------- flow grid ---------- */
+.flow{display:grid;padding:0 22px;
+  grid-template-columns:[full-start] minmax(0,1fr) [main-start] min(70ch,100%) [main-end] minmax(0,1fr) [full-end];}
+.flow > *{grid-column:main;min-width:0}
+.flow > .wide{grid-column:full;max-width:1120px;justify-self:center;width:100%}
+.flow > * + *{margin-top:0}
+main{padding-bottom:120px}
+
+/* ---------- hero ---------- */
+.hero{grid-column:main-start / full-end;max-width:1120px;
+  padding:64px 0 40px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;color:var(--accent);
+  text-transform:uppercase;margin:0 0 20px}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(40px,7vw,74px);line-height:1.12;
+  letter-spacing:.02em;margin:0;text-wrap:balance}
+.sub{font-size:clamp(16px,2vw,19px);color:var(--ink2);max-width:46ch;margin:22px 0 0;line-height:1.85}
+.hero-meta{display:flex;flex-wrap:wrap;gap:0;margin-top:36px;border-top:1px solid var(--line-soft)}
+.hero-meta div{flex:1 1 160px;padding:14px 18px 14px 0;border-right:1px solid var(--line-soft)}
+.hero-meta div:last-child{border-right:0}
+.hero-meta dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--ink3);
+  text-transform:uppercase;margin:0 0 5px}
+.hero-meta dd{margin:0;font-size:14.5px;line-height:1.6;font-weight:500}
+
+/* ---------- typography ---------- */
+h2{font-family:var(--display);font-weight:700;font-size:clamp(26px,3.6vw,36px);line-height:1.35;
+  letter-spacing:.02em;margin:88px 0 6px;text-wrap:balance}
+h2 .num{display:block;font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.2em;
+  color:var(--accent);margin-bottom:12px}
+h3{font-family:var(--display);font-weight:700;font-size:21px;line-height:1.5;margin:48px 0 4px;letter-spacing:.02em}
+h4{font-family:var(--body);font-weight:700;font-size:15.5px;margin:30px 0 2px;letter-spacing:.02em}
+p{margin:14px 0}
+.lede{font-size:17.5px;color:var(--ink2);line-height:1.9;margin:18px 0 0}
+strong{font-weight:700}
+.k{font-family:var(--mono);font-size:.88em;background:var(--panel2);padding:1px 5px;border-radius:3px;
+  border:1px solid var(--line-soft);white-space:nowrap}
+.hl{background:linear-gradient(transparent 62%,var(--accent-soft) 62%);padding:0 1px;font-weight:500}
+ul,ol{margin:14px 0;padding-left:1.4em}
+li{margin:7px 0}
+li::marker{color:var(--ink3)}
+hr.rule{border:0;border-top:1px solid var(--line);margin:70px 0 0}
+.small{font-size:13.5px;color:var(--ink2);line-height:1.8}
+</style>
+<style>
+/* ---------- call-outs ---------- */
+.note{border-left:3px solid var(--accent-line);background:var(--accent-soft);
+  padding:16px 20px;margin:26px 0;border-radius:0 4px 4px 0}
+.note .tag,.warn .tag,.expert .tag{display:block;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.14em;text-transform:uppercase;margin-bottom:7px;font-weight:600}
+.note .tag{color:var(--accent)}
+.note > :last-child,.warn > :last-child,.expert > :last-child{margin-bottom:0}
+.note > p:first-of-type,.warn > p:first-of-type,.expert > p:first-of-type{margin-top:0}
+.warn{border-left:3px solid var(--amber-line);background:var(--amber-soft);
+  padding:16px 20px;margin:26px 0;border-radius:0 4px 4px 0}
+.warn .tag{color:var(--amber)}
+.expert{border-left:3px solid var(--pink-line);background:var(--pink-soft);
+  padding:16px 20px;margin:26px 0;border-radius:0 4px 4px 0}
+.expert .tag{color:var(--pink)}
+
+/* ---------- formula ---------- */
+.eq{font-family:var(--mono);background:var(--sunk);border:1px solid var(--line-soft);
+  border-radius:5px;padding:18px 20px;margin:24px 0;font-size:15px;line-height:1.9;overflow-x:auto}
+.eq b{color:var(--accent);font-weight:600}
+.eq .where{display:block;font-family:var(--body);font-size:13px;color:var(--ink2);
+  margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);line-height:1.75}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:26px 0;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;line-height:1.65}
+caption{caption-side:top;text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink3);padding:13px 16px 0}
+th,td{padding:9px 14px;text-align:left;border-bottom:1px solid var(--line-soft);vertical-align:top}
+thead th{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--ink2);font-weight:600;
+  background:var(--panel2);border-bottom:1px solid var(--line);white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td.n,th.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tbody tr:hover{background:var(--sunk)}
+td strong{font-weight:600}
+
+/* ---------- pills ---------- */
+.pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.06em;padding:2px 8px;border-radius:999px;border:1px solid;font-weight:600;white-space:nowrap}
+.p-ok{color:var(--ok);border-color:var(--ok);background:var(--ok-soft)}
+.p-am{color:var(--amber);border-color:var(--amber-line);background:var(--amber-soft)}
+.p-rd{color:var(--red);border-color:var(--red-line);background:var(--red-soft)}
+.p-ac{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
+
+/* ---------- experiment cards ---------- */
+.exp{border:1px solid var(--line);border-radius:7px;background:var(--panel);margin:30px 0;overflow:hidden}
+.exp-h{display:flex;gap:14px;align-items:baseline;padding:16px 22px;background:var(--panel2);
+  border-bottom:1px solid var(--line)}
+.exp-code{font-family:var(--mono);font-size:19px;font-weight:600;color:var(--accent);line-height:1}
+.exp-t{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.02em;line-height:1.4}
+.exp-b{padding:6px 22px 20px}
+.exp-b h4:first-child{margin-top:18px}
+.spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0;
+  border-top:1px solid var(--line-soft);margin-top:18px}
+.spec div{padding:12px 16px 12px 0;border-right:1px solid var(--line-soft)}
+.spec div:last-child{border-right:0}
+.spec dt{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink3);margin-bottom:4px}
+.spec dd{margin:0;font-size:13.5px;font-weight:500;line-height:1.55}
+
+/* ---------- figures ---------- */
+figure{margin:36px 0;background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:22px}
+figure svg{display:block;width:100%;max-width:100%;height:auto;color:var(--ink)}
+figcaption{margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft);
+  font-size:13px;line-height:1.75;color:var(--ink2)}
+figcaption b{color:var(--ink);font-weight:700}
+.fig-n{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--accent);
+  text-transform:uppercase;margin-right:9px;font-weight:600}
+.dg-fill-p{fill:var(--panel2)}
+.dg-fill-s{fill:var(--sunk)}
+.dg-stroke{stroke:var(--line);fill:none}
+text{font-family:var(--body)}
+.t-lab{font-size:13px;fill:var(--ink);font-weight:500}
+.t-sm{font-size:11.5px;fill:var(--ink2)}
+.t-xs{font-size:10.5px;fill:var(--ink3);font-family:var(--mono);letter-spacing:.05em}
+.t-mono{font-family:var(--mono);font-size:11.5px;fill:var(--ink2)}
+
+/* ---------- chart ---------- */
+.chart-wrap{position:relative;background:var(--panel);border:1px solid var(--line);
+  border-radius:7px;padding:22px;margin:36px 0}
+.chart-hd{font-family:var(--display);font-weight:700;font-size:17px;margin:0 0 3px;letter-spacing:.02em}
+.chart-sd{font-size:12.5px;color:var(--ink2);margin:0 0 18px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin:14px 0 0;font-size:12.5px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+.tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .1s;background:var(--ink);
+  color:var(--ground);font-family:var(--mono);font-size:11.5px;line-height:1.5;padding:7px 10px;
+  border-radius:4px;transform:translate(-50%,-130%);white-space:nowrap;z-index:5}
+.dot{cursor:pointer}
+.dot:hover circle{r:8}
+
+/* ---------- gantt ---------- */
+.gantt{border:1px solid var(--line);border-radius:7px;background:var(--panel);overflow:hidden;margin:30px 0}
+.g-head,.g-row{display:grid;grid-template-columns:190px repeat(24,minmax(16px,1fr));align-items:center}
+.g-head{background:var(--panel2);border-bottom:1px solid var(--line)}
+.g-head > div{font-family:var(--mono);font-size:9.5px;color:var(--ink3);text-align:center;padding:8px 0}
+.g-head > div:first-child{text-align:left;padding-left:16px;letter-spacing:.1em;text-transform:uppercase}
+.g-row{border-bottom:1px solid var(--line-soft);min-height:36px}
+.g-row:last-child{border-bottom:0}
+.g-row > .g-lab{font-size:12.5px;padding:8px 10px 8px 16px;font-weight:500;line-height:1.45}
+.g-bar{grid-row:1;height:15px;border-radius:3px;margin:0 1px;position:relative}
+.g-a{background:var(--accent);opacity:.85}
+.g-b{background:var(--s1);opacity:.8}
+.g-c{background:var(--amber);opacity:.8}
+.g-d{background:var(--pink);opacity:.7}
+.g-ms{grid-row:1;justify-self:center;width:0;height:0;border-left:6px solid transparent;
+  border-right:6px solid transparent;border-bottom:10px solid var(--red)}
+
+/* ---------- misc blocks ---------- */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;margin:26px 0}
+.mini{border:1px solid var(--line);border-radius:6px;padding:16px 18px;background:var(--panel)}
+.mini h4{margin:0 0 6px;font-size:14px}
+.mini p{margin:0;font-size:13.5px;color:var(--ink2);line-height:1.75}
+.stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0;margin:26px 0;
+  border:1px solid var(--line);border-radius:7px;background:var(--panel);overflow:hidden}
+.stat div{padding:18px 20px;border-right:1px solid var(--line-soft)}
+.stat div:last-child{border-right:0}
+.stat .v{font-family:var(--mono);font-size:26px;font-weight:600;line-height:1.1;
+  font-variant-numeric:tabular-nums;color:var(--accent)}
+.stat .v.bad{color:var(--red)}
+.stat .l{font-size:12px;color:var(--ink2);margin-top:7px;line-height:1.6}
+details.qa{border-bottom:1px solid var(--line-soft);padding:0}
+details.qa summary{cursor:pointer;padding:15px 30px 15px 0;font-weight:700;font-size:15px;
+  list-style:none;position:relative;line-height:1.65}
+details.qa summary::-webkit-details-marker{display:none}
+details.qa summary::after{content:"+";position:absolute;right:6px;top:14px;font-family:var(--mono);
+  color:var(--accent);font-size:19px;font-weight:400}
+details.qa[open] summary::after{content:"−"}
+details.qa .a{padding:0 0 18px;color:var(--ink2);font-size:14.5px;line-height:1.85}
+details.qa .a > :first-child{margin-top:0}
+.refs{list-style:none;padding:0;counter-reset:r}
+.refs li{counter-increment:r;position:relative;padding-left:34px;margin:15px 0;font-size:13.5px;
+  line-height:1.75;color:var(--ink2)}
+.refs li::before{content:counter(r);position:absolute;left:0;top:2px;font-family:var(--mono);font-size:11px;
+  color:var(--accent);border:1px solid var(--accent-line);border-radius:3px;width:22px;height:20px;
+  display:grid;place-items:center;font-weight:600}
+.refs b{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:720px){
+  .flow{padding:0 16px}
+  .hero{padding:40px 0 30px}
+  .g-head,.g-row{grid-template-columns:120px repeat(24,minmax(7px,1fr))}
+  .g-row > .g-lab{font-size:11px;padding-left:10px}
+  .spec div,.stat div,.hero-meta div{border-right:0;border-bottom:1px solid var(--line-soft)}
+}
+</style>
+<div class="bar">
+  <div class="bar-in">
+    <div class="bar-name">種の中の<span>時計</span></div>
+    <nav class="bar-nav">
+      <a href="#s0">要旨</a><a href="#s1">教養編</a><a href="#s2">既知と未知</a>
+      <a href="#s3">実験設計</a><a href="#s4">測定</a><a href="#s5">運用</a>
+      <a href="#s6">意思決定</a><a href="#s7">専門家問答</a><a href="#s8">文献</a>
+    </nav>
+  </div>
+  <div class="prog" id="prog"></div>
+</div>
+
+<main class="flow">
+
+<header class="hero">
+  <p class="eyebrow">実験計画書 兼 独習教材 / 2026-09</p>
+  <h1>種の中の時計</h1>
+  <p class="sub">収穫した瞬間から、ジャトロファの種子の中では油を壊す反応が走りはじめる。
+  その時計を止める方法を、モザンビークの畑で、自分たちの品種で、2年以内に数字で確かめるための計画。</p>
+  <dl class="hero-meta">
+    <div><dt>対象</dt><dd>果肉除去・種子乾燥・保管の3工程</dd></div>
+    <div><dt>主指標</dt><dd>酸価 AV(mg KOH/g)<br>副指標 PV・K232/K270・発芽率</dd></div>
+    <div><dt>期間</dt><dd>暫定答え 10か月<br>確定 18か月 / 最終報告 23か月</dd></div>
+    <div><dt>資材費(概算)</dt><dd>US$ 22,000 – 33,000<br>人件費別</dd></div>
+  </dl>
+</header>
+
+<h2 id="s0"><span class="num">Part 0</span>3行で言うと</h2>
+
+<p class="lede">この文書は2つの顔を持っている。前半(Part 1–2)は<strong>読み物</strong>で、「油が壊れる」とは分子の世界で何が起きることなのかを、高校の化学と物理の言葉だけで説明する。後半(Part 3–6)は<strong>実験計画書</strong>で、そのまま現場に配れる手順にしてある。Part 7 は、外部の専門家と対等に話すための想定問答集。</p>
+
+<p>結論を先に書く。</p>
+
+<ol>
+<li><strong>3つの問いは、実は1つの問いである。</strong> 果肉除去の遅れ・乾燥の遅れ・保管中の水分は、どれも「種子が<span class="hl">濡れたまま暖かい状態で何時間過ごしたか</span>」を変えているにすぎない。だから3つを別々の実験で測るのではなく、共通の「線量(dose)」という物差しに載せて測る。そうすれば、将来10,000 haで天候が違っても答えを外挿できる。</li>
+<li><strong>AV測定は自前でやる。</strong> 2年で約430検体・860回の滴定が必要になる。外注すると費用が10倍、回答が数週間遅れ、実験の舵取りができない。滴定そのものは高校化学の中和滴定なので、正しい品質管理を組めば現地で回せる。南アで薬品と器具を、日本から天秤・ビュレット・一次標準を持ち込み、IIAMや南アの認定ラボは「照合」と「自分たちに出来ない分析(脂肪酸組成・トコフェロール)」に使う。</li>
+<li><strong>いちばん効く実験はいちばん安い。</strong> 塩の飽和水溶液を入れた密閉ビン6個(数千円)で自社品種の吸湿等温線を描くこと。これが「何%まで乾かすか」という問いに物理的な意味を与える土台になる。</li>
+</ol>
+
+<div class="stat">
+  <div><div class="v bad">×31</div><div class="l">モザンビーク産ジャトロファ種子を35 °Cで42日置いたときの酸度。相対湿度92%で 0.8% → 25.3%(文献1)</div></div>
+  <div><div class="v bad">×9</div><div class="l">同じ35 °C・42日でも、相対湿度75%なら 0.8% → 7.4%。<strong>湿度17ポイントの差が、劣化速度を約3.7倍に変える</strong></div></div>
+  <div><div class="v">≤ 2</div><div class="l">アルカリ触媒でエステル交換するために必要な原油のAV(mg KOH/g)の目安。超えると酸触媒の前処理工程が要る</div></div>
+  <div><div class="v">0.5</div><div class="l">バイオディーゼル最終製品の規格上限 AV(EN 14214、mg KOH/g)(文献5)</div></div>
+</div>
+
+<div class="note"><span class="tag">この計画の勝ち筋</span>
+<p>ジャトロファについて「貯蔵すると劣化する」ことを示した研究はある。だが<strong>「収穫 → 果肉除去 → 乾燥」という時間軸を体系的に切った研究は、文献上ほとんど見当たらない</strong>。パーム油の世界では「収穫後24時間以内に蒸熱処理」という常識が確立しているのに、ジャトロファには同等の運用基準がない。ここは空白地帯で、しかも自社が10,000 haを設計する前に埋めておくべき空白である。うまくやれば社内の運用基準になるだけでなく、査読論文1本になる。</p></div>
+
+<hr class="rule">
+<h2 id="s1"><span class="num">Part 1 — 教養編</span>油が壊れるとは、分子の世界で何が起きることか</h2>
+
+<h3>1-1 まず、油とは何か</h3>
+
+<p>植物油の分子は<strong>トリグリセリド(トリアシルグリセロール)</strong>という。グリセリンという炭素3個の骨組みに、脂肪酸という長い炭化水素の鎖が3本、<strong>エステル結合</strong>でぶら下がっている。ジャトロファ油の場合、その鎖の内訳はおよそオレイン酸43%・リノール酸35%・パルミチン酸15%・ステアリン酸7%。<span class="hl">8割近くが不飽和(二重結合を持つ)</span>という点を覚えておいてほしい。あとで効いてくる。</p>
+
+<p>種子の中で、この油は<strong>オイルボディ(油滴)</strong>という直径1マイクロメートルほどの小さな袋に詰められ、タンパク質の膜で包まれて、細胞の中に整然と並んでいる。ここが重要で——<span class="hl">健康な細胞の中では、油と、油を壊す酵素は、別々の部屋に隔離されている</span>。壁が壊れたときに初めて、両者は出会う。</p>
+
+<h3>1-2 壊れ方は2種類しかない</h3>
+
+<p>「油が劣化した」と一言で言うが、化学的にはまったく別の2つの反応が同時に進んでいる。この2つを混ぜて考えるのが、現場でいちばんよくある間違いである。</p>
+
+<figure>
+<svg viewBox="0 0 900 445" role="img" aria-label="種子の油が壊れる2つの経路。加水分解は水とリパーゼで遊離脂肪酸を生み酸価を上げ、酸化は酸素と光と熱で過酸化物を生み過酸化物価を上げる。">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <!-- seed -->
+  <ellipse cx="72" cy="222" rx="42" ry="55" class="dg-fill-p" stroke="currentColor" stroke-width="1.5"/>
+  <ellipse cx="72" cy="222" rx="26" ry="39" class="dg-fill-s" stroke="currentColor" stroke-width="1"/>
+  <circle cx="66" cy="206" r="4" fill="currentColor" opacity=".35"/>
+  <circle cx="78" cy="220" r="4" fill="currentColor" opacity=".35"/>
+  <circle cx="68" cy="236" r="4" fill="currentColor" opacity=".35"/>
+  <text x="72" y="300" text-anchor="middle" class="t-lab">種子</text>
+  <text x="72" y="317" text-anchor="middle" class="t-xs">油滴 + 酵素</text>
+
+  <line x1="120" y1="222" x2="163" y2="222" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="172" y="188" width="128" height="68" rx="4" class="dg-fill-p" stroke="currentColor" stroke-width="1.5"/>
+  <text x="236" y="215" text-anchor="middle" class="t-lab">トリグリセリド</text>
+  <text x="236" y="234" text-anchor="middle" class="t-xs">C-O-C 結合 ×3</text>
+
+  <!-- branch -->
+  <path d="M300 210 C 336 210 336 118 366 118" class="dg-stroke" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M300 234 C 336 234 336 330 366 330" class="dg-stroke" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- upper: hydrolysis -->
+  <rect x="376" y="72" width="182" height="92" rx="4" fill="var(--pink-soft)" stroke="var(--pink-line)" stroke-width="1.5"/>
+  <text x="392" y="98" class="t-lab" fill="var(--pink)">① 加水分解</text>
+  <text x="392" y="120" class="t-sm">要るもの: 水 + リパーゼ</text>
+  <text x="392" y="140" class="t-sm">エステル結合を切る</text>
+  <text x="392" y="157" class="t-xs">遅い・確実・後戻りしない</text>
+  <line x1="558" y1="118" x2="600" y2="118" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="610" y="72" width="176" height="92" rx="4" class="dg-fill-p" stroke="currentColor" stroke-width="1.5"/>
+  <text x="626" y="98" class="t-lab">遊離脂肪酸(FFA)</text>
+  <text x="626" y="119" class="t-sm">+ グリセリン</text>
+  <text x="626" y="147" class="t-lab" fill="var(--pink)">→ AV(酸価)が上がる</text>
+  <text x="376" y="192" class="t-xs">止め方: 乾かす(aw↓)・冷やす・60 °C 1時間でリパーゼを失活させる</text>
+
+  <!-- lower: oxidation -->
+  <rect x="376" y="284" width="182" height="92" rx="4" fill="var(--amber-soft)" stroke="var(--amber-line)" stroke-width="1.5"/>
+  <text x="392" y="310" class="t-lab" fill="var(--amber)">② 酸化</text>
+  <text x="392" y="332" class="t-sm">要るもの: 酸素 + 光/熱/金属</text>
+  <text x="392" y="352" class="t-sm">二重結合を攻撃する</text>
+  <text x="392" y="369" class="t-xs">連鎖反応・一度始まると加速</text>
+  <line x1="558" y1="330" x2="600" y2="330" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="610" y="284" width="176" height="92" rx="4" class="dg-fill-p" stroke="currentColor" stroke-width="1.5"/>
+  <text x="626" y="310" class="t-lab">過酸化物 → アルデヒド</text>
+  <text x="626" y="331" class="t-sm">におい・色・重合</text>
+  <text x="626" y="359" class="t-lab" fill="var(--amber)">→ PV・K270 が上がる</text>
+  <text x="376" y="404" class="t-xs">止め方: 遮光・低温・空気を減らす・トコフェロール(種子が元々持っている)</text>
+</svg>
+<figcaption><span class="fig-n">図 1</span><b>油の壊れ方は2本の道に分かれ、止め方も別々である。</b>
+酸価(AV)は①だけを見ている指標で、②はまったく捉えない。天日乾燥のように②を強く進める操作は、AVだけ測っていると「問題なし」と誤診される。だから本計画では主指標をAVに置きつつ、乾燥方式の比較(実験C)では必ず酸化指標も併せて測る。</figcaption>
+</figure>
+
+<div class="expert"><span class="tag">専門家の一言</span>
+<p><strong>過酸化物価(PV)は単調に増えない。</strong> 過酸化物は反応の<em>中間体</em>なので、酸化が進みすぎると自分自身が分解してアルデヒドに変わり、PVは下がりはじめる。「PVが低いから新鮮」は誤りで、劣化しきった油もPVは低い。だからPVは必ず、二次生成物を見る指標(<span class="k">K270</span> か <span class="k">p-アニシジン価</span>)とペアで読む。これを言えるだけで、油の専門家との会話の格が変わる。</p></div>
+
+<h3>1-3 酸価(AV)は、実は何を測っているのか</h3>
+
+<p>加水分解でエステル結合が切れると、脂肪酸の端に <span class="k">-COOH</span>(カルボキシ基)がむき出しになる。これは弱い酸である。つまり<span class="hl">油の中に何個の酸ができたかを数えれば、何本のエステル結合が切れたかが分かる</span>。数え方は、高校でやる中和滴定そのもの——既知濃度の水酸化カリウム(KOH)を、色が変わるまで滴下して、要った量から個数を逆算する。</p>
+
+<figure>
+<svg viewBox="0 0 900 400" role="img" aria-label="トリグリセリドが加水分解して遊離脂肪酸を生じ、そのカルボキシ基を水酸化カリウムで中和滴定して酸価を求める仕組み。">
+  <defs>
+    <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <text x="20" y="26" class="t-xs">分子で見ると</text>
+  <line x1="20" y1="36" x2="470" y2="36" stroke="currentColor" stroke-width=".7" opacity=".3"/>
+  <!-- glycerol spine -->
+  <line x1="60" y1="70" x2="60" y2="180" stroke="currentColor" stroke-width="2"/>
+  <text x="42" y="130" text-anchor="middle" class="t-xs">グリ</text>
+  <text x="42" y="144" text-anchor="middle" class="t-xs">セリン</text>
+  <g stroke="currentColor" stroke-width="1.6" fill="none">
+    <polyline points="60,70 78,62 96,70 114,62 132,70 150,62"/>
+    <polyline points="60,125 78,117 96,125 114,117 132,125 150,117"/>
+    <polyline points="60,180 78,172 96,180 114,172 132,180 150,172"/>
+  </g>
+  <circle cx="60" cy="125" r="7" fill="var(--pink-soft)" stroke="var(--pink)" stroke-width="1.8"/>
+  <text x="163" y="74" class="t-xs">脂肪酸</text><text x="163" y="129" class="t-xs">脂肪酸</text><text x="163" y="184" class="t-xs">脂肪酸</text>
+  <text x="60" y="212" text-anchor="middle" class="t-sm">トリグリセリド</text>
+  <!-- water attack -->
+  <text x="228" y="106" text-anchor="middle" class="t-sm" fill="var(--pink)">H₂O + リパーゼ</text>
+  <line x1="196" y1="125" x2="262" y2="125" stroke="var(--pink)" stroke-width="1.8" marker-end="url(#ar2)"/>
+  <text x="228" y="148" text-anchor="middle" class="t-xs">エステル結合を1本切る</text>
+  <!-- product -->
+  <g stroke="currentColor" stroke-width="1.6" fill="none">
+    <polyline points="300,118 318,110 336,118 354,110 372,118 390,110"/>
+  </g>
+  <circle cx="300" cy="118" r="8" fill="var(--pink-soft)" stroke="var(--pink)" stroke-width="2"/>
+  <text x="300" y="98" text-anchor="middle" class="t-sm" fill="var(--pink)">-COOH</text>
+  <text x="352" y="146" text-anchor="middle" class="t-sm">遊離脂肪酸 1個</text>
+  <text x="352" y="167" text-anchor="middle" class="t-xs">= 酸 1個 = KOH 1個ぶん</text>
+  <!-- neutralisation -->
+  <line x1="300" y1="196" x2="300" y2="232" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar2)"/>
+  <text x="314" y="218" class="t-sm">+ KOH</text>
+  <text x="300" y="256" text-anchor="middle" class="t-sm">-COOK(石けん)+ H₂O</text>
+  <text x="300" y="278" text-anchor="middle" class="t-xs">中和しきると指示薬が桃色になる</text>
+
+  <!-- burette -->
+  <text x="530" y="26" class="t-xs">実験台で見ると</text>
+  <line x1="530" y1="36" x2="880" y2="36" stroke="currentColor" stroke-width=".7" opacity=".3"/>
+  <rect x="600" y="52" width="20" height="150" rx="3" class="dg-fill-s" stroke="currentColor" stroke-width="1.5"/>
+  <rect x="600" y="112" width="20" height="90" rx="0" fill="var(--pink-soft)"/>
+  <line x1="610" y1="202" x2="610" y2="228" stroke="currentColor" stroke-width="1.5"/>
+  <text x="636" y="80" class="t-sm">ビュレット</text>
+  <text x="636" y="98" class="t-xs">0.1 N KOH</text>
+  <g stroke="currentColor" stroke-width=".8" opacity=".5">
+    <line x1="600" y1="72" x2="592" y2="72"/><line x1="600" y1="92" x2="592" y2="92"/>
+    <line x1="600" y1="112" x2="588" y2="112"/><line x1="600" y1="132" x2="592" y2="132"/>
+    <line x1="600" y1="152" x2="592" y2="152"/><line x1="600" y1="172" x2="588" y2="172"/>
+  </g>
+  <text x="578" y="116" text-anchor="end" class="t-xs">V mL</text>
+  <circle cx="610" cy="240" r="3.5" fill="var(--pink)"/>
+  <path d="M578 262 L642 262 L672 336 A34 34 0 0 1 548 336 Z" fill="var(--pink-soft)" stroke="currentColor" stroke-width="1.6"/>
+  <text x="610" y="322" text-anchor="middle" class="t-sm">油 W g</text>
+  <text x="610" y="378" text-anchor="middle" class="t-xs">溶媒に溶かし、フェノールフタレインを1滴</text>
+  <text x="760" y="150" class="t-lab">AV =</text>
+  <text x="812" y="140" text-anchor="middle" class="t-mono" fill="var(--pink)">V × N × 56.1</text>
+  <line x1="760" y1="150" x2="875" y2="150" stroke="currentColor" stroke-width="1.2"/>
+  <text x="812" y="170" text-anchor="middle" class="t-mono">W</text>
+  <text x="760" y="200" class="t-xs">V: 滴下量 mL</text>
+  <text x="760" y="216" class="t-xs">N: KOH規定度</text>
+  <text x="760" y="232" class="t-xs">W: 油の質量 g</text>
+  <text x="760" y="248" class="t-xs">56.1: KOHの式量</text>
+</svg>
+<figcaption><span class="fig-n">図 2</span><b>酸価は「切れたエステル結合の本数」を、中和に要したKOHの質量に翻訳したものである。</b>
+定義は「油1 gを中和するのに必要なKOHのミリグラム数」。だから単位が <span class="k">mg KOH/g</span> になる。56.1 はKOHの式量(39.1+16.0+1.0)で、mol を mg に換算しているだけ。分子を数えていることが分かれば、この式は暗記するものではなくなる。</figcaption>
+</figure>
+
+<h3>1-4 AVとFFA%の翻訳、そしてなぜ数字が2倍ずれるのか</h3>
+
+<p>論文によって「酸価 25 mg KOH/g」と書いてあったり「FFA 14%」と書いてあったりする。これは同じことを2通りに言っているだけである。FFA% は「遊離脂肪酸の<em>質量</em>が油全体の何%か」を、代表としてオレイン酸(分子量282.5)で数えたもの。</p>
+
+<div class="eq">
+FFA(%, as oleic) = AV × 282.5 / (10 × 56.1) = <b>AV × 0.5035</b><br>
+AV(mg KOH/g) = FFA(%) × <b>1.986</b>
+<span class="where">つまり <b>FFA 1% ≒ AV 2</b>、<b>FFA 5% ≒ AV 10</b> と覚えておけば、どんな論文も即座に読み替えられる。文献で「AV 25–28 mg KOH/g」と「FFA 約14%」が同じジャトロファ原油について書かれているのは、この換算で一致している。</span>
+</div>
+
+<div class="warn"><span class="tag">落とし穴</span>
+<p>FFA%は「何の脂肪酸として数えるか」で値が変わる。パーム油はパルミチン酸(256.4)、ラウリン系油はラウリン酸(200.3)で換算する慣習がある。ジャトロファはオレイン酸換算が標準だが、<strong>報告書には必ず「as oleic」と明記する</strong>。書いていない数字は比較できない。</p></div>
+
+<h3>1-5 なぜAVが直接お金になるのか</h3>
+
+<p>遊離脂肪酸は、油を売る側にとって3重の損失である。</p>
+
+<ol>
+<li><strong>製品にならない。</strong> アルカリ触媒(KOH/NaOH)でエステル交換してバイオディーゼルにするとき、FFAは触媒と反応して<strong>石けん</strong>になってしまう。石けんは乳化を起こしてグリセリンとの分離を妨げ、収率を落とす。だから原油のFFAは<span class="hl">1%未満(AV 2未満)</span>が望ましいとされる。</li>
+<li><strong>余計な工程が要る。</strong> 高FFAのジャトロファ油は、そのままでは使えない。文献では AV 25–28 の原油を、硫酸0.5%(v/v)・メタノール:油 = 6:1 で<strong>酸触媒エステル化</strong>して AV 2±0.25 まで下げ、それから塩基触媒でエステル交換して最終 AV 0.41–0.43(EN 14214 の上限0.5以内)に持ち込んでいる。この前処理は設備・薬品・時間の追加コストであり、AVが低ければ丸ごと不要になる。</li>
+<li><strong>中和精製で油そのものが減る。</strong> 苛性ソーダで遊離脂肪酸を落とす脱酸工程では、石けんが油を巻き込んで沈むため、実際の損失はFFA量そのものより多くなる(工業的にはFFA%の1.3〜2倍という経験則が使われる。自社のオフテイカーの実測係数を必ず確認すること)。</li>
+</ol>
+
+<p>10,000 ha規模で考えると、この数字は無視できない。仮に将来 6,000 t/年の原油を得るとして、AVを 2 下げる(FFA約1%減)ことが油の実収量を1%改善するなら、それだけで年間60 t。<strong>本調査の資材費は、初年度の1回の改善で回収できる桁にある。</strong></p>
+
+<div class="note"><span class="tag">判定基準を先に決める</span>
+<p>実験を始める前に「いくつなら合格か」を決めておかないと、結果を見てから基準を作ることになる(これは科学として失格)。暫定的に次を提案する。オフテイカーが決まっている場合はその仕様を優先すること。</p>
+<p style="margin-top:12px">
+<span class="pill p-ok">緑 AV ≤ 2.0</span>&nbsp; 前処理なしでアルカリ触媒に直行できる &nbsp;
+<span class="pill p-am">黄 2.0 – 5.0</span>&nbsp; 酸触媒の前処理が必要 &nbsp;
+<span class="pill p-rd">赤 &gt; 5.0</span>&nbsp; 精製損失が大きく、価格交渉で不利
+</p></div>
+
+<hr class="rule">
+<h3>1-6 犯人はリパーゼ。ただし犯人は2人いる</h3>
+
+<p>加水分解は、水とエステル結合が出会えば理屈の上では進む。しかし常温では反応が遅すぎて、実際にはほとんど進まない。速度を数万倍に跳ね上げているのが<strong>リパーゼ</strong>という酵素である。そしてリパーゼの出どころは2つある。</p>
+
+<div class="grid2">
+<div class="mini"><h4>① 種子自身のリパーゼ</h4><p>種子は「発芽したら油を分解してエネルギーにする」ために、最初からリパーゼを持っている。健康な細胞では油滴と別の場所にあるが、<strong>細胞が潰れる・乾いて割れる・虫に食われる</strong>と両者が混ざる。パーム果実で「打撲した果実」のFFAが跳ね上がるのはこれで、打撲直後15分間の上昇速度は 0.11 %/分にも達する。</p></div>
+<div class="mini"><h4>② 微生物のリパーゼ</h4><p>果肉には糖と水がたっぷりあり、カビと細菌の培地そのものである。彼らは油を食べるためにリパーゼを外に分泌する。<strong>果肉を付けたまま置く=微生物にリパーゼ工場を建てさせている</strong>ということ。パームでは打撲+濡れの条件で5日後にFFA 10.44%に達したという報告がある。</p></div>
+</div>
+
+<p>ここから、果肉除去が急がれる理由が論理的に導ける。果肉が付いている間、種子は <span class="hl">水がある・糖がある・微生物がいる・細胞が壊れている</span> という4条件が全部そろった環境にいる。果肉を取ることは、この4つを一度に外す操作である。逆に言えば、<strong>果肉除去の遅れは、乾燥の遅れよりも高い代償を払うはずだ</strong>——これが実験Aで検証する仮説である。</p>
+
+<div class="expert"><span class="tag">専門家の一言</span>
+<p>リパーゼは<strong>60 °C・1時間で失活する</strong>ことがパーム油の研究で確立している(だからパーム搾油所は最初に蒸熱処理をする)。ジャトロファでも同じ手が使えるなら「短時間の熱処理 → あとはゆっくり乾かす」という選択肢が生まれる。ただし<strong>60 °Cは種子も殺す</strong>。播種用の種と搾油用の種で処理を分ける必要が出てくる。この一点だけで、10,000 ha展開時の乾燥設備の設計が変わる。実験Cにこの処理区を入れてあるのはそのためである。</p></div>
+
+<h3>1-7 いちばん大事な概念 ── 「水分%」ではなく「水分活性」</h3>
+
+<p>現場では「水分8%まで乾かす」と言う。しかしこれは、化学的にはやや的外れな言い方である。反応の速度を決めているのは、水が<em>何%あるか</em>ではなく、<span class="hl">その水がどれくらい自由に動けるか</span>だからだ。</p>
+
+<p>種子の中の水には2種類ある。分子にがっちり水素結合で貼りついて動けない<strong>結合水</strong>と、隙間で自由に動き回れる<strong>自由水</strong>。反応にも微生物にも使えるのは自由水だけ。この「自由さ」を0から1の数字にしたのが<strong>水分活性 <span class="k">a<sub>w</sub></span></strong> で、定義は</p>
+
+<div class="eq">
+a<sub>w</sub> = (種子の周りの空気の水蒸気圧) / (同じ温度の純水の水蒸気圧) = <b>平衡相対湿度(%) ÷ 100</b>
+<span class="where">純水は a<sub>w</sub> = 1.00、カラカラの砂漠は 0 に近い。ジャトロファの果肉の中の種子はほぼ 0.99。目安として、<b>a<sub>w</sub> 0.70未満でカビは生えられず、0.60未満ではいかなる微生物も増殖できない</b>。アスペルギルス・フラバス(アフラトキシン産生菌)は 0.78以上で生育、毒素産生は 0.84–0.87から。</span>
+</div>
+
+<p>水分%と a<sub>w</sub> の関係を描いたグラフが<strong>吸湿等温線(sorption isotherm)</strong>である。これがS字を描くこと、そして<strong>温度が上がると同じ水分%でも a<sub>w</sub> が上がる</strong>ことが、この計画のいちばんの土台になる。</p>
+
+<figure>
+<svg viewBox="0 0 900 420" role="img" aria-label="ジャトロファ種子の吸湿等温線の模式図。水分活性が上がると平衡水分が増え、温度が高いほど同じ水分でも水分活性が高くなる。">
+  <!-- danger zones -->
+  <rect x="608" y="50" width="222" height="290" fill="var(--amber-soft)"/>
+  <rect x="712" y="50" width="118" height="290" fill="var(--red-soft)"/>
+  <!-- axes -->
+  <line x1="90" y1="340" x2="850" y2="340" stroke="currentColor" stroke-width="1.2"/>
+  <line x1="90" y1="340" x2="90" y2="45" stroke="currentColor" stroke-width="1.2"/>
+  <!-- grid -->
+  <g stroke="currentColor" stroke-width=".6" opacity=".16">
+    <line x1="90" y1="50" x2="850" y2="50"/><line x1="90" y1="130" x2="850" y2="130"/>
+    <line x1="90" y1="211" x2="850" y2="211"/><line x1="90" y1="292" x2="850" y2="292"/>
+  </g>
+  <!-- x ticks -->
+  <g class="t-xs" text-anchor="middle">
+    <text x="90" y="360">0</text><text x="238" y="360">0.2</text><text x="386" y="360">0.4</text>
+    <text x="534" y="360">0.6</text><text x="682" y="360">0.8</text><text x="830" y="360">1.0</text>
+  </g>
+  <text x="470" y="382" text-anchor="middle" class="t-sm">水分活性 a&#8342;(= 平衡相対湿度 ÷ 100)</text>
+  <!-- y ticks -->
+  <g class="t-xs" text-anchor="end">
+    <text x="80" y="344">0</text><text x="80" y="296">3</text><text x="80" y="215">8</text>
+    <text x="80" y="134">13</text><text x="80" y="54">18</text>
+  </g>
+  <text x="30" y="200" class="t-sm" transform="rotate(-90 30 200)" text-anchor="middle">種子水分 %(湿量基準)</text>
+  <!-- 25C -->
+  <polyline points="127,304.6 164,291.7 238,272.3 312,256.2 386,241.7 460,225.6 534,206.3 608,178.9 682,140.2 756,82.2 793,50"
+    fill="none" stroke="var(--s1)" stroke-width="2.4"/>
+  <!-- 35C -->
+  <polyline points="127,311 164,299.7 238,282 312,267.5 386,254.6 460,240.1 534,222.4 608,198.2 682,162.8 756,109.6 793,79"
+    fill="none" stroke="var(--s2)" stroke-width="2.4" stroke-dasharray="7 4"/>
+  <!-- MC 8 line -->
+  <line x1="90" y1="211" x2="620" y2="211" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 4" opacity=".7"/>
+  <circle cx="515" cy="211" r="6" fill="var(--s1)" stroke="var(--chart-surface)" stroke-width="2"/>
+  <circle cx="569" cy="211" r="6" fill="var(--s2)" stroke="var(--chart-surface)" stroke-width="2"/>
+  <text x="500" y="196" text-anchor="end" class="t-xs" fill="var(--s1)">a&#8342; 0.58</text>
+  <text x="574" y="250" class="t-xs" fill="var(--s2)">a&#8342; 0.65</text>
+  <!-- zone labels -->
+  <line x1="608" y1="50" x2="608" y2="340" stroke="var(--amber)" stroke-width="1.4"/>
+  <line x1="712" y1="50" x2="712" y2="340" stroke="var(--red)" stroke-width="1.4"/>
+  <text x="614" y="66" class="t-xs" fill="var(--amber)">a&#8342; 0.70</text>
+  <text x="614" y="80" class="t-xs" fill="var(--amber)">カビが生える</text>
+  <text x="718" y="66" class="t-xs" fill="var(--red)">a&#8342; 0.84</text>
+  <text x="718" y="80" class="t-xs" fill="var(--red)">毒素が出る</text>
+  <text x="600" y="330" text-anchor="end" class="t-xs">← ここより左が安全側</text>
+  <!-- legend -->
+  <g transform="translate(120,60)">
+    <line x1="0" y1="0" x2="26" y2="0" stroke="var(--s1)" stroke-width="2.4"/>
+    <text x="34" y="4" class="t-sm">25 °C</text>
+    <line x1="0" y1="22" x2="26" y2="22" stroke="var(--s2)" stroke-width="2.4" stroke-dasharray="7 4"/>
+    <text x="34" y="26" class="t-sm">35 °C</text>
+  </g>
+</svg>
+<figcaption><span class="fig-n">図 3</span><b>模式図(自社品種の実測値は実験0-Aで作る)。同じ「水分8%」でも、25 °Cなら a<sub>w</sub> 0.58で安全、35 °Cでは 0.65 まで上がり危険域の縁に立つ。</b>
+これが「モザンビークの倉庫では、日本の教科書の水分目標では足りないかもしれない」理由である。等温線を自分で持てば、目標水分%を気温から逆算できるようになる。</figcaption>
+</figure>
+
+<div class="warn"><span class="tag">落とし穴 ── 湿量基準と乾量基準</span>
+<p>「水分8%」には2通りの意味がある。<strong>湿量基準(wb)</strong>= 水の質量 ÷ 全体の質量、<strong>乾量基準(db)</strong>= 水の質量 ÷ 乾物の質量。換算は <span class="k">db = wb / (1 − wb)</span> で、8% wb = 8.7% db。数%の話をしているのに定義違いで1割ずれる。<strong>本計画では全て湿量基準(wb)に統一し、報告書にも毎回明記する。</strong></p></div>
+
+<div class="expert"><span class="tag">専門家の一言</span>
+<p><strong>種子と「核(kernel)」は違う。</strong> ジャトロファの種子は硬い殻と、その中の核でできていて、油は核にある。乾燥中、殻は先に乾き、核は遅れて乾く。表面の水分計が8%を示しても、<span class="hl">核はまだ12%かもしれない</span>。袋詰めした後で水分が殻から核へ、あるいは核から殻へ再配分され、数日後に袋の中の一部が湿ってカビる——これが「乾いていたはずなのに悪くなった」の正体である。<strong>対策:乾燥終了時と、袋詰め48時間後の2回、水分を測る。</strong>差が1ポイント以上あれば乾燥不足。</p></div>
+
+<h3>1-8 温度 ── 10 °C上がると、時計は2倍速く進む</h3>
+
+<p>酵素反応の速度は温度で指数関数的に変わる。おおまかには<strong>Q<sub>10</sub></strong>という数字で表す:温度が10 °C上がったとき速度が何倍になるか。多くの酵素反応で Q<sub>10</sub> ≒ 2〜2.5。より正確にはアレニウスの式で書く。</p>
+
+<div class="eq">
+k(T) = A · exp( −E<sub>a</sub> / RT )&nbsp;&nbsp;→&nbsp;&nbsp;速度比 = <b>Q₁₀<sup>(T − T₀)/10</sup></b>
+<span class="where">Q₁₀ = 2 とすると:25 °C → 35 °C で <b>2倍</b>、25 °C → 45 °C で <b>4倍</b>。逆に 30 °C → −18 °C(冷凍庫)は −48 °C の差なので 2<sup>−4.8</sup> ≒ <b>1/28</b>。つまり<b>冷凍庫でも反応は止まらず、28分の1に遅くなるだけ</b>。試料を1か月冷凍保存することは、常温で約1日置いたのと同じ。この見積もりができると、試料の保存計画が根拠を持つ。</span>
+</div>
+
+<p>ここで現場の話に戻る。<strong>果実を麻袋に山積みすると、中は暑くなる。</strong> 果肉と微生物が呼吸して熱を出し、袋が断熱材として働くからだ。周囲が28 °Cでも山の中心が38 °Cになれば、それだけで劣化速度は2倍。しかも湿気が逃げず a<sub>w</sub> も高いまま。この「山積み」という何気ない操作が、温度と水分活性の両方を悪い方に振っている。実験Aで山積み区を入れ、山の中に温湿度ロガーを差し込むのはこのためである。</p>
+
+<h3>1-9 3つの問いを1つにまとめる ── 「線量」という考え方</h3>
+
+<p>ここまでを組み合わせると、こう書ける。</p>
+
+<div class="eq">
+dAV/dt = k₀ · <b>g(a<sub>w</sub>)</b> · <b>Q₁₀<sup>(T−30)/10</sup></b>&nbsp;&nbsp;&nbsp;&nbsp;
+AV<sub>搾油時</sub> = AV<sub>収穫時</sub> + ∫<sub>収穫</sub><sup>搾油</sup> (dAV/dt) dt
+<span class="where">g(a<sub>w</sub>) は水分活性の関数で、a<sub>w</sub> 0.6以下でほぼ0、0.7を超えると急に立ち上がる。要するに <b>AVの上昇量 = 「濡れて暖かかった時間」の積算</b>。放射線の被曝線量と同じ考え方で、瞬間の強さ × 時間の合計が効く。</span>
+</div>
+
+<p>この式が書けると、3つの問いが1枚の絵に収まる。</p>
+
+<figure>
+<svg viewBox="0 0 900 470" role="img" aria-label="収穫から搾油までの水分活性の推移。現行の遅い工程と改善後の速い工程で、危険域にとどまる面積すなわち劣化線量が大きく違う。">
+  <defs>
+    <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <!-- damage area: current -->
+  <path d="M100,64.5 L162.5,64.5 L225,69 L287.5,73.5 L350,91.5 L412.5,123 L475,150 L537.5,172.5 L600,190.5 L662.5,204 L725,217.5 L100,217.5 Z"
+        fill="var(--red)" opacity=".18"/>
+  <!-- damage area: improved -->
+  <path d="M100,64.5 L131.25,69 L162.5,105 L193.75,159 L225,204 L241,217.5 L100,217.5 Z"
+        fill="var(--accent)" opacity=".30"/>
+  <!-- axes -->
+  <line x1="100" y1="330" x2="860" y2="330" stroke="currentColor" stroke-width="1.2"/>
+  <line x1="100" y1="330" x2="100" y2="50" stroke="currentColor" stroke-width="1.2"/>
+  <!-- threshold -->
+  <line x1="100" y1="217.5" x2="860" y2="217.5" stroke="var(--amber)" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <text x="856" y="209" text-anchor="end" class="t-xs" fill="var(--amber)">a&#8342; 0.65 — 安全域の境</text>
+  <!-- curves -->
+  <polyline points="100,64.5 162.5,64.5 225,69 287.5,73.5 350,91.5 412.5,123 475,150 537.5,172.5 600,190.5 662.5,204 725,217.5 787.5,231 850,240"
+    fill="none" stroke="var(--s2)" stroke-width="2.6"/>
+  <polyline points="100,64.5 131.25,69 162.5,105 193.75,159 225,204 256.25,231 287.5,240 850,249"
+    fill="none" stroke="var(--accent)" stroke-width="2.6"/>
+  <!-- y ticks -->
+  <g class="t-xs" text-anchor="end">
+    <text x="92" y="68">1.0</text><text x="92" y="158">0.8</text><text x="92" y="221">0.65</text><text x="92" y="334">0.4</text>
+  </g>
+  <text x="38" y="190" class="t-sm" transform="rotate(-90 38 190)" text-anchor="middle">種子の水分活性 a&#8342;</text>
+  <!-- x ticks -->
+  <g class="t-xs" text-anchor="middle">
+    <text x="100" y="350">収穫</text><text x="225" y="350">2日</text><text x="350" y="350">4日</text>
+    <text x="475" y="350">6日</text><text x="600" y="350">8日</text><text x="725" y="350">10日</text><text x="850" y="350">12日</text>
+  </g>
+  <!-- labels on curves -->
+  <text x="452" y="110" class="t-sm" fill="var(--s2)">現行(果肉除去が遅い・厚く積む)</text>
+  <text x="268" y="288" class="t-sm" fill="var(--accent)">改善案(当日除去・薄層送風)</text>
+  <text x="420" y="200" text-anchor="middle" class="t-sm" fill="var(--red)">この面積が劣化「線量」</text>
+  <text x="146" y="196" class="t-xs" fill="var(--accent)">線量 小</text>
+  <!-- experiment brackets -->
+  <g stroke="currentColor" stroke-width="1.3" fill="none">
+    <path d="M100,382 L100,390 L287,390 L287,382"/>
+    <path d="M297,382 L297,390 L600,390 L600,382"/>
+    <path d="M610,382 L610,390 L860,390 L860,382"/>
+  </g>
+  <text x="193" y="410" text-anchor="middle" class="t-sm" fill="var(--pink)">実験 A</text>
+  <text x="193" y="428" text-anchor="middle" class="t-xs">果肉除去までの時間</text>
+  <text x="448" y="410" text-anchor="middle" class="t-sm" fill="var(--pink)">実験 B1・C</text>
+  <text x="448" y="428" text-anchor="middle" class="t-xs">乾燥の速さと方式(=曲線の下り方)</text>
+  <text x="735" y="410" text-anchor="middle" class="t-sm" fill="var(--pink)">実験 B2</text>
+  <text x="735" y="428" text-anchor="middle" class="t-xs">到達点と保管(=尾の高さ×月数)</text>
+  <text x="100" y="458" class="t-xs">3つの実験は、別々の問いではなく、1本の曲線の別々の区間を測っている</text>
+</svg>
+<figcaption><span class="fig-n">図 4</span><b>この計画の中心にある考え方。</b>
+種子の水分活性が時間とともにどう下がるかを描き、危険域(a<sub>w</sub> 0.65より上)にとどまった<strong>面積</strong>が最終的なAVの上昇量を決める、と考える。実験A・B1・B2・Cはこの曲線の別々の区間を測っている。全部が終われば1本の予測式になり、<span class="hl">安いロガーで温湿度を記録するだけで、搾油前にAVを予測できる</span>ようになる。これが10,000 haへの外挿を可能にする。</figcaption>
+</figure>
+
+<h3>1-10 天日乾燥の隠れたコスト</h3>
+
+<p>太陽は無料で強力な乾燥機である。水分活性を最速で下げるという意味では、天日乾燥は加水分解に対しては<strong>有利</strong>だ。しかし同時に、もう1本の道(酸化)を全開にする。</p>
+
+<p>油の中には葉緑素(クロロフィル)がごく微量(0.1 ppm未満でも)残っていることがある。これが<strong>光増感剤</strong>として働くと、普通の酸素(三重項酸素)を反応性の高い<strong>一重項酸素</strong>に変えてしまう。この経路の反応速度は、暗所での自動酸化の<span class="hl">1000〜1500倍</span>と言われる。大豆油を180日置いた試験では、常温暗所でPV 20.5、日光下で 41.9 meq/kg と約2倍になっている。</p>
+
+<p>加えて、天日乾燥には現場的な弱点がある。<strong>夜露</strong>だ。夕方に取り込まずに置くと、種子は夜のうちに水分を吸い戻す。図4の曲線が夜ごとに上に跳ね返り、線量の積算が止まらない。だから実験Cには「天日+夜間被覆」という区を別に立ててある。<strong>「天日はダメ」ではなく「天日のどこがダメか」を分けて測る</strong>のが実験の作り方である。</p>
+
+<hr class="rule">
+<h2 id="s2"><span class="num">Part 2 — 文献編</span>すでに分かっていること、まだ誰も測っていないこと</h2>
+
+<p class="lede">計画を立てる前に、他人がすでに払った授業料は回収しておく。ここでは「自分たちの実験の設計を変えるほど重要な」先行研究だけを挙げる。</p>
+
+<h3>2-1 いちばん効く一報 ── モザンビーク産の種子で、42日で31倍</h3>
+
+<p>本計画にとって決定的な先行研究がある。<strong>モザンビークで栽培されたジャトロファ種子</strong>を、暗所・35 °C・相対湿度75%と92%の2条件で42日間保管し、油の酸度を追跡したものだ(文献1)。産地も気温条件も、自社の倉庫にきわめて近い。</p>
+
+<div class="chart-wrap" id="cw1">
+  <p class="chart-hd">湿度17ポイントの差が、42日で3.7倍の劣化差になる</p>
+  <p class="chart-sd">モザンビーク産ジャトロファ種子、暗所 35 °C 保管。両条件とも開始は FFA 0.8%(AV 1.6)。文献1の実測は 0日目と42日目のみ ── 途中の形は分かっていないので直線で結んである。</p>
+  <svg viewBox="0 0 880 380" role="img" aria-label="モザンビーク産ジャトロファ種子を35度で42日保管したときの油の酸度。相対湿度75パーセントで0.8から7.4パーセント、92パーセントで0.8から25.3パーセントに上昇。">
+    <!-- acceptance bands -->
+    <rect x="90" y="310.4" width="710" height="9.6" fill="var(--ok)" opacity=".22"/>
+    <rect x="90" y="271.8" width="710" height="38.6" fill="var(--amber)" opacity=".16"/>
+    <!-- grid -->
+    <g stroke="currentColor" stroke-width=".6" opacity=".14">
+      <line x1="90" y1="50" x2="800" y2="50"/><line x1="90" y1="127.1" x2="800" y2="127.1"/>
+      <line x1="90" y1="204.3" x2="800" y2="204.3"/><line x1="90" y1="281.4" x2="800" y2="281.4"/>
+    </g>
+    <line x1="90" y1="320" x2="800" y2="320" stroke="currentColor" stroke-width="1.2"/>
+    <line x1="90" y1="320" x2="90" y2="45" stroke="currentColor" stroke-width="1.2"/>
+    <!-- y ticks left -->
+    <g class="t-xs" text-anchor="end">
+      <text x="82" y="324">0</text><text x="82" y="285">5</text><text x="82" y="208">13</text>
+      <text x="82" y="131">20</text><text x="82" y="54">28</text>
+    </g>
+    <text x="34" y="185" class="t-sm" transform="rotate(-90 34 185)" text-anchor="middle">油の酸度 FFA %</text>
+    <!-- y ticks right (unit conversion, same scale) -->
+    <g class="t-xs" text-anchor="start">
+      <text x="808" y="324">0</text><text x="808" y="285">10</text><text x="808" y="208">26</text>
+      <text x="808" y="131">40</text><text x="808" y="54">56</text>
+    </g>
+    <text x="866" y="185" class="t-sm" transform="rotate(-90 866 185)" text-anchor="middle">同じ値を AV に換算</text>
+    <!-- x ticks -->
+    <g class="t-xs" text-anchor="middle">
+      <text x="90" y="342">0</text><text x="200" y="342">7</text><text x="311" y="342">14</text>
+      <text x="421" y="342">21</text><text x="532" y="342">28</text><text x="642" y="342">35</text><text x="753" y="342">42</text>
+    </g>
+    <text x="445" y="366" text-anchor="middle" class="t-sm">保管日数</text>
+    <!-- series -->
+    <line x1="90" y1="312.3" x2="753" y2="76" stroke="var(--s2)" stroke-width="2.4" stroke-dasharray="8 5"/>
+    <line x1="90" y1="312.3" x2="753" y2="248.6" stroke="var(--s1)" stroke-width="2.4" stroke-dasharray="8 5"/>
+    <g class="dot" data-t="0日目 · 両条件共通&#10;FFA 0.8% (AV 1.6)"><circle cx="90" cy="312.3" r="6" fill="var(--ink2)" stroke="var(--chart-surface)" stroke-width="2"/></g>
+    <g class="dot" data-t="42日目 · 相対湿度 75%&#10;FFA 7.4% (AV 14.7)"><circle cx="753" cy="248.6" r="6.5" fill="var(--s1)" stroke="var(--chart-surface)" stroke-width="2"/></g>
+    <g class="dot" data-t="42日目 · 相対湿度 92%&#10;FFA 25.3% (AV 50.3)"><circle cx="753" cy="76" r="6.5" fill="var(--s2)" stroke="var(--chart-surface)" stroke-width="2"/></g>
+    <text x="741" y="66" text-anchor="end" class="t-sm" fill="var(--s2)">92% RH → 25.3%</text>
+    <text x="741" y="239" text-anchor="end" class="t-sm" fill="var(--s1)">75% RH → 7.4%</text>
+  </svg>
+  <div class="legend">
+    <span><i style="background:var(--s1)"></i>相対湿度 75%</span>
+    <span><i style="background:var(--s2)"></i>相対湿度 92%</span>
+    <span><i style="background:var(--ok);opacity:.45"></i>緑帯 = AV ≤ 2</span>
+    <span><i style="background:var(--amber);opacity:.45"></i>黄帯 = AV 2–5(前処理が要る)</span>
+  </div>
+  <div class="tip" id="tip1"></div>
+</div>
+
+<p>この図から読み取るべきことは3つある。</p>
+<ul>
+<li><strong>合格ラインは、グラフのいちばん下の細い帯でしかない。</strong> 42日で25%まで行く現象を相手にしているのに、我々が守りたいのは 1%(AV 2)である。余裕はまったくない。</li>
+<li><strong>湿度17ポイントの差が、速度を約3.7倍にする。</strong> 75%で 0.157 %/日、92%で 0.583 %/日。図3の等温線を思い出せば、これは a<sub>w</sub> 0.75 と 0.92 の差である。倉庫の湿度管理は「気休め」ではなく、4倍近い効き目を持つ操作だと分かる。</li>
+<li><strong>途中の形は誰も測っていない。</strong> 実測点は0日と42日だけ。線形なのか、加速するのか、途中で頭打ちになるのかは不明。<span class="hl">この「途中」を埋めるのが実験B2である。</span></li>
+</ul>
+
+<div class="expert"><span class="tag">専門家の一言</span>
+<p>同じ研究は、42日間で<strong>脂肪酸組成は有意に変化しなかった</strong>とも報告している。当たり前に見えて重要な事実だ。加水分解は結合を切るだけで<em>鎖そのものは変えない</em>から、組成は変わらない。つまり<span class="hl">GCで脂肪酸組成を測っても劣化は見えない</span>。劣化を見たいならAVかPVを測るしかない。高価なGCを持っている相手に「組成は問題ありません」と言われたときに、この違いを指摘できるかどうかで信頼が決まる。</p></div>
+
+<h3>2-2 パーム油の世界がすでに答えを持っている</h3>
+
+<p>ジャトロファで空白の部分は、パーム油の産業研究に代替データがある。果肉に油があるパームは条件が厳しいぶん、我々の実験の<strong>上限側の目安</strong>を与えてくれる。</p>
+
+<div class="stat">
+  <div><div class="v bad">0.11<span style="font-size:14px"> %/分</span></div><div class="l">打撲直後15分間のFFA上昇速度。細胞を壊した瞬間に酵素と基質が出会う(文献2)</div></div>
+  <div><div class="v bad">10.4<span style="font-size:14px"> %</span></div><div class="l">打撲+濡れの果実を5日置いたときのFFA。約 2.1 %/日(文献3)</div></div>
+  <div><div class="v">0.17<span style="font-size:14px"> %</span></div><div class="l">打撲していない果房は24時間置いてもほぼ変化しない ── <strong>時間ではなく「傷+水」が犯人</strong>(文献3)</div></div>
+  <div><div class="v">60<span style="font-size:14px"> °C · 1h</span></div><div class="l">リパーゼが失活する条件。搾油所が最初に蒸熱処理をする理由(文献2)</div></div>
+</div>
+
+<p>3番目の数字がいちばん示唆的だ。<strong>時間そのものが悪いのではなく、「細胞が壊れていること」と「水があること」が悪い。</strong> ジャトロファの果実は、成熟すると自然に裂開しはじめ、そこから微生物が入る。だから実験Aでは、単に時間を切るだけでなく<strong>果実の状態(樹上完熟・落果)を分けた小実験A2</strong>を併設する。</p>
+
+<h3>2-3 その他の押さえておくべき数字</h3>
+
+<div class="tw">
+<table>
+<caption>設計に影響する先行研究の要点</caption>
+<thead><tr><th>論点</th><th>報告されている値</th><th>自社の設計にどう効くか</th></tr></thead>
+<tbody>
+<tr><td>収穫適期</td><td class="n">黄熟果で搾油量が褐変乾燥果より 6–9% 多い。黒色果は水分9.25%・油分42.59%・酸度3.9%と、成熟が進むほど水分は下がるが酸度は上がる(文献4)</td><td><strong>成熟度は最大の交絡要因。</strong> 全実験で「黄〜初期褐変」に限定して収穫し、成熟度を要因ではなく定数にする</td></tr>
+<tr><td>保管の目安</td><td class="n">水分6–10%まで下げれば、条件が良ければ12か月保管可能。常温3か月で AV 1.42 → 1.74、ただし同時に水分が 7.59% → 13.71% に<em>上昇</em>(文献6)</td><td>「乾かした後で吸湿させたら意味がない」。実験B2では<strong>密封して水分を保持</strong>し、水分を要因として固定できるようにする</td></tr>
+<tr><td>乾燥温度</td><td class="n">40–80 °Cで乾燥時間は温度とともに短縮。80 °Cでは残留水分0.34%まで到達(文献7)。一方ヒマワリでは40 °Cは安全だが45/50/55 °Cで発芽力が低下(文献8)</td><td><strong>搾油用と播種用で乾燥条件を分ける必要がある。</strong> 36 haの育苗圃場と10,000 haの移植計画がある以上、これは事業上の分岐点</td></tr>
+<tr><td>光酸化</td><td class="n">光増感剤があるときの酸化は暗所自動酸化の1000–1500倍。大豆油180日でPV 20.5(暗所)対 41.9(日光)(文献9,10)</td><td>天日乾燥の評価は<strong>AVだけでは不当に甘くなる</strong>。実験CでPVとK232/K270を必ず併測</td></tr>
+<tr><td>微生物</td><td class="n">a<sub>w</sub> 0.70未満でカビ停止、0.60未満で全微生物停止。A. flavus は0.78以上で生育、アフラトキシン産生は0.84–0.87(文献11)</td><td>目標を「水分%」ではなく<strong>a<sub>w</sub> &lt; 0.60</strong>で立て、等温線でそれに相当する水分%を自社品種について求める</td></tr>
+<tr><td>油の抗酸化力</td><td class="n">モザンビーク産種子の油は γ-トコフェロール 160 mg/kg を含み、酸化に対して高い抵抗性を示した(文献1)</td><td>自社品種にも同じ強みがあるか要確認。<strong>あるなら「酸化には強いが加水分解には弱い」油</strong>ということになり、対策の優先順位が決まる</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>2-4 空白 ── ここが自社の取り分</h3>
+
+<div class="note"><span class="tag">文献調査で見つからなかったもの</span>
+<ul style="margin-bottom:0">
+<li><strong>ジャトロファにおける「収穫 → 果肉除去」の許容時間を、時間刻みで測った研究。</strong> パームには確立した24時間ルールがあるが、ジャトロファにはない。</li>
+<li><strong>果肉除去 → 乾燥完了までの許容時間と、到達水分の組み合わせを直交させた研究。</strong> 貯蔵中の劣化を見た研究はあるが、その手前の工程は「乾燥した種子を用いた」の一文で片付けられていることが多い。</li>
+<li><strong>乾燥方式(天日/日陰/送風/機械)を、油の品質と発芽率の両方で同時に評価した研究。</strong> 播種用は日陰・搾油用は天日という慣行的な助言はあるが、数字の裏付けが薄い。</li>
+<li><strong>品種間の「後収穫劣化しやすさ」の比較。</strong> 品種と油の性状の関係を見た研究はあるが、<em>劣化速度</em>を品種形質として扱った例は見当たらない。</li>
+</ul></div>
+
+<p>4つ目は特に大きい。もし品種間で劣化速度に差があるなら、それは<strong>育種の選抜形質になる</strong>。10,000 haに植える系統をこれから選ぶ立場にあるのだから、「油が多い」だけでなく「収穫後に壊れにくい」で選べるようになる価値は極めて大きい。実験Dはそのための道具を作る。</p>
+
+<hr class="rule">
+<h2 id="s3"><span class="num">Part 3 — 設計編</span>実験計画</h2>
+
+<h3>3-0 設計の原則 ── 先に決めておかないと、後から直せないこと</h3>
+
+<p>実験のやり直しは効かない。収穫は年に1度しか来ないからだ。だから設計段階で、次の6つは絶対に外さない。</p>
+
+<figure>
+<svg viewBox="0 0 900 410" role="img" aria-label="収穫日ごとに処理を割り当てる誤った設計と、一括収穫して混合し無作為に分割してから処理を割り当てる正しい設計の比較。">
+  <defs>
+    <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <text x="20" y="24" class="t-lab" fill="var(--red)">✗ よくある設計</text>
+  <line x1="20" y1="34" x2="880" y2="34" stroke="var(--red)" stroke-width="1" opacity=".5"/>
+  <g>
+    <rect x="30" y="56" width="112" height="42" rx="4" fill="var(--red-soft)" stroke="var(--red-line)" stroke-width="1.4"/>
+    <text x="86" y="82" text-anchor="middle" class="t-sm">収穫 4/12(晴)</text>
+    <line x1="86" y1="98" x2="86" y2="124" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar4)"/>
+    <text x="86" y="144" text-anchor="middle" class="t-sm">処理 0時間</text>
+
+    <rect x="182" y="56" width="112" height="42" rx="4" fill="var(--red-soft)" stroke="var(--red-line)" stroke-width="1.4"/>
+    <text x="238" y="82" text-anchor="middle" class="t-sm">収穫 4/15(雨)</text>
+    <line x1="238" y1="98" x2="238" y2="124" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar4)"/>
+    <text x="238" y="144" text-anchor="middle" class="t-sm">処理 24時間</text>
+
+    <rect x="334" y="56" width="112" height="42" rx="4" fill="var(--red-soft)" stroke="var(--red-line)" stroke-width="1.4"/>
+    <text x="390" y="82" text-anchor="middle" class="t-sm">収穫 4/19(曇)</text>
+    <line x1="390" y1="98" x2="390" y2="124" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar4)"/>
+    <text x="390" y="144" text-anchor="middle" class="t-sm">処理 48時間</text>
+  </g>
+  <text x="490" y="76" class="t-lab" fill="var(--red)">交絡(confounding)</text>
+  <text x="490" y="100" class="t-sm">処理が変わると同時に、収穫日・天気・</text>
+  <text x="490" y="120" class="t-sm">果実の成熟度・作業班まで変わっている。</text>
+  <text x="490" y="140" class="t-sm">出た差が何の差なのか、永久に分からない。</text>
+
+  <text x="20" y="212" class="t-lab" fill="var(--accent)">✓ この計画の設計</text>
+  <line x1="20" y1="222" x2="880" y2="222" stroke="var(--accent)" stroke-width="1" opacity=".5"/>
+  <g>
+    <rect x="24" y="244" width="104" height="46" rx="4" fill="var(--accent-soft)" stroke="var(--accent-line)" stroke-width="1.4"/>
+    <text x="76" y="264" text-anchor="middle" class="t-sm">1日で一括収穫</text>
+    <text x="76" y="281" text-anchor="middle" class="t-xs">黄〜初期褐変のみ</text>
+    <line x1="128" y1="267" x2="156" y2="267" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar4)"/>
+
+    <rect x="164" y="244" width="78" height="46" rx="4" class="dg-fill-p" stroke="currentColor" stroke-width="1.4"/>
+    <text x="203" y="272" text-anchor="middle" class="t-sm">よく混ぜる</text>
+    <line x1="242" y1="267" x2="270" y2="267" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar4)"/>
+
+    <rect x="278" y="244" width="104" height="46" rx="4" class="dg-fill-p" stroke="currentColor" stroke-width="1.4"/>
+    <text x="330" y="264" text-anchor="middle" class="t-sm">無作為に分割</text>
+    <text x="330" y="281" text-anchor="middle" class="t-xs">48区 × 1 kg</text>
+    <line x1="382" y1="267" x2="410" y2="267" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar4)"/>
+
+    <rect x="418" y="244" width="104" height="46" rx="4" fill="var(--pink-soft)" stroke="var(--pink-line)" stroke-width="1.4"/>
+    <text x="470" y="264" text-anchor="middle" class="t-sm">乱数で処理割付</text>
+    <text x="470" y="281" text-anchor="middle" class="t-xs">6遅延 × 2条件 × 4反復</text>
+    <line x1="522" y1="267" x2="550" y2="267" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar4)"/>
+
+    <rect x="558" y="244" width="120" height="46" rx="4" fill="var(--accent-soft)" stroke="var(--accent-line)" stroke-width="1.4"/>
+    <text x="618" y="264" text-anchor="middle" class="t-sm">下流は全区共通</text>
+    <text x="618" y="281" text-anchor="middle" class="t-xs">同じ乾燥・同じ抽出</text>
+    <line x1="678" y1="267" x2="706" y2="267" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar4)"/>
+
+    <rect x="714" y="244" width="112" height="46" rx="4" class="dg-fill-p" stroke="currentColor" stroke-width="1.4"/>
+    <text x="770" y="264" text-anchor="middle" class="t-sm">盲検コードで</text>
+    <text x="770" y="281" text-anchor="middle" class="t-sm">滴定</text>
+  </g>
+  <g stroke="currentColor" stroke-width=".9" fill="var(--sunk)">
+    <rect x="284" y="300" width="13" height="13" rx="2"/><rect x="301" y="300" width="13" height="13" rx="2"/>
+    <rect x="318" y="300" width="13" height="13" rx="2"/><rect x="335" y="300" width="13" height="13" rx="2"/>
+    <rect x="352" y="300" width="13" height="13" rx="2"/><rect x="369" y="300" width="13" height="13" rx="2"/>
+    <rect x="284" y="317" width="13" height="13" rx="2"/><rect x="301" y="317" width="13" height="13" rx="2"/>
+    <rect x="318" y="317" width="13" height="13" rx="2"/><rect x="335" y="317" width="13" height="13" rx="2"/>
+    <rect x="352" y="317" width="13" height="13" rx="2"/><rect x="369" y="317" width="13" height="13" rx="2"/>
+  </g>
+  <text x="24" y="352" class="t-sm">処理<tspan font-style="italic">だけ</tspan>が違う区が48個できる。だから出た差は処理の差である。</text>
+  <text x="24" y="378" class="t-xs">1回の分析バッチに全処理を1反復ずつ入れる → 日ごとの分析のブレは「処理の差」ではなく「バッチの差」として分離できる</text>
+</svg>
+<figcaption><span class="fig-n">図 5</span><b>「一括収穫 → 混合 → 無作為分割 → 処理割付」の順序が、この計画のすべてを支えている。</b>
+上の設計は現場で自然にやってしまう形だが、得られたデータからは何も結論できない。順序を入れ替えるだけで、追加費用ゼロで実験が成立する。</figcaption>
+</figure>
+
+<ol>
+<li><strong>交絡を殺す。</strong> 処理以外のすべて(収穫日・成熟度・樹・作業者・乾燥・抽出・分析日)を共通にする。図5のとおり。</li>
+<li><strong>疑似反復をしない。</strong> 同じ油を3回滴定するのは<em>分析反復</em>であって、<em>実験反復</em>ではない。統計の n として数えてよいのは「独立に処理された区の数」だけ。1袋を3つに分けたものは1反復である。<span class="hl">この間違いは論文審査で最も多く指摘される</span>。分析反復はあくまで測定誤差の把握に使い、平均して1つの値にしてから解析に載せる。</li>
+<li><strong>閾値を知りたいなら、回帰で測る。</strong> 「何時間まで大丈夫か」は、いくつかの処理区を総当たりで比較する問題ではなく、<strong>曲線を引いて折れ点を探す</strong>問題である。時間を6水準に刻んで直線または折線回帰(broken-stick / segmented regression)を当てるほうが、同じ手間ではるかに高い精度で閾値が出る。</li>
+<li><strong>先に解析計画を書いて封をする。</strong> データを見てから解析法を選ぶと、必ず「見たい結果」が出てしまう。主要評価項目・モデル式・有意水準・除外基準を、収穫前に文書化して日付を入れる(3-9)。</li>
+<li><strong>盲検化する。</strong> 滴定する人には処理内容を知らせず、試料は乱数コードだけで扱う。終点の見極めには主観が入る余地があるため、これは形式ではなく実質的な防御である。</li>
+<li><strong>ばらつきを先に測る。</strong> 反復数は「4が普通だから4」ではなく、自分たちのσから計算して決める。そのために予備試験を最初に置く(3-8)。</li>
+</ol>
+
+<h3>3-1 実験0 ── 土台づくり(準備期に必ず先に済ませる)</h3>
+
+<div class="exp">
+<div class="exp-h"><span class="exp-code">0-A</span><span class="exp-t">自社品種の吸湿等温線を描く</span></div>
+<div class="exp-b">
+<p>密閉ビンの底に塩の飽和水溶液を入れると、ビンの中の相対湿度が塩ごとに決まった値に固定される。そこに種子を吊るして重量が変わらなくなるまで置けば、その a<sub>w</sub> における平衡水分が分かる。<strong>これだけで図3が自社品種の実データになる。</strong> 費用は数千円。</p>
+<div class="tw"><table>
+<caption>25 °C における飽和塩溶液の平衡相対湿度</caption>
+<thead><tr><th>塩</th><th class="n">RH %</th><th class="n">a&#8342;</th><th>意味</th></tr></thead>
+<tbody>
+<tr><td>塩化リチウム LiCl</td><td class="n">11.3</td><td class="n">0.11</td><td>過乾燥の下限</td></tr>
+<tr><td>塩化マグネシウム MgCl₂</td><td class="n">32.8</td><td class="n">0.33</td><td>安全域</td></tr>
+<tr><td>炭酸カリウム K₂CO₃</td><td class="n">43.2</td><td class="n">0.43</td><td>安全域</td></tr>
+<tr><td>硝酸マグネシウム Mg(NO₃)₂</td><td class="n">52.9</td><td class="n">0.53</td><td>目標貯蔵域</td></tr>
+<tr><td>塩化ナトリウム NaCl(食塩)</td><td class="n">75.3</td><td class="n">0.75</td><td>文献1の低湿区と同じ</td></tr>
+<tr><td>塩化カリウム KCl</td><td class="n">84.3</td><td class="n">0.84</td><td>アフラトキシン域</td></tr>
+</tbody></table></div>
+<p class="small">※ 平衡相対湿度は温度で少し動くので、恒温にした場所(発泡スチロール箱+温度ロガー)で行い、実測温度を記録すること。</p>
+<div class="warn"><span class="tag">ついでにやる価値のある拡張</span>
+<p>各ビンの種子を <strong>7日後・14日後・28日後に取り出してAVを測る</strong> と、a<sub>w</sub> と劣化速度の関係 g(a<sub>w</sub>) が直接1枚のグラフになる。これは図4の予測式の心臓部で、しかも<strong>収穫を待たずに、去年の在庫種子で今すぐ始められる</strong>。本計画で最初に着手すべき実験はこれ。</p></div>
+<dl class="spec">
+<div><dt>要因</dt><dd>6 a&#8342; × 2温度(25/35 °C)</dd></div>
+<div><dt>反復</dt><dd>3</dd></div>
+<div><dt>区数</dt><dd>36 ビン</dd></div>
+<div><dt>期間</dt><dd>3–4週間</dd></div>
+<div><dt>費用</dt><dd>数千円 + 恒温箱</dd></div>
+</dl>
+</div>
+</div>
+
+<div class="exp">
+<div class="exp-h"><span class="exp-code">0-B</span><span class="exp-t">抽出方法を1つに決め、その癖を測る</span></div>
+<div class="exp-b">
+<p><strong>AVは「油」の性質であって「種子」の性質ではない。</strong> 同じ種子でも、圧搾で採った油と溶媒で抽出した油ではAVが違う(遊離脂肪酸はやや極性が高く、溶媒抽出のほうが多く取り出される傾向がある)。だから<span class="hl">全実験で抽出方法を1つに固定する</span>のが絶対条件で、その上で一度だけ換算係数を求めておく。</p>
+<p>推奨は<strong>小型スクリュープレス(または卓上油圧プレス)による機械圧搾</strong>。理由は、溶媒(ヘキサン)は引火性で現地調達・保管・換気の負担が大きく、しかも実際の工場が使う方法に近いため現場への外挿がしやすいから。</p>
+<dl class="spec">
+<div><dt>設計</dt><dd>同一試料を2分割し、圧搾 vs 溶媒で対応のある比較</dd></div>
+<div><dt>反復</dt><dd>20 対</dd></div>
+<div><dt>分析</dt><dd>AV 40 検体</dd></div>
+<div><dt>出力</dt><dd>換算式と95%信頼区間</dd></div>
+</dl>
+</div>
+</div>
+
+<div class="exp">
+<div class="exp-h"><span class="exp-code">0-C</span><span class="exp-t">ハウス標準油と管理図</span></div>
+<div class="exp-b">
+<p>ジャトロファ油を一度に5 L作り、よく混ぜてから 30 mL の褐色瓶に小分けし、満量にして −18 °C で凍結保存する。<strong>これを毎回の分析バッチに1本ずつ混ぜて測る。</strong> 値が管理図(平均±3標準偏差)の中に入っていれば、その日の滴定は信頼できる。外れたら、KOHの標定・溶媒のブランク・指示薬を疑う。</p>
+<p>これがあるかないかで、外部の専門家からの信用が決まる。「あなたのデータの再現性はどう担保していますか」に対して管理図を出せる組織は、アフリカの現場ではほとんどない。</p>
+<dl class="spec">
+<div><dt>作成</dt><dd>5 L × 1バッチ → 150本に小分け</dd></div>
+<div><dt>使用</dt><dd>全分析バッチに1本</dd></div>
+<div><dt>期限</dt><dd>6か月ごとに新バッチと重ね測り</dd></div>
+</dl>
+</div>
+</div>
+
+<div class="exp">
+<div class="exp-h"><span class="exp-code">0-D/E</span><span class="exp-t">滴定の反復精度と、水分計の自家検量線</span></div>
+<div class="exp-b">
+<p><strong>0-D:</strong> 同一の油を5回ずつ、10種類の油について滴定し、繰返し精度(併行精度)を求める。これが後の検出力計算に入る分析誤差 σ<sub>a</sub> になる。</p>
+<p><strong>0-E:</strong> 市販の穀物水分計はジャトロファ用に校正されていないので、そのままでは使えない。<strong>だが自分で検量線を作れば使える。</strong> 水分の異なる30試料について、水分計の読みとISTAオーブン法(103 °C・17時間)の実測値を対にし、回帰式を作る。これができると<span class="hl">現場で数秒で水分が読めるようになり、乾燥管理の解像度が一気に上がる</span>。決定係数 R² &gt; 0.9、標準誤差 &lt; 0.7ポイントを合格ラインとする。</p>
+<dl class="spec">
+<div><dt>0-D</dt><dd>10油 × 5反復 = 50 滴定</dd></div>
+<div><dt>0-E</dt><dd>30 対(水分計 vs オーブン)</dd></div>
+<div><dt>出力</dt><dd>σ<sub>a</sub>、検量線、許容差</dd></div>
+</dl>
+</div>
+</div>
+<h3>3-2 実験A ── 果肉除去は収穫後いつまでにやるべきか</h3>
+
+<div class="exp">
+<div class="exp-h"><span class="exp-code">A</span><span class="exp-t">収穫から果肉除去までの遅延時間 × 保持条件</span></div>
+<div class="exp-b">
+<h4>問い</h4>
+<p>収穫した果実を果肉付きのまま放置したとき、油のAVはどの速さで上がるか。実務上の締切(「〇時間以内に除去せよ」)はどこか。</p>
+<h4>仮説</h4>
+<p>果肉の中は a<sub>w</sub> ≒ 0.99・糖あり・微生物ありという最悪条件なので、<strong>ここでの劣化速度は乾燥工程や保管工程より一桁速い</strong>。さらに山積みは自己発熱と通気不良により、薄層放置より顕著に速い。</p>
+<h4>処理</h4>
+<ul>
+<li><strong>要因1 遅延時間(6水準):</strong> 0 / 12 / 24 / 48 / 96 / 168 時間</li>
+<li><strong>要因2 保持条件(2水準):</strong> ①日陰に薄く広げる(単層、厚さ ≤5 cm) ②麻袋に山積み(現場の実態)</li>
+<li><strong>反復 4</strong> → 6 × 2 × 4 = <strong>48区</strong>、各区 果実 1.0 kg</li>
+</ul>
+<h4>下流の共通化</h4>
+<p>遅延処理が終わった区は、<strong>すべて同一条件で乾燥する</strong>(日陰・送風・薄層で48時間以内に水分7%まで)。ここを共通にしないと、遅延の効果と乾燥の効果が混ざる。抽出も分析バッチも共通(図5)。</p>
+<h4>測定</h4>
+<div class="tw"><table>
+<thead><tr><th>時点</th><th>測る項目</th></tr></thead>
+<tbody>
+<tr><td>連続</td><td>山および薄層の内部温度・相対湿度(ロガー、10分間隔)。外気の温湿度も同時に。</td></tr>
+<tr><td>果肉除去時</td><td>果実の外観スコア(裂開・カビ・変色を0–3で採点、写真を残す)、種子の水分、a<sub>w</sub></td></tr>
+<tr><td>乾燥終了時</td><td>種子水分、a<sub>w</sub>、種子重量(乾物損失)</td></tr>
+<tr><td>油の分析</td><td><strong>AV(主要評価項目)</strong>、油分(%)、PVとK232/K270(0/48/168時間区のみ)、発芽率(0/24/96時間区のみ)</td></tr>
+</tbody></table></div>
+<h4>実施回数</h4>
+<p><strong>3ラウンド</strong>(端境期の収穫1回 + 主収穫期に2回。乾季と雨季寄りの両方を含めること)。年・季節をブロック要因として扱い、「この結論はどの季節でも成り立つか」を検証する。</p>
+<dl class="spec">
+<div><dt>区数</dt><dd>48 × 3ラウンド</dd></div>
+<div><dt>主要評価</dt><dd>AV(mg KOH/g)</dd></div>
+<div><dt>解析</dt><dd>折線回帰で折れ点(=締切)を推定</dd></div>
+<div><dt>必要種子</dt><dd>約 150 kg(果実)</dd></div>
+<div><dt>出力</dt><dd>「除去は〇時間以内」+ 1日遅れごとの AV 増分</dd></div>
+</dl>
+</div>
+</div>
+
+<div class="exp">
+<div class="exp-h"><span class="exp-code">A2</span><span class="exp-t">果実の状態別(樹上完熟・落果・裂開果)</span></div>
+<div class="exp-b">
+<p>実験Aの付随試験。10,000 ha規模では「落ちた実を拾うか、樹から採るか」は労務設計そのものである。パームの知見が「時間ではなく傷+水が犯人」と言っている以上、<strong>収穫の入口ですでにAVが違っている可能性</strong>を確かめておく価値は高い。しかも費用はほぼゼロ。</p>
+<ul>
+<li>①樹上の黄熟果 ②樹上の褐変果 ③裂開しはじめた果実 ④地面に落ちて1〜3日経った果実</li>
+<li>4水準 × 4反復 = <strong>16区</strong>。全区とも即日果肉除去し、共通乾燥。</li>
+</ul>
+<div class="note"><span class="tag">これが効いたら</span><p>もし④のAVが①より 2 mg KOH/g 以上高いなら、<strong>落果は別ロットにして安い用途へ回す</strong>という運用が即座に正当化される。逆に差がなければ、落果回収は堂々と続けられる。どちらに転んでも意思決定に直結する。</p></div>
+<dl class="spec">
+<div><dt>区数</dt><dd>16 × 2ラウンド</dd></div>
+<div><dt>費用</dt><dd>ほぼ追加なし</dd></div>
+<div><dt>出力</dt><dd>収穫時の初期AV基準値</dd></div>
+</dl>
+</div>
+</div>
+
+<h3>3-3 実験B ── 乾燥は「いつまでに」「何%まで」か</h3>
+
+<p>この問いは2つに分けないと答えが出ない。<strong>B1が「締切(速さ)」、B2が「到達点(水分)と、その後どれだけ持つか」</strong>である。</p>
+
+<div class="exp">
+<div class="exp-h"><span class="exp-code">B1</span><span class="exp-t">安全域に入るまでの許容時間(乾燥の速さ)</span></div>
+<div class="exp-b">
+<h4>問い</h4>
+<p>果肉除去した種子が a<sub>w</sub> 0.65 を下回るまでに何時間かかってよいか。</p>
+<h4>処理</h4>
+<p>層の厚さと送風量を変えることで、a<sub>w</sub> 0.65 到達までの時間 t<sub>c</sub> を作り分ける。目標は <strong>約 12 / 24 / 48 / 96 / 192 時間の5水準</strong>。実際の到達時間はロガーと定期秤量で実測し、<span class="hl">設定値ではなく実測 t<sub>c</sub> を説明変数にして回帰する</span>(これにより天候のブレが誤差ではなく情報になる)。</p>
+<ul>
+<li>5水準 × <strong>反復5</strong> = <strong>25区</strong>(閾値を回帰で出すので反復をやや厚くする)</li>
+<li>全区とも最終水分は 6.5 ± 0.5% に揃える。<strong>到達点は同じで、そこに至る速さだけが違う</strong>ようにする</li>
+<li>果肉除去は全区とも収穫当日(実験Aの結果が出たら、その締切内に統一)</li>
+</ul>
+<h4>測定</h4>
+<p>乾燥曲線(重量を2時間ごと)、種子温度、AV、PV、乾物損失、発芽率。<strong>袋詰め48時間後の水分再測定</strong>(核との水分再配分の確認、1-7の専門家の一言)。</p>
+<dl class="spec">
+<div><dt>区数</dt><dd>25 × 2ラウンド</dd></div>
+<div><dt>説明変数</dt><dd>実測 t<sub>c</sub>(時間)</dd></div>
+<div><dt>解析</dt><dd>AV = a + b·t<sub>c</sub> + 折れ点</dd></div>
+<div><dt>出力</dt><dd>「除去後〇時間以内に a&#8342; 0.65 を切ること」</dd></div>
+</dl>
+</div>
+</div>
+
+<div class="exp">
+<div class="exp-h"><span class="exp-code">B2</span><span class="exp-t">到達水分 × 保管月数(この計画で最も長い実験)</span></div>
+<div class="exp-b">
+<h4>問い</h4>
+<p>何%まで乾かせば、何か月保管できるか。文献1が測っていない「途中」を埋める。</p>
+<h4>処理</h4>
+<ul>
+<li><strong>最終水分(5水準):</strong> 4 / 6 / 8 / 10 / 12 %(湿量基準)</li>
+<li>各水準を<strong>密封容器</strong>(厚手のPEまたは金属缶)に入れ、その水分を保持したまま常温倉庫に置く。倉庫の温湿度は通年ロガーで記録</li>
+<li>反復4 → <strong>20ロット</strong>、各ロット 4 kg</li>
+<li><strong>破壊的サンプリング:</strong> 0 / 1 / 3 / 6 / 12 か月に各ロットから 600 g ずつ取り出す → <strong>AV 100検体</strong></li>
+</ul>
+<h4>要点</h4>
+<div class="expert"><span class="tag">専門家の一言</span>
+<p>ここで<strong>密封する</strong>のが設計の肝である。通気させると全ロットが倉庫の湿度に向かって収束し、「初期水分の違い」という要因が数週間で消えてしまう(文献6で水分が 7.59% → 13.71% に上がったのはこれ)。密封すれば水分は要因として固定され、同時に各ロットの a<sub>w</sub> が実験0-Aの等温線から読める。<span class="hl">つまりB2は実質「a<sub>w</sub> を5水準に振った実験」になる</span>。ただし現場の袋詰めは密封ではないので、<strong>「通気麻袋」区を各水準に1反復ずつ追加</strong>して、現実との橋渡しをしておく。</p></div>
+<h4>測定</h4>
+<p>各サンプリングで AV、水分、a<sub>w</sub>、PV、K270、カビの目視スコア、発芽率。倉庫の温湿度は連続記録。</p>
+<dl class="spec">
+<div><dt>区数</dt><dd>20 + 通気5 = 25 ロット</dd></div>
+<div><dt>分析</dt><dd>AV 125 検体</dd></div>
+<div><dt>期間</dt><dd>12 か月(6か月で暫定回答)</dd></div>
+<div><dt>解析</dt><dd>混合モデル(ロットを変量効果)</dd></div>
+<div><dt>出力</dt><dd>水分別の AV 上昇速度 → 賞味期限表</dd></div>
+</dl>
+</div>
+</div>
+
+<h3>3-4 実験C ── 乾燥方式は油の劣化に影響するか</h3>
+
+<div class="exp">
+<div class="exp-h"><span class="exp-code">C</span><span class="exp-t">6方式の比較(品質・種子生存・コストの3面評価)</span></div>
+<div class="exp-b">
+<div class="tw"><table>
+<caption>処理区</caption>
+<thead><tr><th>区</th><th>方式</th><th>この区が答える問い</th></tr></thead>
+<tbody>
+<tr><td class="n">C1</td><td>天日(防水シート/コンクリ床、夜間も屋外)</td><td>現行法の基準値。夜露の影響を含む</td></tr>
+<tr><td class="n">C2</td><td>天日 + 夜間は屋内へ取り込み</td><td><strong>夜露だけを分離して測る</strong></td></tr>
+<tr><td class="n">C3</td><td>日陰・自然通風(開放型乾燥舎)</td><td>光を除いた効果。播種用の慣行法</td></tr>
+<tr><td class="n">C4</td><td>日陰 + 強制送風(ファン、常温)</td><td>光なしで乾燥を速めた場合</td></tr>
+<tr><td class="n">C5</td><td>機械乾燥 40 °C</td><td>種子生存を保てる上限温度での加温</td></tr>
+<tr><td class="n">C6</td><td><strong>60 °C で1時間の熱処理 → 以後 C4 と同じ</strong></td><td><strong>リパーゼを最初に殺す戦略</strong>が成立するか</td></tr>
+</tbody></table></div>
+<p>6方式 × 反復4 = <strong>24区</strong>、各区 種子 3 kg。全区とも果肉除去は収穫当日、最終水分 6.5 ± 0.5% で揃える(<span class="hl">到達点を揃え、そこへの道筋だけを変える</span>)。</p>
+<h4>測定 ── 3つの軸で同時に評価する</h4>
+<div class="grid2">
+<div class="mini"><h4>油の品質</h4><p>AV(主)、PV、K232 / K270、油分。<strong>天日区はAVでは有利に見える可能性が高い</strong>(速く乾くから)。酸化指標を併測しないと、天日の本当のコストが見えない。</p></div>
+<div class="mini"><h4>種子の生存</h4><p>発芽率(ISTA準拠、100粒×4反復)、発芽勢。<strong>36 haの育苗圃場と10,000 haの移植計画がある以上、これは油と同格の評価項目である。</strong>C6で油が良くても発芽が死ぬなら、用途別に工程を分ける判断になる。</p></div>
+<div class="mini"><h4>コストと現実性</h4><p>乾燥時間、必要面積(m²/t)、電力・燃料消費、必要人工(人時/t)、雨天時の頑健性。最終的に <strong>US$/t</strong> と <strong>AV低減量</strong> の比で並べる。</p></div>
+</div>
+<dl class="spec">
+<div><dt>区数</dt><dd>24 × 2ラウンド</dd></div>
+<div><dt>分析</dt><dd>AV 48 / PV 48 / 発芽 48</dd></div>
+<div><dt>解析</dt><dd>一元配置 + 事前計画対比</dd></div>
+<div><dt>出力</dt><dd>方式別の品質・生存・単価の3面表</dd></div>
+</dl>
+<div class="note"><span class="tag">事前に決めておく対比(contrast)</span>
+<p>「全部を総当たりで比べる」のではなく、答えたい問いを先に3つの対比として書いておく。こうすると多重比較の補正が軽くなり、検出力が上がる。<br>
+① <strong>光の効果:</strong> (C1+C2)/2 対 (C3+C4)/2 &nbsp;&nbsp; ② <strong>夜露の効果:</strong> C1 対 C2 &nbsp;&nbsp; ③ <strong>リパーゼ失活の効果:</strong> C4 対 C6</p></div>
+</div>
+</div>
+
+<h3>3-5 実験D ── 自社の品種でどう測るか</h3>
+
+<p>ここが「これを自社の品種でどう測れるか」への直接の答えになる。2段構えにする。</p>
+
+<div class="exp">
+<div class="exp-h"><span class="exp-code">D1</span><span class="exp-t">自社系統の基準特性カルテ</span></div>
+<div class="exp-b">
+<p>Tanheia(Linhas)/ 7 de Abril(Blocos)/ Índia 17 の各系統について、下の項目を一度きちんと測って台帳にする。これは実験というより<strong>資産の棚卸し</strong>で、以後すべての議論の基準線になる。</p>
+<div class="tw"><table>
+<thead><tr><th>項目</th><th>方法</th><th>実施</th></tr></thead>
+<tbody>
+<tr><td>種子重(千粒重)・殻/核比・種子寸法</td><td>自社</td><td class="n">全系統</td></tr>
+<tr><td>油分(%乾物)</td><td>自社(圧搾 + 残渣の溶媒抽出)</td><td class="n">全系統</td></tr>
+<tr><td>収穫時 AV(初期値)</td><td>自社滴定</td><td class="n">全系統 × 4反復</td></tr>
+<tr><td>脂肪酸組成(GC-FAME)</td><td><strong>外注</strong>(IIAM または南ア認定ラボ)</td><td class="n">系統あたり2検体</td></tr>
+<tr><td>トコフェロール(特に γ)</td><td><strong>外注</strong>(HPLC)</td><td class="n">系統あたり2検体</td></tr>
+<tr><td>吸湿等温線</td><td>自社(実験0-A)</td><td class="n">代表2系統</td></tr>
+</tbody></table></div>
+<p class="small">γ-トコフェロールは文献1でモザンビーク産種子に160 mg/kg見つかり、酸化への高い抵抗性の理由とされている。自社系統にもこれがあるかどうかで、「酸化対策と加水分解対策のどちらに投資すべきか」の優先順位が変わる。</p>
+</div>
+</div>
+
+<div class="exp">
+<div class="exp-h"><span class="exp-code">D2</span><span class="exp-t">後収穫脆弱性指数(LSI)── 系統を1週間でふるいにかける道具</span></div>
+<div class="exp-b">
+<p>本命はこちら。<strong>標準化した過酷条件に7日間さらし、AVの上昇量だけを見る</strong>という単純な試験を定義する。</p>
+<div class="eq">
+LSI = AV(7日後) − AV(0日)&nbsp;&nbsp;&nbsp;条件: 35 °C、a<sub>w</sub> 0.92(KNO₃ 飽和液の代わりに KCl+加湿で調整)、暗所、種子は無傷のまま
+<span class="where">文献1の92% RH区とほぼ同じ条件を、42日ではなく<b>7日</b>に短縮したもの。文献1の速度(0.583 %FFA/日 ≒ AV 1.16/日)が線形なら、7日で ΔAV ≈ 8。系統間の差を検出するには十分な大きさになるはず。予備試験で確認する。</span>
+</div>
+<ul>
+<li>系統5 × 反復4 × (0日, 7日) = <strong>AV 40検体</strong>、期間わずか1週間、収穫期に依存しない</li>
+<li>試験に使う種子は<strong>同じ乾燥履歴のもの</strong>に揃える(履歴が違えば初期AVが違い、比較にならない)</li>
+</ul>
+<div class="note"><span class="tag">なぜこれが価値を持つか</span>
+<p>10,000 haに植える系統をこれから選ぶ。従来の選抜基準は「収量」「油分」「耐病性」だが、<span class="hl">LSIを加えれば「収穫後に壊れにくい」という形質でも選べる</span>。試験は1週間・数千円で回るので、新しい選抜個体が出るたびに常時スクリーニングできる。育種の道具を1つ増やす仕事だと考えてよい。将来、LSIと相関する簡易形質(殻の厚さ、種子含水率の落ちやすさ、トコフェロール量)が見つかれば、さらに安くなる。</p></div>
+<dl class="spec">
+<div><dt>系統</dt><dd>5(拡張可)</dd></div>
+<div><dt>期間</dt><dd>1週間 / 回</dd></div>
+<div><dt>分析</dt><dd>AV 40</dd></div>
+<div><dt>出力</dt><dd>系統別 LSI ランキング</dd></div>
+</dl>
+</div>
+</div>
+
+<h3>3-6 実験E ── 実規模での確認(最後の関門)</h3>
+
+<div class="exp">
+<div class="exp-h"><span class="exp-code">E</span><span class="exp-t">現行工程 vs 新SOP の実ロット比較</span></div>
+<div class="exp-b">
+<p>小さな区で得た結論が、実際の数百kgのロットと現場の人手でも再現するとは限らない。<strong>小規模試験の結論が実規模で消えるのは、農学では日常茶飯事である。</strong> だから最後に必ずこれを置く。</p>
+<ul>
+<li>2拠点(Tanheia / 7 de Abril)× 2工程(現行 / 新SOP)× 3ロット = <strong>12大ロット</strong>、各 200–500 kg</li>
+<li>各ロットから無作為に3か所サンプリング → 36検体。<strong>ロット内のばらつき</strong>も同時に評価する(これが実は最重要の情報。平均が良くても一部が悪ければ、混ぜた瞬間に全部が悪くなる)</li>
+<li>作業時間・人工・追加コストも記録し、<strong>「AVを1下げるのにいくらかかったか」</strong>を出す</li>
+<li>図4の予測式に温湿度ログを入れて予測したAVと、実測AVを突き合わせる(<strong>モデルの検証</strong>)</li>
+</ul>
+<dl class="spec">
+<div><dt>ロット</dt><dd>12(200–500 kg)</dd></div>
+<div><dt>分析</dt><dd>AV 36 + 予測との照合</dd></div>
+<div><dt>時期</dt><dd>18–21 か月目</dd></div>
+<div><dt>出力</dt><dd>SOP最終版 + 費用対効果</dd></div>
+</dl>
+</div>
+</div>
+<h3>3-7 全体の規模 ── 本当に回るのか</h3>
+
+<div class="tw">
+<table>
+<caption>分析検体数と必要資源の見積もり(2年間合計)</caption>
+<thead><tr><th>実験</th><th class="n">区数</th><th class="n">ラウンド</th><th class="n">AV検体</th><th class="n">必要種子/果実</th><th>時期</th></tr></thead>
+<tbody>
+<tr><td>0-A 等温線(+ a<sub>w</sub>別劣化)</td><td class="n">36</td><td class="n">1</td><td class="n">54</td><td class="n">5 kg</td><td>準備期</td></tr>
+<tr><td>0-B 抽出法比較</td><td class="n">20対</td><td class="n">1</td><td class="n">40</td><td class="n">10 kg</td><td>準備期</td></tr>
+<tr><td>0-D 併行精度</td><td class="n">—</td><td class="n">1</td><td class="n">50</td><td class="n">3 kg</td><td>準備期</td></tr>
+<tr><td><strong>A</strong> 果肉除去の遅延</td><td class="n">48</td><td class="n">3</td><td class="n">144</td><td class="n">150 kg 果実</td><td>M4–M17</td></tr>
+<tr><td><strong>A2</strong> 果実の状態</td><td class="n">16</td><td class="n">2</td><td class="n">32</td><td class="n">35 kg 果実</td><td>M4–M12</td></tr>
+<tr><td><strong>B1</strong> 乾燥の速さ</td><td class="n">25</td><td class="n">2</td><td class="n">50</td><td class="n">75 kg</td><td>M5–M13</td></tr>
+<tr><td><strong>B2</strong> 到達水分 × 保管</td><td class="n">25</td><td class="n">1</td><td class="n">125</td><td class="n">100 kg</td><td>M5–M18</td></tr>
+<tr><td><strong>C</strong> 乾燥方式</td><td class="n">24</td><td class="n">2</td><td class="n">48</td><td class="n">145 kg</td><td>M8–M16</td></tr>
+<tr><td><strong>D</strong> 品種カルテ + LSI</td><td class="n">—</td><td class="n">2</td><td class="n">60</td><td class="n">25 kg</td><td>M6–M14</td></tr>
+<tr><td><strong>E</strong> 実規模検証</td><td class="n">12</td><td class="n">1</td><td class="n">36</td><td class="n">4 t(通常生産分)</td><td>M18–M21</td></tr>
+<tr><td>QC(標準油・ブランク)15%</td><td class="n">—</td><td class="n">—</td><td class="n">96</td><td class="n">5 L</td><td>通年</td></tr>
+<tr style="background:var(--accent-soft)"><td><strong>合計</strong></td><td class="n">—</td><td class="n">—</td><td class="n"><strong>約 735</strong></td><td class="n"><strong>約 550 kg</strong><br>(+ 実規模4 t)</td><td>23 か月</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>AV検体735、それぞれ<strong>2回滴定</strong>するので約1,470回。23か月で割ると<strong>月およそ64回、週16回</strong>。1回20分として週に約5時間。技師2名なら、他の作業と併せて十分に回る。</p>
+
+<p>種子は550 kg。直近の実績(2025年4月〜2026年3月に1,200 kg、2026年4月〜8月に900 kg)から見て、<span class="hl">年間生産量の3割弱を2年に分けて使う計算</span>になる。搾油や販売に回す分を圧迫する可能性があるので、<strong>どの区画の樹を試験用に確保するかを事前に決めて地図に落としておくこと</strong>。既存の25,000本のうち、生育の揃った一群を「試験用ブロック」として指定するのが望ましい。</p>
+
+<h3>3-8 反復数は勘で決めない</h3>
+
+<p>「n = 3で足りますか」という質問には、σ(ばらつき)を測るまで答えられない。必要な反復数は次式で決まる。</p>
+
+<div class="eq">
+n ≥ <b>2 (z<sub>α/2</sub> + z<sub>β</sub>)² σ² / Δ²</b> = 15.7 × σ² / Δ²&nbsp;&nbsp;&nbsp;(両側 α = 0.05、検出力 80%)
+<span class="where">σ = 区間のばらつき(標準偏差、mg KOH/g)、Δ = 検出したい差(mg KOH/g)。<b>Δ は「統計的に出したい差」ではなく「経営判断が変わる差」で決める。</b> AV 判定帯(緑2 / 黄5)の幅を考えると、実務上意味を持つ差は <b>Δ = 1.0</b> 程度。</span>
+</div>
+
+<div class="tw">
+<table>
+<caption>σ の想定別に必要な反復数</caption>
+<thead><tr><th class="n">σ</th><th class="n">Δ = 0.5</th><th class="n">Δ = 1.0</th><th class="n">Δ = 2.0</th><th>備考</th></tr></thead>
+<tbody>
+<tr><td class="n">0.3</td><td class="n">6</td><td class="n">2</td><td class="n">2</td><td>分析誤差だけならこの程度</td></tr>
+<tr><td class="n">0.5</td><td class="n">16</td><td class="n"><strong>4</strong></td><td class="n">2</td><td><strong>本計画の想定</strong></td></tr>
+<tr><td class="n">0.8</td><td class="n">41</td><td class="n">11</td><td class="n">3</td><td>ばらつきが大きい場合</td></tr>
+<tr><td class="n">1.2</td><td class="n">91</td><td class="n">23</td><td class="n">6</td><td>この場合は設計を見直す</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="warn"><span class="tag">だから準備期に予備試験を置く</span>
+<p>σ の想定 0.5 は仮置きにすぎない。<strong>準備期に実験Aの縮小版(遅延 0 / 48 / 168時間 × 2反復 = 6区)を回して、自分たちの σ を実測する。</strong> σ が 0.8 を超えるようなら、反復を増やすのではなく<em>まず原因を潰す</em>——サンプリング法、混合の均一性、抽出のばらつき。反復を増やして誤魔化すのは最後の手段である。</p></div>
+
+<div class="expert"><span class="tag">専門家の一言</span>
+<p>上の表は「2群を比べる」場合の数字だが、本計画の主要な問いは<strong>回帰</strong>で答える。時間を6水準に刻んで直線を当てる場合、傾きの検定は同じ総サンプル数でも大幅に有利になる(水準が両端に広がるほど傾きの推定精度は上がる)。<span class="hl">「6水準 × 4反復 = 24区で傾きを推定する」ほうが、「2水準 × 12反復 = 24区で平均を比べる」より、閾値を知る目的にははるかに強い。</span>これを説明できると、統計の専門家との議論で主導権が取れる。</p></div>
+
+<h3>3-9 解析計画(データを見る前に確定させる)</h3>
+
+<div class="tw">
+<table>
+<thead><tr><th>項目</th><th>事前に決めておく内容</th></tr></thead>
+<tbody>
+<tr><td>主要評価項目</td><td>油の酸価 AV(mg KOH/g、圧搾油、実験0-Bで固定した方法)。区あたり2回滴定の平均を1つの値とする</td></tr>
+<tr><td>副次評価項目</td><td>PV、K232、K270、油分、発芽率、乾物損失、カビスコア</td></tr>
+<tr><td>実験A のモデル</td><td><span class="k">AV ~ 遅延時間 × 保持条件 + (1|ラウンド) + (1|分析バッチ)</span>。遅延時間は連続変数。折線回帰で折れ点とその95%信頼区間を推定する</td></tr>
+<tr><td>実験B2 のモデル</td><td><span class="k">AV ~ 水分 × 月数 + (1|ロット)</span> の線形混合モデル。水分ごとの傾き k(水分) を推定し、続いて等温線で a<sub>w</sub> に変換して g(a<sub>w</sub>) を当てる</td></tr>
+<tr><td>実験C のモデル</td><td>一元配置分散分析 + 事前計画対比3本(3-4)。多重比較の補正は対比3本に対してのみ</td></tr>
+<tr><td>統合モデル</td><td>全データを使い <span class="k">dAV/dt = k₀ · g(a&#8342;) · Q₁₀^((T−30)/10)</span> を非線形回帰でフィット。Q₁₀ と g のパラメータを推定し、実験Eで検証</td></tr>
+<tr><td>有意水準</td><td>α = 0.05(両側)。<strong>ただし p値だけを報告しない。効果量と95%信頼区間を必ず併記する</strong></td></tr>
+<tr><td>欠測・除外</td><td>盗難・獣害・豪雨による滅失は理由を記録して除外(欠測は解析上許容)。<strong>「値が変だから」という理由での除外は禁止</strong>。外れ値は残したまま解析し、感度分析として除外版も併記</td></tr>
+<tr><td>盲検</td><td>試料は乱数4桁コードのみで分析室に渡す。対応表は分析責任者以外が保持</td></tr>
+<tr><td>ソフト</td><td>R(lme4、segmented、emmeans)または Python(statsmodels)。<strong>解析スクリプトと生データを社内で版管理する</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note"><span class="tag">この文書に日付を入れて封をする</span>
+<p>上の表を確定させ、日付とともに保存(できればコミットして版を残す)してから収穫を始める。<strong>これが「後から都合よく解析した」という批判に対する唯一の防御であり、同時に自分自身に対する防御でもある。</strong> 変更する場合は、変更理由と日付を追記する形で残し、上書きしない。</p></div>
+
+<hr class="rule">
+<h2 id="s4"><span class="num">Part 4 — 測定編</span>AVをどこで、どうやって測るか</h2>
+
+<h3>4-1 4つの選択肢と、その決定的な違い</h3>
+
+<p>選択肢は「日本から運ぶ / 南アで買う / IIAMに委託する」と挙げられていたが、これらは<strong>同じ軸の選択肢ではない</strong>。「どこで測るか」と「機材をどこから調達するか」は別の問題で、分けて考えると答えが出る。まず「どこで測るか」を見る。</p>
+
+<figure>
+<svg viewBox="0 0 900 375" role="img" aria-label="酸価測定を自社ラボ、IIAM、南アフリカの受託ラボ、日本で行った場合の、試料採取から数値が手元に届くまでの所要日数の比較。">
+  <!-- axis -->
+  <line x1="150" y1="330" x2="850" y2="330" stroke="currentColor" stroke-width="1.2"/>
+  <g class="t-xs" text-anchor="middle">
+    <text x="150" y="350">0</text><text x="266" y="350">10</text><text x="383" y="350">20</text>
+    <text x="500" y="350">30</text><text x="616" y="350">40</text><text x="733" y="350">50</text><text x="850" y="350">60</text>
+  </g>
+  <text x="500" y="370" text-anchor="middle" class="t-sm">試料採取から数値が手元に届くまでの日数</text>
+  <g stroke="currentColor" stroke-width=".6" opacity=".15">
+    <line x1="266" y1="50" x2="266" y2="330"/><line x1="383" y1="50" x2="383" y2="330"/>
+    <line x1="500" y1="50" x2="500" y2="330"/><line x1="616" y1="50" x2="616" y2="330"/><line x1="733" y1="50" x2="733" y2="330"/>
+  </g>
+
+  <!-- A -->
+  <text x="140" y="76" text-anchor="end" class="t-lab">A 自社ラボ</text>
+  <text x="140" y="93" text-anchor="end" class="t-xs">現場</text>
+  <rect x="150" y="60" width="12" height="24" rx="3" fill="var(--accent)"/>
+  <rect x="162" y="60" width="12" height="24" rx="3" fill="var(--accent)" opacity=".35"/>
+  <text x="186" y="77" class="t-sm" fill="var(--accent)">1–2日</text>
+  <text x="850" y="70" text-anchor="end" class="t-sm">US$ 3–5 / 検体</text>
+  <text x="850" y="88" text-anchor="end" class="t-xs">初期投資 US$ 12–18k</text>
+
+  <!-- C -->
+  <text x="140" y="146" text-anchor="end" class="t-lab">C IIAM</text>
+  <text x="140" y="163" text-anchor="end" class="t-xs">マプト</text>
+  <rect x="150" y="130" width="82" height="24" rx="3" fill="var(--s1)"/>
+  <rect x="232" y="130" width="163" height="24" rx="3" fill="var(--s1)" opacity=".35"/>
+  <text x="408" y="147" class="t-sm" fill="var(--s1)">7–21日(要照会)</text>
+  <text x="850" y="140" text-anchor="end" class="t-sm">要見積</text>
+  <text x="850" y="158" text-anchor="end" class="t-xs">陸送・国内なので許可不要</text>
+
+  <!-- B -->
+  <text x="140" y="216" text-anchor="end" class="t-lab">B 南アの受託ラボ</text>
+  <text x="140" y="233" text-anchor="end" class="t-xs">ヨハネスブルグ等</text>
+  <rect x="150" y="200" width="163" height="24" rx="3" fill="var(--amber)"/>
+  <rect x="313" y="200" width="245" height="24" rx="3" fill="var(--amber)" opacity=".35"/>
+  <text x="570" y="217" class="t-sm" fill="var(--amber)">14–35日</text>
+  <text x="850" y="210" text-anchor="end" class="t-sm">US$ 30–60 / 検体 + 輸送</text>
+  <text x="850" y="228" text-anchor="end" class="t-xs">輸出許可・輸送中の劣化</text>
+
+  <!-- D -->
+  <text x="140" y="286" text-anchor="end" class="t-lab">D 日本へ送る</text>
+  <text x="140" y="303" text-anchor="end" class="t-xs">空輸</text>
+  <rect x="150" y="270" width="327" height="24" rx="3" fill="var(--red)"/>
+  <rect x="477" y="270" width="326" height="24" rx="3" fill="var(--red)" opacity=".35"/>
+  <text x="815" y="287" class="t-sm" fill="var(--red)">28–56日</text>
+  <text x="850" y="256" text-anchor="end" class="t-xs">濃い部分 = 最短、薄い部分 = 現実的な上限</text>
+  <text x="150" y="30" class="t-sm">実験は「次に何をするか」を結果を見て決める。<tspan fill="var(--red)">28日待つ実験は、実質やり直しが利かない。</tspan></text>
+</svg>
+<figcaption><span class="fig-n">図 6</span><b>費用の差より、回転の速さの差のほうが決定的である。</b>
+735検体を外注すると、費用は US$22,000–44,000(自社実施の約10倍)。だがそれ以上に、乾燥試験のように<strong>結果を見ながら条件を追い込む必要のある実験は、回答に1か月かかると成立しない</strong>。自社ラボは「安いから」ではなく「実験が回るから」選ぶ。</figcaption>
+</figure>
+
+<div class="note"><span class="tag">推奨する組み合わせ</span>
+<ul style="margin-bottom:0">
+<li><strong>主軸は A(自社ラボ)。</strong> AVと水分と a<sub>w</sub> は全部自前で測る。滴定は高校化学の中和滴定であり、品質管理(4-4)さえきちんと組めば現地で十分な精度が出る。</li>
+<li><strong>Bを「照合」に使う。</strong> 年2回、各20検体を同じ試料から二分して南アの認定ラボにも出し、自社値と突き合わせる。差が系統的にあれば補正係数を出す。<span class="hl">これがあると自社データが外部に対して説明可能になる</span>。年間の費用は US$1,500–2,500 程度に収まる。</li>
+<li><strong>Cを「提携先」に使う。</strong> IIAMには、自社で出来ない分析(GC-FAME、トコフェロールHPLC)と、公的な信頼性・共同研究としての位置づけを求める。<strong>まず能力照会の公式レターを出すこと</strong>——分析項目・稼働状況・所要日数・費用・受入条件を書面で確認するまで、計画の前提にしない。国内なので輸出許可が不要という利点は大きい。</li>
+<li><strong>Dは「調達ルート」として使う。</strong> 日本は分析の委託先ではなく、<strong>精密機材と一次標準の入手先</strong>と位置づける(4-2)。</li>
+</ul></div>
+
+<div class="warn"><span class="tag">見落とされがちな制約 ── 薬品は空輸できない</span>
+<p>イソプロパノール、トルエン、エタノール、ヘキサンはいずれも<strong>引火性液体(IATA危険物クラス3)</strong>、水酸化カリウムは<strong>腐食性固体(クラス8)</strong>。旅客機の手荷物・預け荷物では持ち込めず、貨物でも危険物申告と専用手配が要る。<span class="hl">溶媒と苛性アルカリは南アフリカまたはマプトの工業薬品業者から現地調達する以外にない。</span>逆に、日本から持ち込むべきものは<strong>危険物に当たらない精密機材と標準物質</strong>である:分析天秤、デジタルビュレット、フタル酸水素カリウム(一次標準・非危険物)、フェノールフタレイン粉末(少量)、精密ガラス器具、シリカゲル。<strong>フェノールフタレインは粉末で持ち込み、溶液は現地のエタノールで調製する</strong>のが正解。</p></div>
+
+<h3>4-2 自社ラボの機材リスト</h3>
+
+<div class="tw">
+<table>
+<caption>初期投資(概算・US$)</caption>
+<thead><tr><th>品目</th><th>仕様</th><th class="n">概算</th><th>調達</th></tr></thead>
+<tbody>
+<tr><td><strong>分析天秤</strong></td><td>220 g / 0.001 g、風防付き</td><td class="n">500–900</td><td>日本</td></tr>
+<tr><td><strong>デジタルビュレット</strong></td><td>25 mL、瓶取付型(Brand / Hirschmann 等)</td><td class="n">400–700</td><td>日本</td></tr>
+<tr><td>予備のガラスビュレット</td><td>25 mL クラスA + スタンド ×2</td><td class="n">150</td><td>南ア</td></tr>
+<tr><td><strong>乾燥器</strong></td><td>50 L、~250 °C、送風付き、温度精度±2 °C</td><td class="n">700–1,400</td><td>南ア</td></tr>
+<tr><td>デシケーター + シリカゲル</td><td>φ250 ×2</td><td class="n">150</td><td>日本/南ア</td></tr>
+<tr><td>マグネチックスターラー</td><td>撹拌子付き ×2</td><td class="n">200</td><td>南ア</td></tr>
+<tr><td>ガラス器具一式</td><td>三角フラスコ250 mL ×20、メスフラスコ、ホールピペット、秤量皿</td><td class="n">400</td><td>日本+南ア</td></tr>
+<tr><td><strong>小型圧搾機</strong></td><td>スクリュー式 5–20 kg/h + 少量試料用の卓上油圧プレス</td><td class="n">800–2,500</td><td>南ア/中国</td></tr>
+<tr><td><strong>冷凍庫</strong></td><td>チェスト型 100–200 L、−18 °C</td><td class="n">300–500</td><td>現地</td></tr>
+<tr><td>温湿度ロガー</td><td>小型 ×20(実験用)+ 高精度 ×3(校正用)</td><td class="n">600–1,200</td><td>日本</td></tr>
+<tr><td>水分活性 測定治具</td><td>密閉容器 + デジタル湿度計 ×8 + 校正用飽和塩6種</td><td class="n">150</td><td>南ア</td></tr>
+<tr><td>(任意)水分活性計</td><td>専用機。予算が許せば精度と速度が段違い</td><td class="n">2,500–5,000</td><td>日本/南ア</td></tr>
+<tr><td>穀物水分計</td><td>自家検量線を作って使う(実験0-E)</td><td class="n">200–500</td><td>南ア</td></tr>
+<tr><td><strong>電源のバックアップ</strong></td><td>乾燥器と冷凍庫用。UPS + 発電機または太陽光</td><td class="n">1,500–3,000</td><td>現地</td></tr>
+<tr><td>作業環境</td><td>作業台、換気扇、消火器、洗眼器、保護具</td><td class="n">800</td><td>現地</td></tr>
+<tr style="background:var(--accent-soft)"><td colspan="2"><strong>機材 小計</strong></td><td class="n"><strong>6,850 – 12,200</strong></td><td>(水分活性計を入れると +5,000)</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tw">
+<table>
+<caption>消耗品(2年分・概算 US$)</caption>
+<thead><tr><th>品目</th><th>用途と量の目安</th><th class="n">概算</th></tr></thead>
+<tbody>
+<tr><td>イソプロパノール(またはIPA:トルエン 1:1)</td><td>滴定溶媒。1検体50 mL × 1,470回 ≒ 75 L</td><td class="n">700–1,400</td></tr>
+<tr><td>水酸化カリウム(ペレット、試薬級)</td><td>0.1 N 調製用。約 2 kg</td><td class="n">150</td></tr>
+<tr><td>フタル酸水素カリウム(一次標準)</td><td>KOHの標定用。500 g</td><td class="n">120</td></tr>
+<tr><td>フェノールフタレイン + アルカリブルー6B</td><td>指示薬。濃色油にはアルカリブルーを使う</td><td class="n">100</td></tr>
+<tr><td>褐色スクリューバイアル 30 mL</td><td>油試料の保存。800本</td><td class="n">400</td></tr>
+<tr><td>ヘキサン(実験0-Bの溶媒抽出のみ)</td><td>少量。換気と防火を厳守</td><td class="n">200</td></tr>
+<tr><td>飽和塩用の試薬6種、シリカゲル、ろ紙、手袋等</td><td>—</td><td class="n">400</td></tr>
+<tr><td>外注分析(GC-FAME、トコフェロール、照合AV、PV)</td><td>D1 + 年2回の照合</td><td class="n">4,000–7,000</td></tr>
+<tr style="background:var(--accent-soft)"><td colspan="2"><strong>消耗品・外注 小計</strong></td><td class="n"><strong>6,070 – 9,770</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<p><strong>資材費の合計はおよそ US$ 13,000 – 22,000</strong>(水分活性計と予備費15%を足すと 22,000 – 33,000)。人件費と輸送費は別途。10,000 haの工程設計を左右する判断材料としては、十分に小さい投資である。</p>
+<h3>4-3 酸価の測定手順(AOCS Cd 3d-63 / ISO 660 準拠)</h3>
+
+<h4>試薬の準備</h4>
+<ol>
+<li><strong>0.1 N KOH溶液:</strong> KOHペレット約5.6 gを、イソプロパノール(または95%エタノール)に溶かして1 Lにする。<span class="hl">濃度は「作った値」ではなく「標定した値」を使う</span>。褐色瓶に入れ、ソーダライム管を付けて空気中のCO₂を遮る。</li>
+<li><strong>標定:</strong> フタル酸水素カリウム(KHP、分子量204.22)を105 °Cで2時間乾燥し、約0.4 gを0.1 mgまで正確に量り、水20 mLに溶かしてKOHで滴定する。<div class="eq">N = <b>m<sub>KHP</sub> / (0.20422 × V)</b>&nbsp;&nbsp;&nbsp;m はグラム、V は mL<span class="where">3回行い、相対標準偏差が0.5%以内なら平均を採用する。<b>アルコール性KOHは徐々に濃度が下がる</b>(CO₂の吸収とエステル化)ので、<b>週1回、および新しい瓶を開けるたびに標定し直す</b>。ここを怠ると、全データが静かに間違う。</span></div></li>
+<li><strong>滴定溶媒:</strong> イソプロパノール:トルエン = 1:1(容量比)。使用直前に、フェノールフタレインを加えて<strong>ごく薄い桃色になるまでKOHで中和しておく</strong>(溶媒自体の酸を打ち消す=ブランク補正)。トルエンが入手できない場合はイソプロパノール単独でもよいが、その場合は50–60 °Cに温めて油を完全に溶かすこと。</li>
+</ol>
+
+<h4>本試験</h4>
+<ol>
+<li>油を三角フラスコに <strong>0.001 gまで正確に</strong>量り取る(質量は下表参照)。</li>
+<li>中和済みの溶媒 50 mL を加え、完全に溶けるまで撹拌する。溶け残りがあると終点が早く出る。</li>
+<li>フェノールフタレイン 2–3滴(濃色の油ではアルカリブルー6B)。</li>
+<li>0.1 N KOH で滴定。<strong>桃色が30秒間消えなければ終点。</strong> 撹拌しながら、終点付近は1滴ずつ。</li>
+<li>同じ試料で<strong>2回</strong>行う。差が0.1 mg KOH/g または相対5%を超えたら、3回目を行う。</li>
+<li>ブランク(油なし・溶媒だけ)を各バッチで1回。</li>
+</ol>
+
+<div class="eq">AV = <b>(V<sub>試料</sub> − V<sub>ブランク</sub>) × N × 56.1 / W</b></div>
+
+<div class="expert"><span class="tag">専門家の一言 ── 滴下量を「ビュレットの2〜8割」に収める</span>
+<p>滴下量が1 mLでは、0.05 mLの読み取り誤差が5%の誤差になる。逆に満量近くだと途中で足す手間が増え、誤差源になる。<strong>予想されるAVに応じて、試料量と滴定液濃度を変える</strong>のが正しいやり方である。式 <span class="k">V = AV × W / (56.1 × N)</span> から逆算する。</p>
+<div class="tw" style="margin-bottom:0"><table>
+<thead><tr><th>予想 AV</th><th class="n">試料量 W</th><th class="n">KOH 濃度 N</th><th class="n">滴下量 V の目安</th><th>該当する場面</th></tr></thead>
+<tbody>
+<tr><td class="n">1 – 4</td><td class="n">10 g</td><td class="n">0.05 N</td><td class="n">3.6 – 14.3 mL</td><td>新鮮な種子、良好な処理区</td></tr>
+<tr><td class="n">4 – 15</td><td class="n">5 g</td><td class="n">0.1 N</td><td class="n">3.6 – 13.4 mL</td><td>標準的な処理区</td></tr>
+<tr><td class="n">15 – 60</td><td class="n">2 g</td><td class="n">0.1 N</td><td class="n">5.4 – 21.4 mL</td><td>劣悪区、LSI試験の7日後</td></tr>
+</tbody></table></div>
+</div>
+
+<h3>4-4 品質管理 ── データが信用されるかどうかは、ここで決まる</h3>
+
+<div class="grid2">
+<div class="mini"><h4>毎バッチに入れるもの</h4><p>①ブランク1本 ②ハウス標準油1本(実験0-C) ③盲検コードで並べ替えた試料。標準油の値を毎回<strong>管理図</strong>に打点し、平均±3σを外れたらそのバッチは無効にして原因を追う。</p></div>
+<div class="mini"><h4>1バッチに全処理を入れる</h4><p>処理区を日ごとに分けて分析すると、分析日の差が処理の差に化ける。<strong>1回のバッチに全処理を1反復ずつ</strong>入れ、バッチをブロック要因として解析する。</p></div>
+<div class="mini"><h4>週1回の標定</h4><p>アルコール性KOHの濃度は下がる。標定の記録を日付とともに残し、各測定日にどの標定値を使ったかを追跡できるようにする。</p></div>
+<div class="mini"><h4>年2回の外部照合</h4><p>同じ試料を二分し、20検体を認定ラボへ。系統的な差(バイアス)と、ばらつきの差(精度)を分けて評価する。Bland-Altman プロットが分かりやすい。</p></div>
+</div>
+
+<h3>4-5 水分と水分活性を安く正確に測る</h3>
+
+<h4>水分 ── ISTA低温恒温法が基準</h4>
+<p>油分の多い種子は高温で油が酸化して重量が変わるため、<strong>103 ± 2 °C で 17 ± 1 時間</strong>という「低温・長時間」が基準法になる(ISTA)。手順:種子を粉砕し、秤量皿に約4–5 gを0.001 gまで量り、乾燥器へ。取り出したら<strong>必ずデシケーター内で室温まで冷ましてから</strong>再秤量する(熱いまま量ると空気の浮力と吸湿で狂う)。2反復。</p>
+<div class="eq">水分(%, 湿量基準) = <b>(m<sub>乾燥前</sub> − m<sub>乾燥後</sub>) / m<sub>乾燥前</sub> × 100</b></div>
+<p class="small">日常管理には実験0-Eで検量線を作った水分計を使い、<strong>週1回はオーブン法で照合する</strong>。全ての公式データはオーブン法で取る。</p>
+
+<h4>水分活性 ── 密閉ビン + 湿度計で十分に戦える</h4>
+<p>専用の水分活性計は高価だが、原理は「試料と平衡した空気の相対湿度を測る」だけである。<strong>気密容器に試料を半分ほど入れ、小型デジタル湿度計を封入して2–4時間放置し、読みが安定したら a<sub>w</sub> = RH/100</strong>。精度は ±0.03 程度で、0.5〜0.9の判断には十分。</p>
+<div class="note"><span class="tag">湿度計は必ず校正する</span>
+<p>安価な湿度計は数%ずれている。実験0-Aで使う飽和塩溶液(MgCl₂ 33% / NaCl 75% / KCl 84%)にそのまま入れて、3点で校正曲線を作る。<strong>これをやるかやらないかで、この測定は「使えるデータ」と「気休め」に分かれる。</strong> 校正は3か月ごとに繰り返す。</p></div>
+
+<h3>4-6 試料の時計を止める ── 保存と輸送</h3>
+
+<p>1-8で見たとおり、−18 °C でも反応は止まらず約1/28に遅くなるだけである。だから保存には次の3原則を置く。</p>
+<ol>
+<li><strong>できるだけ早く油にする。</strong> 湿った種子より、抽出した油のほうがはるかに安定している。サンプリングしたら、可能なら48時間以内に圧搾してしまう。</li>
+<li><strong>油は褐色バイアルに満量で。</strong> ヘッドスペースの空気が酸化の燃料になる。満たして密栓し、−18 °C。</li>
+<li><strong>保存期間を全試料で揃える。</strong> これが最も重要。保存中の変化は避けられないが、<span class="hl">全試料が同じだけ変化するなら、それは処理間の差には影響しない</span>。「A区は即日測定、B区は3か月保存」が最悪のパターン。<strong>保存期間は最長4週間を上限とし、超える見込みなら分析を優先する。</strong></li>
+</ol>
+
+<div class="warn"><span class="tag">国外へ送るときの追加の注意</span>
+<p>①<strong>種子の輸出には植物検疫証明が要る</strong>(ジャトロファは種苗として扱われる)。油であれば検疫上は扱いやすいので、<strong>照合用の試料は「油」で送る</strong>のが賢い。②輸送中は常温・数十度になりうるので、<strong>同じ試料の控えを手元に凍結保存しておき、後で自社でも測る</strong>。両者の差が輸送による変化の見積もりになる。③油の少量サンプルは一般に非危険物だが、<strong>航空会社と通関業者に事前確認すること</strong>。</p></div>
+
+<h3>4-7 安全 ── ジャトロファは毒である</h3>
+
+<div class="warn"><span class="tag">現場に必ず掲示する</span>
+<ul style="margin-bottom:0">
+<li><strong>種子と油と搾りかすは有毒。</strong> ホルボールエステルとクルシン(毒性タンパク質)を含む。子どもが種子を食べる事故が各国で報告されている。<span class="hl">試験区・乾燥場・実験室に食品を持ち込まない。搾りかすを家畜に与えない。試験区に子どもや家畜を近づけない。</span></li>
+<li><strong>樹液は皮膚を刺激する。</strong> 果肉除去では手袋を着用する。目に入らないよう保護眼鏡。</li>
+<li><strong>ヘキサン・イソプロパノール・トルエンは引火性。</strong> 火気厳禁、換気必須、金属容器で保管、消火器を近くに。<strong>乾燥器の中に溶媒を入れない</strong>(爆発事故の典型)。</li>
+<li><strong>KOHは強アルカリ。</strong> 目に入ると失明の危険。保護眼鏡と手袋、洗眼器を作業台の近くに設置。溶解時は発熱するので、必ず溶媒に少量ずつ加える。</li>
+<li>全ての薬品にSDS(安全データシート)を備え、担当者に説明した記録を残す。</li>
+</ul></div>
+
+<hr class="rule">
+<h2 id="s5"><span class="num">Part 5 — 運用編</span>23か月をどう回すか</h2>
+
+<h3>5-1 日程 ── 暫定答えは10か月目に出す</h3>
+
+<p>収穫は待ってくれないので、日程は<strong>収穫期に合わせて逆算する</strong>。直近の実績(2025年4月〜2026年3月に1,200 kg、2026年4月〜8月に900 kg)から、4〜8月が主収穫期、9〜3月にも一定量の収穫があると読める。この2つを両方使えば、<span class="hl">2028年の主収穫を待たずに、3ラウンドの反復が取れる</span>。</p>
+
+<div class="gantt wide">
+  <div class="g-head">
+    <div>工程</div>
+    <div>26<br>09</div><div></div><div></div><div>26<br>12</div><div></div><div></div>
+    <div>27<br>03</div><div></div><div></div><div>27<br>06</div><div></div><div></div>
+    <div>27<br>09</div><div></div><div></div><div>27<br>12</div><div></div><div></div>
+    <div>28<br>03</div><div></div><div></div><div>28<br>06</div><div></div><div></div>
+  </div>
+  <div class="g-row"><div class="g-lab">準備・機材調達・ラボ立上げ</div><div class="g-bar g-a" style="grid-column:2/5"></div></div>
+  <div class="g-row"><div class="g-lab">実験0 等温線・方法検証・標準油</div><div class="g-bar g-a" style="grid-column:3/6"></div></div>
+  <div class="g-row"><div class="g-lab">予備試験(σ を実測 → 反復数確定)</div><div class="g-bar g-a" style="grid-column:4/6"></div></div>
+  <div class="g-row"><div class="g-lab">A 果肉除去の遅延 ×3ラウンド</div><div class="g-bar g-b" style="grid-column:6/9"></div><div class="g-bar g-b" style="grid-column:12/15"></div><div class="g-bar g-b" style="grid-column:17/19"></div></div>
+  <div class="g-row"><div class="g-lab">A2 果実の状態別 ×2</div><div class="g-bar g-b" style="grid-column:6/8"></div><div class="g-bar g-b" style="grid-column:12/14"></div></div>
+  <div class="g-row"><div class="g-lab">B1 乾燥の速さ ×2</div><div class="g-bar g-b" style="grid-column:7/10"></div><div class="g-bar g-b" style="grid-column:13/16"></div></div>
+  <div class="g-row"><div class="g-lab">B2 到達水分 × 保管(12か月)</div><div class="g-bar g-c" style="grid-column:7/20"></div></div>
+  <div class="g-row"><div class="g-lab">C 乾燥方式 ×2</div><div class="g-bar g-b" style="grid-column:10/13"></div><div class="g-bar g-b" style="grid-column:16/18"></div></div>
+  <div class="g-row"><div class="g-lab">D 品種カルテ・LSI</div><div class="g-bar g-d" style="grid-column:7/8"></div><div class="g-bar g-d" style="grid-column:15/16"></div></div>
+  <div class="g-row"><div class="g-lab">E 実規模検証</div><div class="g-bar g-c" style="grid-column:19/23"></div></div>
+  <div class="g-row"><div class="g-lab">解析・報告書</div><div class="g-bar g-a" style="grid-column:23/25"></div></div>
+  <div class="g-row"><div class="g-lab">▲ 節目</div><div class="g-ms" style="grid-column:11"></div><div class="g-ms" style="grid-column:19"></div><div class="g-ms" style="grid-column:24"></div></div>
+</div>
+
+<div class="tw">
+<table>
+<caption>3つの節目で何が手に入るか</caption>
+<thead><tr><th>時期</th><th>節目</th><th>この時点で言えるようになること</th></tr></thead>
+<tbody>
+<tr><td class="n">10か月<br>2027-06</td><td><strong>暫定 SOP v1</strong></td><td>果肉除去の締切(実験A 1ラウンド)、乾燥の速さの目安(B1 1ラウンド)、保管3か月までの水分別劣化(B2)。<span class="hl">この時点で現場の運用を変え始める</span></td></tr>
+<tr><td class="n">18か月<br>2028-02</td><td><strong>確定 SOP v2</strong></td><td>A・B1・Cが2〜3ラウンドで再現確認済み。乾燥方式の順位と発芽率への影響。品種別LSI。B2の12か月結果。<strong>これが「1.5〜2年で欲しい答え」の本体</strong></td></tr>
+<tr><td class="n">23か月<br>2028-07</td><td><strong>最終報告 + 予測モデル</strong></td><td>実規模検証済みのSOP、費用対効果、統合予測式。10,000 ha向けの乾燥設備・集荷動線の設計要件。論文投稿</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note"><span class="tag">短縮したい場合</span>
+<p>B2の12か月アームを6か月で打ち切れば、<strong>全体を18か月に圧縮できる</strong>。ただし「1年保管できるか」という問いには答えられなくなる(6か月までしか言えない)。収穫と搾油の間隔が実務上6か月以内で収まるなら、この短縮は合理的である。<strong>先に「自社は種子を最長何か月保管するのか」を決めれば、この判断は自動的に決まる。</strong></p></div>
+
+<h3>5-2 体制</h3>
+
+<div class="grid2">
+<div class="mini"><h4>研究責任者(1名・兼務可)</h4><p>設計・無作為化・解析・報告。<strong>盲検の対応表を管理する</strong>。統計解析ができること、または四半期ごとに外部の助言を受けられること。</p></div>
+<div class="mini"><h4>実験技師(2名・現地)</h4><p>サンプリング、乾燥管理、秤量、滴定、記録。<strong>滴定の訓練は2週間</strong>——標準油を繰り返し測って、自分の再現性が管理図に収まるようになれば合格。</p></div>
+<div class="mini"><h4>圃場作業班</h4><p>収穫・果肉除去・搬送。既存の収穫作業班に、<strong>試験用ブロックの収穫日と時刻の記録</strong>を追加してもらう。</p></div>
+<div class="mini"><h4>外部アドバイザー</h4><p>大学またはIIAMの研究者1名と四半期レビューの契約を結ぶ。<strong>解析計画を封じる前に一度見てもらう</strong>のが最も費用対効果が高い使い方。</p></div>
+</div>
+
+<h3>5-3 記録は JatLog にそのまま載せられる</h3>
+
+<p>この実験でいちばん重要な変数は<strong>「経過時間」</strong>である。そして自社にはすでに、<span class="hl">圏外でも動き、端末の時計でタイムスタンプを打ち、監査ログを残す記録アプリ(JatLog)がある</span>。紙の野帳より確実で、後からの改ざんも追跡できる。使わない手はない。</p>
+
+<p>既存の4モジュールの構造(<span class="k">colheita</span> / <span class="k">india</span> / <span class="k">pesagem</span> / <span class="k">india17</span>)に倣って、5つ目の <span class="k">ensaio</span>(試験)モジュールを足すのが素直な形になる。書き込み先のシート設計案:</p>
+
+<div class="tw">
+<table>
+<caption>Ensaio_Log の列案</caption>
+<thead><tr><th>列</th><th>内容</th><th>例</th></tr></thead>
+<tbody>
+<tr><td class="n">A Timestamp</td><td>端末時計(実際に作業した時刻)</td><td class="n">2027-04-12 06:45</td></tr>
+<tr><td class="n">B Operador</td><td>作業者名(共有セッションから)</td><td>—</td></tr>
+<tr><td class="n">C Ensaio</td><td>実験コード</td><td class="n">A / A2 / B1 / B2 / C / D / E</td></tr>
+<tr><td class="n">D Unidade</td><td>区の番号(乱数割付済み)</td><td class="n">A-27</td></tr>
+<tr><td class="n">E Tratamento</td><td>処理コード</td><td class="n">48h / amontoado</td></tr>
+<tr><td class="n">F Repetição</td><td>反復番号</td><td class="n">3</td></tr>
+<tr><td class="n">G Evento</td><td>作業種別(プルダウン)</td><td>colheita / despolpa / início secagem / fim secagem / amostragem / pesagem</td></tr>
+<tr><td class="n">H Peso_kg</td><td>重量</td><td class="n">1.024</td></tr>
+<tr><td class="n">I Humidade_pct</td><td>水分(湿量基準)</td><td class="n">8.4</td></tr>
+<tr><td class="n">J Aw</td><td>水分活性</td><td class="n">0.61</td></tr>
+<tr><td class="n">K Temp_C</td><td>その場の温度</td><td class="n">31.2</td></tr>
+<tr><td class="n">L Amostra_ID</td><td>分析用の乱数4桁コード(盲検)</td><td class="n">7314</td></tr>
+<tr><td class="n">M Observações</td><td>自由記述(カビ、雨、事故など)</td><td>—</td></tr>
+<tr><td class="n">N Record ID</td><td>UUID(既存の仕組みと同じ)</td><td>—</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note"><span class="tag">実装するかどうかは別の判断</span>
+<p>これは<strong>提案であって、この計画の必須要件ではない</strong>。当面は既存の <span class="k">pesagem</span> の記録に「Observações」で試験区コードを書く運用や、紙+毎晩の表計算入力でも実験は成立する。ただし、<span class="hl">経過時間が主要な説明変数である以上、時刻の記録だけは絶対に手書きに頼らないほうがよい</span>(「たしか朝だった」は48時間区と72時間区を混ぜる)。実装する場合は、README の保守の掟(<span class="k">docs/sw.js</span> の <span class="k">CACHE</span> を+1する、Apps Script は「デプロイを管理→編集」で更新する)に従うこと。</p></div>
+
+<h3>5-4 現場用SOP(ポルトガル語・暫定版)</h3>
+
+<p>下は<strong>実験を始める前の暫定運用</strong>であり、文献から導いた仮の値である。実験AとB1の結果が出たら数字を差し替える。乾燥場に掲示する。</p>
+
+<div class="tw">
+<table>
+<caption>SOP v0 — Manuseamento da semente entre a colheita e a prensagem(暫定)</caption>
+<thead><tr><th>#</th><th>Regra</th><th>Porquê / 根拠</th></tr></thead>
+<tbody>
+<tr><td class="n">1</td><td><strong>Colher apenas frutos amarelos a castanhos.</strong> Separar os frutos caídos no chão num lote diferente.</td><td>成熟度は油分と酸度の両方に効く。落果は初期AVが高い可能性(実験A2で確認中)</td></tr>
+<tr><td class="n">2</td><td><strong>Despolpar no mesmo dia — no máximo 24 h.</strong></td><td><span class="pill p-am">暫定</span> 果肉内は a<sub>w</sub>≈0.99。パームの類推では最も速い劣化区間。実験Aで確定</td></tr>
+<tr><td class="n">3</td><td><strong>Nunca amontoar frutos em sacos fechados.</strong> Espalhar em camada fina à sombra até despolpar.</td><td>山積みは自己発熱(+5 °Cで速度1.4倍)と通気不良を同時に起こす</td></tr>
+<tr><td class="n">4</td><td><strong>Secar à sombra com ventilação, em camada ≤ 3 cm.</strong> Revolver 2× por dia.</td><td>日光は酸化を最大1000倍速める経路を開く。薄層は乾燥を速める</td></tr>
+<tr><td class="n">5</td><td><strong>Recolher as sementes ao anoitecer.</strong> Nunca deixar ao relento.</td><td>夜露で水分を吸い戻し、劣化線量の積算が止まらない</td></tr>
+<tr><td class="n">6</td><td><strong>Atingir 8% de humidade em ≤ 3 dias.</strong></td><td><span class="pill p-am">暫定</span> 実験B1で確定</td></tr>
+<tr><td class="n">7</td><td><strong>Armazenar abaixo de 7% de humidade</strong>, em sacos sobre paletes, longe da parede.</td><td><span class="pill p-am">暫定</span> a<sub>w</sub> &lt; 0.60 を狙う。実験0-A の等温線で自社品種の値に差し替える</td></tr>
+<tr><td class="n">8</td><td><strong>Medir a humidade outra vez 48 h depois de ensacar.</strong> Se subiu mais de 1 ponto, voltar a secar.</td><td>殻と核のあいだで水分が再配分される。「乾いたはずなのに悪くなる」の主因</td></tr>
+<tr><td class="n">9</td><td><strong>Registar sempre a hora:</strong> colheita, despolpa, início e fim da secagem, ensacamento.</td><td>経過時間が全ての解析の土台。記憶に頼らない</td></tr>
+<tr><td class="n">10</td><td><strong>As sementes e o bagaço são tóxicos.</strong> Não comer, não dar aos animais, manter as crianças afastadas.</td><td>ホルボールエステル・クルシン</td></tr>
+</tbody>
+</table>
+</div>
+
+<hr class="rule">
+<h2 id="s6"><span class="num">Part 6 — 意思決定編</span>答えが出たら、何が変わるのか</h2>
+
+<p class="lede">実験は数字を出すことが目的ではない。<strong>出た数字で何を決めるかを、先に書いておく。</strong> そうしないと、報告書は棚に入って終わる。</p>
+
+<h3>6-1 結果と打ち手の対応表</h3>
+
+<div class="tw">
+<table>
+<thead><tr><th>もし結果がこうなら</th><th>10,000 ha に向けて決めること</th></tr></thead>
+<tbody>
+<tr><td><strong>果肉除去の締切が24時間より短い</strong>(実験A)</td><td>圃場に<strong>分散型の果肉除去所</strong>を置く。集荷してから中央で処理する動線は成立しない。除去機の台数と配置、そのための人員シフトを設計に織り込む</td></tr>
+<tr><td><strong>締切が3日以上ある</strong></td><td>中央集約が可能。大型の除去機に投資し、圃場側は収穫と搬送に専念できる。物流コストが下がる</td></tr>
+<tr><td><strong>山積みが薄層より AV +2 以上悪い</strong></td><td>収穫用のコンテナを<strong>通気型(メッシュ・浅箱)</strong>に切り替える。麻袋の禁止をSOPに明記。これは器材更新の投資判断になる</td></tr>
+<tr><td><strong>落果のAVが樹上果より +2 以上高い</strong>(A2)</td><td>落果は<strong>別ロットとして低品位の用途</strong>へ。混ぜない。収穫の巡回頻度を上げて落果を減らす価値が計算できる</td></tr>
+<tr><td><strong>乾燥の締切が48時間より短い</strong>(B1)</td><td>自然乾燥だけでは雨期に間に合わない。<strong>送風または加温乾燥への投資が必須</strong>。太陽光発電+ファンの規模を試算する</td></tr>
+<tr><td><strong>安全水分が7%より低い</strong>(B2 + 0-A)</td><td>単なる乾燥では届かない。<strong>密封保管または除湿倉庫</strong>が要る。保管期間の上限をSOPに書く</td></tr>
+<tr><td><strong>天日と日陰でAVに差がないが、PVで天日が明確に悪い</strong>(C)</td><td>用途で分ける。長期保管・高付加価値向けは日陰、即搾油向けは天日でよい、という<strong>二本立ての運用</strong>が正当化される</td></tr>
+<tr><td><strong>60 °C熱処理(C6)が有効</strong></td><td>搾油用ラインに<strong>短時間熱処理工程</strong>を入れる。ただし発芽率が落ちるなら、<span class="hl">播種用と搾油用で乾燥ラインを物理的に分ける</span>。36 haの育苗圃場の設計に直結</td></tr>
+<tr><td><strong>系統間でLSIに有意差がある</strong>(D2)</td><td><strong>LSIを育種の選抜形質に加える。</strong> 10,000 haに植える系統の選定基準を書き換える。これが本計画で最も長期的な価値を持つ結果になりうる</td></tr>
+<tr><td><strong>実規模でSOPの効果が再現しない</strong>(E)</td><td>小規模の結論を撤回する勇気を持つ。ロット内のばらつきを調べ、<strong>「平均は良いが一部が悪い」</strong>という失敗パターンでないかを確認する</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>6-2 いくらの話をしているのか</h3>
+
+<p>効果を金額に翻訳する枠組みだけ作っておく(具体的な数値は自社の販売条件で埋める)。</p>
+
+<div class="eq">
+年間便益 ≒ <b>種子生産量(t) × 搾油率 × 油価格 × (回避できる精製損失率 + 前処理費の削減)</b>
+<span class="where">仮に将来 6,000 t/年の原油を生産し、油価格を US$1,000/t とする。AVを2下げる(FFA約1%減)ことで精製損失が1%改善するなら、<b>年間 60 t = US$60,000</b>。加えて、原油AVが2を切れば<b>酸触媒による前処理工程そのものが不要</b>になり、設備・薬品・時間が丸ごと消える。本計画の資材費 US$22,000–33,000 は、この桁の前ではごく小さい。</span>
+</div>
+
+<div class="warn"><span class="tag">この計算をそのまま信じない</span>
+<p>上の数字は<strong>枠組みを示すための仮定</strong>である。実際の便益は ①オフテイカーがAVで値段を変えるのか(変えないなら便益は精製損失だけ) ②搾油を自社でやるのか委託か ③損失係数の実測値、で大きく変わる。<strong>実験を始める前に、オフテイカーに「AVがいくつだと価格がいくら変わるか」を書面で確認すること。</strong> それが分かった瞬間に、この計画の優先順位そのものが確定する。</p></div>
+
+<h3>6-3 この計画自体のリスク</h3>
+
+<div class="tw">
+<table>
+<thead><tr><th>リスク</th><th class="n">影響</th><th>対策</th></tr></thead>
+<tbody>
+<tr><td>ばらつき σ が想定より大きく、差が検出できない</td><td class="n">高</td><td>準備期の予備試験でσを実測し、反復数を再設計する。差が出ないまま本番に突入しない</td></tr>
+<tr><td>収穫量が予測より少なく、区が確保できない</td><td class="n">中</td><td>区あたりの果実量を1.0 kgに抑えてある。足りない場合は反復ではなく<strong>水準数</strong>を削る(回帰の両端は必ず残す)</td></tr>
+<tr><td>電源断で乾燥器・冷凍庫が停止</td><td class="n">中</td><td>UPSと発電機を初期投資に計上済み。冷凍庫には温度ロガーを常設し、停電履歴を記録</td></tr>
+<tr><td>雨天で乾燥試験が計画どおりに進まない</td><td class="n">中</td><td>設定値ではなく<strong>実測の到達時間</strong>を説明変数にする設計にしてある(3-3)。天候のブレは誤差ではなく情報になる</td></tr>
+<tr><td>技師の交代でデータの一貫性が崩れる</td><td class="n">中</td><td>ハウス標準油の管理図で個人差を検出できる。SOPと訓練記録を文書化し、引き継ぎ時は重ね測りをする</td></tr>
+<tr><td>IIAMの分析能力が想定と違う</td><td class="n">低</td><td>計画の前提にしない。書面での能力照会を最初に行い、駄目なら南アの認定ラボへ切り替える</td></tr>
+<tr><td>試験区の盗難・獣害</td><td class="n">低</td><td>試験用ブロックを柵の内側に指定。欠測は解析上許容する設計(3-9)</td></tr>
+</tbody>
+</table>
+</div>
+
+<hr class="rule">
+
+<h2 id="s7"><span class="num">Part 7</span>専門家と話すための想定問答</h2>
+
+<p class="lede">ここに挙げたのは、外部の研究者・コンサルタント・オフテイカーとの会話で実際に出る質問と、その正しい答えである。<strong>逆に、相手がこれらを間違えたら指摘できる。</strong></p>
+
+<details class="qa"><summary>「脂肪酸組成を分析したら正常でした。品質に問題ないですね?」</summary>
+<div class="a"><p>いいえ。<strong>加水分解はエステル結合を切るだけで、脂肪酸の鎖そのものは変えません。</strong> だから最も進行した劣化でも組成はほとんど動かない(文献1でも42日間で有意差なし)。組成分析は品種の同定や用途適性には役立ちますが、劣化の指標にはなりません。劣化を見るならAV(加水分解)とPV+K270(酸化)です。</p></div></details>
+
+<details class="qa"><summary>「過酸化物価が低いので新鮮ですね」</summary>
+<div class="a"><p>断定できません。<strong>過酸化物は中間体で、酸化が進みすぎると自分が分解してPVは下がります。</strong> 新鮮な油も、劣化しきった油も、PVは低い。だからPVは必ず二次生成物の指標(K270 または p-アニシジン価)と組で読み、可能なら Totox価(= 2×PV + AnV)のような複合指標で見ます。</p></div></details>
+
+<details class="qa"><summary>「種子水分を8%に管理しています。これで十分でしょうか」</summary>
+<div class="a"><p>3つ確認させてください。<strong>①湿量基準ですか乾量基準ですか</strong>(8% wb = 8.7% db)。<strong>②何度で測った8%ですか</strong>——同じ8%でも25 °Cなら a<sub>w</sub> 0.58、35 °Cなら 0.65 まで上がります。<strong>③全粒ですか核ですか</strong>——殻は先に乾き、核は遅れます。本質的に効いているのは水分%ではなく<strong>水分活性</strong>で、目標は a<sub>w</sub> &lt; 0.60。それが何%に当たるかは品種と温度で違うので、吸湿等温線を自分で持つべきです。</p></div></details>
+
+<details class="qa"><summary>「乾燥は速ければ速いほど良いのでは?」</summary>
+<div class="a"><p>加水分解に対してはそのとおりです。しかし3つの制約があります。<strong>①高温は種子を殺す</strong>(ヒマワリでは45 °C以上で発芽力低下、文献8)。播種用の種子には使えません。<strong>②天日は速いが酸化を最大1000〜1500倍に加速する経路を開く</strong>(光増感剤による一重項酸素、文献10)。<strong>③急激すぎる乾燥は種皮を割る</strong>ことがあり、割れた種子は細胞が壊れているのでリパーゼと油が出会います。だから「速く、ただし種子を傷めない範囲で、光を当てずに」が正解のはずで、それを数字にするのが実験Cです。</p></div></details>
+
+<details class="qa"><summary>「反復は3で十分ですよね」</summary>
+<div class="a"><p>σ(ばらつき)を測るまでは答えられません。必要な n は <span class="k">n ≥ 15.7 σ²/Δ²</span> で決まります。我々は Δ = 1.0 mg KOH/g(経営判断が変わる差)を設定し、予備試験でσを実測してから決めます。<strong>そして本命の問いは「何時間まで大丈夫か」という閾値の問題なので、群間比較ではなく回帰で答えます。</strong> 6水準×4反復のほうが、2水準×12反復より同じ手間で強い。</p></div></details>
+
+<details class="qa"><summary>「有意差が出なかったので、差はないということですね」</summary>
+<div class="a"><p>違います。<strong>「差がない」ことと「差を検出できなかった」ことは別です。</strong> 正しい報告の仕方は「推定された差は 0.3 mg KOH/g、95%信頼区間は −0.4 〜 1.0」のように<strong>効果量と信頼区間を出す</strong>ことです。信頼区間が我々の実務的な閾値(1.0)を含んでいるなら、それは「差がない」ではなく「まだ分からない」。p値だけの報告は情報を捨てています。</p></div></details>
+
+<details class="qa"><summary>「同じ油を3回滴定したので n=3 です」</summary>
+<div class="a"><p>それは<strong>分析反復</strong>であって実験反復ではありません。<strong>疑似反復(pseudoreplication)</strong>と呼ばれる誤りで、これをやると誤差が過小評価され、実際には無い差が有意に見えます。統計の n として数えてよいのは「独立に処理された区」の数だけ。分析反復は平均して1つの値にしてから解析に載せます。</p></div></details>
+
+<details class="qa"><summary>「サンプルは冷凍したので、いつ分析しても同じですよね」</summary>
+<div class="a"><p>止まりません、遅くなるだけです。Q₁₀ を2とすると 30 °C から −18 °C で約 2<sup>−4.8</sup> ≒ <strong>1/28</strong>。つまり<strong>冷凍1か月は常温1日に相当</strong>します。無視できる場合もありますが、重要なのは<strong>全試料の保存期間を揃えること</strong>です。揃っていれば変化は全体に同じだけ乗るので、処理間の比較は保たれます。「この区だけ即日、あの区は3か月後」が最悪です。</p></div></details>
+
+<details class="qa"><summary>「圧搾油と抽出油でAVが違うのはなぜですか。どちらが正しいのですか」</summary>
+<div class="a"><p>どちらも正しく、測っている対象が違います。<strong>遊離脂肪酸は中性の油より極性が高いので、溶媒抽出のほうが多く回収される傾向があります。</strong> AVは「油」の性質であって「種子」の性質ではないので、抽出方法を変えれば値は変わります。だから<strong>全実験で1つの方法に固定し、一度だけ換算係数を求めておく</strong>のが正しい対処です(実験0-B)。工場の実務に外挿したいなら、工場と同じ圧搾を使うべきです。</p></div></details>
+
+<details class="qa"><summary>「アルカリ性KOHの標定は最初に1回で十分では?」</summary>
+<div class="a"><p>不十分です。<strong>アルコール性KOHは空気中のCO₂を吸って中和され、またアルコールと徐々にエステル化して濃度が下がります。</strong> 週1回、および新しい瓶を開けるたびに、フタル酸水素カリウムで標定し直します。ここを怠ると全データが静かに、しかも系統的に間違います。ソーダライム管を付けた褐色瓶での保管も併せて。</p></div></details>
+
+<details class="qa"><summary>「モザンビークの現地でこの精度の分析ができるのですか」</summary>
+<div class="a"><p>できます。酸価の滴定は高校化学の中和滴定であり、必要なのは高度な機器ではなく<strong>規律</strong>です。具体的には ①一次標準(KHP)による週次の標定 ②各バッチのブランク ③ハウス標準油と管理図 ④盲検化 ⑤年2回の外部照合。<span class="hl">この5つが揃っていれば、認定ラボと突き合わせられるデータになります。</span>逆に言えば、高価な機器があってもこの5つが無ければ信用できません。</p></div></details>
+
+<details class="qa"><summary>「品種で劣化しやすさが違うなんて聞いたことがない」</summary>
+<div class="a"><p>報告が少ないのは事実で、そこが我々の狙いです。<strong>ありうる機構は説明できます:</strong> ①種皮の厚さと透水性が乾燥速度と再吸湿を左右する ②γ-トコフェロールなど内在抗酸化物質の量(モザンビーク産種子で160 mg/kgという報告があります、文献1) ③種子中のリパーゼ活性そのものの差 ④種子サイズと殻/核比による乾燥のしやすさ。<strong>だから我々はまず「後収穫脆弱性指数(LSI)」という標準化した1週間の過酷試験を定義し、系統をふるいにかけます。</strong> 差があれば育種の選抜形質になり、無ければ「品種を問わず工程で管理すればよい」という有用な結論になります。どちらでも意思決定に効きます。</p></div></details>
+
+<details class="qa"><summary>「なぜパーム油の文献を引くのですか。作物が違うでしょう」</summary>
+<div class="a"><p>機構が同じだからです。<strong>リパーゼによるエステル結合の加水分解という化学は、作物を選びません。</strong> パーム産業は年間数千万トンの規模でこの問題と戦ってきたので、①打撲(細胞破壊)がFFAを跳ね上げること ②水との接触が効くこと ③60 °C・1時間でリパーゼが失活すること、といった定量的な知見が蓄積しています。<strong>もちろんそのまま持ち込むことはできません</strong>——パームは果肉に油があり、ジャトロファは種子の中にあるので、細胞破壊の起こりやすさが根本的に違います。だから<strong>仮説の出どころとして使い、自分たちの数字は自分たちで測る</strong>。それが実験Aの位置づけです。</p></div></details>
+
+<hr class="rule">
+<h2 id="s8"><span class="num">Part 8</span>用語集と参考文献</h2>
+
+<h3>8-1 この文書で使った用語</h3>
+
+<div class="tw">
+<table>
+<thead><tr><th>語</th><th>意味</th></tr></thead>
+<tbody>
+<tr><td><strong>AV(酸価)</strong></td><td>油1 gを中和するのに必要なKOHのミリグラム数。加水分解の進み具合を示す。単位 mg KOH/g</td></tr>
+<tr><td><strong>FFA(遊離脂肪酸)</strong></td><td>トリグリセリドから切り離された脂肪酸。質量%で表す。<span class="k">FFA% ≒ AV × 0.5035</span></td></tr>
+<tr><td><strong>PV(過酸化物価)</strong></td><td>酸化の一次生成物(ヒドロペルオキシド)の量。単位 meq O₂/kg。<strong>非単調</strong>なので単独で使わない</td></tr>
+<tr><td><strong>K232 / K270</strong></td><td>紫外部の吸光度。K232は一次酸化生成物(共役ジエン)、K270は二次生成物を反映する</td></tr>
+<tr><td><strong>a<sub>w</sub>(水分活性)</strong></td><td>試料と平衡した空気の相対湿度 ÷ 100。0〜1。反応と微生物に使える「自由な水」の量を表す</td></tr>
+<tr><td><strong>吸湿等温線</strong></td><td>ある温度で、a<sub>w</sub> と平衡水分含量の関係を描いた曲線。S字を描く</td></tr>
+<tr><td><strong>Q₁₀</strong></td><td>温度が10 °C上がったときの反応速度の倍率。酵素反応でおよそ2〜2.5</td></tr>
+<tr><td><strong>交絡(confounding)</strong></td><td>2つ以上の要因が同時に変わり、どちらの効果か区別できない状態</td></tr>
+<tr><td><strong>疑似反復</strong></td><td>独立でないものを反復として数えること。誤差を過小評価し、偽の有意差を生む</td></tr>
+<tr><td><strong>折線回帰</strong></td><td>直線が途中で折れるモデル。折れ点が「閾値」に相当するので、締切を推定するのに使う</td></tr>
+<tr><td><strong>LSI(後収穫脆弱性指数)</strong></td><td>本計画で定義する自社指標。35 °C・a<sub>w</sub> 0.92・7日で上昇したAVの量</td></tr>
+<tr><td><strong>湿量基準 / 乾量基準</strong></td><td>水分%の分母が全体か乾物か。<span class="k">db = wb/(1−wb)</span>。本計画は全て湿量基準</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>8-2 参考文献</h3>
+
+<ol class="refs">
+<li><b>Storage stability of Jatropha curcas L. oil naturally rich in gamma-tocopherol.</b> Industrial Crops and Products (2014). <strong>本計画の中核となる先行研究。</strong>モザンビーク産種子、暗所35 °C・42日、相対湿度75%/92%で酸度 0.8% → 7.4% / 25.3%、K270 0.07 → 0.25 / 0.46、γ-トコフェロール160 mg/kg、初期水分8.4%、油分45.7%(乾物基準)。脂肪酸組成は期間中不変。<br><a href="https://www.sciencedirect.com/science/article/abs/pii/S0926669014006669">sciencedirect.com/science/article/abs/pii/S0926669014006669</a></li>
+<li><b>Free Fatty Acid Formation Points in Palm Oil Processing and the Impact on Oil Quality.</b> Agriculture 13(5): 957 (2023). 打撲直後15分間のFFA上昇 0.11 %/分。リパーゼ失活には60 °C・1時間が必要。<br><a href="https://www.mdpi.com/2077-0472/13/5/957">mdpi.com/2077-0472/13/5/957</a></li>
+<li><b>Effect of delayed, bruised, and water contact on rate of free fatty acid formation.</b> IOP Conf. Ser. Earth Environ. Sci. 1632: 012011. 打撲+濡れの果実は5日でFFA 10.44%。打撲のない果房は24時間後も約0.17%で不変。<br><a href="https://iopscience.iop.org/article/10.1088/1755-1315/1632/1/012011/pdf">iopscience.iop.org/article/10.1088/1755-1315/1632/1/012011</a></li>
+<li><b>Variation of Jatropha curcas seed oil content and fatty acid composition with fruit maturity stage.</b> Heliyon (2020). 黄熟果は褐変乾燥果より搾油量が6–9%多い。黒色果は水分9.25%・油分42.59%・酸度3.9%。<br><a href="https://www.sciencedirect.com/science/article/pii/S2405844020301304">sciencedirect.com/science/article/pii/S2405844020301304</a></li>
+<li><b>Biodiesel production from high free fatty acids content Jatropha curcas L. oil using dual step process.</b> Biomass Conversion and Biorefinery (2013). AV 25–28 → 酸触媒エステル化で 2±0.25 → 塩基触媒で 0.41–0.43(ASTM/EN規格の上限0.5以内)。<br><a href="https://link.springer.com/article/10.1007/s13399-013-0077-3">link.springer.com/article/10.1007/s13399-013-0077-3</a></li>
+<li><b>Analysis of oil content of Jatropha curcas seeds under storage condition.</b> PubMed 24813015. 常温3か月で水分 7.59% → 13.71%、AV 1.42 → 1.74。保管の目安は水分6–10%、条件が良ければ12か月。<br><a href="https://pubmed.ncbi.nlm.nih.gov/24813015/">pubmed.ncbi.nlm.nih.gov/24813015</a></li>
+<li><b>Temperature and pretreatment effects on the drying of different collections of Jatropha curcas L. seeds.</b> SN Applied Sciences (2019). 313–353 K(40–80 °C)での乾燥速度。353 Kで残留水分0.34%。<br><a href="https://link.springer.com/article/10.1007/s42452-019-0969-3">link.springer.com/article/10.1007/s42452-019-0969-3</a></li>
+<li><b>High Drying Temperature Accelerates Sunflower Seed Deterioration.</b> PMC8193951. 乾燥40 °Cは安全、45/50/55 °Cで発芽力が有意に低下。<strong>搾油用と播種用で乾燥条件を分ける根拠。</strong><br><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8193951/">ncbi.nlm.nih.gov/pmc/articles/PMC8193951</a></li>
+<li><b>Assessment of oxidative deterioration of soybean oil at ambient and sunlight storage.</b> Grasas y Aceites. 180日後のPVは常温20.52、日光下41.89 meq/kg。<br><a href="https://grasasyaceites.revistas.csic.es/index.php/grasasyaceites/article/view/451">grasasyaceites.revistas.csic.es/.../451</a></li>
+<li><b>Contribution of chlorophyll to photooxidation of soybean oil at specific visible wavelengths.</b> PubMed 25581427 / <b>Assessing the effects of Sunlight on the Photooxidation of Tropical Oils</b>(Authorea)。光増感剤存在下の光酸化は暗所自動酸化の1000–1500倍。<br><a href="https://pubmed.ncbi.nlm.nih.gov/25581427/">pubmed.ncbi.nlm.nih.gov/25581427</a></li>
+<li><b>Influence of Temperature and Water Activity on Deleterious Fungi and Mycotoxin Production during Grain Storage.</b> PMC5780356 / <b>Understanding Mycotoxins</b>(Univ. of Nebraska Extension EC3068)。a<sub>w</sub> 0.70未満でカビ停止、0.60未満で全微生物停止。A. flavus は0.78以上、アフラトキシン産生は0.84–0.87。<br><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5780356/">pmc.ncbi.nlm.nih.gov/articles/PMC5780356</a> ・ <a href="https://extensionpubs.unl.edu/publication/ec3068/2023/html/view">extensionpubs.unl.edu/publication/ec3068</a></li>
+<li><b>AOCS Cd 3d-63(酸価)</b>および <b>A Greener Alternative Titration Method for Measuring Acid Values of Fats, Oils, and Grease</b>, JAOCS (2019)。溶媒はトルエン:イソプロパノール 1:1、0.1 M KOH/イソプロパノール、フェノールフタレイン指示薬。<br><a href="https://aocs.onlinelibrary.wiley.com/doi/abs/10.1002/aocs.12281">aocs.onlinelibrary.wiley.com/doi/abs/10.1002/aocs.12281</a></li>
+<li><b>ISTA 種子水分測定(低温恒温オーブン法)。</b> 油分の多い種子は103 ± 2 °C・17 ± 1時間、2反復・各約4–5 g、粉砕して実施、0.1%まで報告。<br><a href="https://www.seedtest.org/api/rm/336B2F8WNC7ST72/grindinginistamoisturetesting2008-09-14annex2.pdf">seedtest.org — Grinding in ISTA Moisture Testing</a></li>
+<li><b>Moisture sorption behaviour of jatropha seed (Jatropha curcas) as a source of vegetable oil for biodiesel production.</b> 30 °CでGABモデルが最も適合。平衡水分含量とFFAを水分活性の関数として相関づけている。<strong>実験0-Aの直接の先行例。</strong><br><a href="https://journal.ipb.ac.id/index.php/jurnaltin/article/view/1774">journal.ipb.ac.id/index.php/jurnaltin/article/view/1774</a></li>
+<li><b>Storage stability of seeds from Jatropha curcas L. grown in Mozambique.</b> ResearchGate 289498021。文献1の姉妹研究。<br><a href="https://www.researchgate.net/publication/289498021_Storage_stability_of_seeds_from_Jatropha_curcas_L_grown_in_Mozambique">researchgate.net/publication/289498021</a></li>
+<li><b>Chemical evaluation of oil from field- and storage-damaged soybeans.</b> JAOCS. 損傷の程度が上がるほど遊離脂肪酸・色・酸化生成物が増加。<strong>「傷んだ種子はFFAが高い」ことの他作物での確認。</strong><br><a href="https://link.springer.com/article/10.1007/BF02639850">link.springer.com/article/10.1007/BF02639850</a></li>
+</ol>
+
+<div class="warn"><span class="tag">本文書の限界について</span>
+<p>上記のうち、本文書の作成時に<strong>全文を閲覧できたものはない</strong>(ネットワーク制約のため、抄録・検索結果・二次的な要約から数値を取っている)。<span class="hl">実験を開始する前に、少なくとも文献1・4・6・14の全文を入手して数値と実験条件を確認すること。</span>とくに文献1の「酸度%」がオレイン酸換算のFFA%であるか、乾燥条件・抽出法は何かを確かめる必要がある。ここが変われば本計画の期待効果量の見積もりが変わる。IIAMや提携大学の図書館経由、または著者への直接請求(ResearchGate等)が現実的な入手手段になる。</p></div>
+
+<div class="note"><span class="tag">最後に ── この文書の使い方</span>
+<p>Part 1〜2 は繰り返し読む部分、Part 3〜5 は<strong>書き換えていく部分</strong>である。予備試験でσが出たら3-8の表を更新し、実験Aの結果が出たら5-4のSOPの「暫定」を実測値に差し替える。<span class="hl">この文書はリポジトリの中にあるので、変更履歴がそのまま研究ノートになる</span>。数字を書き換えるときは、必ず「いつ・何の結果に基づいて変えたか」をコミットメッセージに残すこと。</p>
+<p style="margin-bottom:0">そして最初にやるべき3つは、収穫を待つ必要がない。<strong>①実験0-A(塩のビンで等温線)を今週始める ②オフテイカーにAVと価格の関係を書面で問い合わせる ③IIAMに分析能力の照会レターを出す。</strong> この3つが動き出せば、計画は動き出している。</p></div>
+
+</main>
+
+<footer class="flow" style="border-top:1px solid var(--line);padding-top:26px;padding-bottom:60px">
+<p class="small" style="margin:0">ジャトロファ収穫後品質 実験計画書 v0.1 — 2026-09 作成 / 未確定の数値には <span class="pill p-am">暫定</span> を付してある。
+本文中の費用はいずれも概算であり、見積もりで置き換えること。</p>
+</footer>
+
+<script>
+(function(){
+  var prog=document.getElementById("prog");
+  function upd(){
+    var h=document.documentElement;
+    var max=h.scrollHeight-h.clientHeight;
+    prog.style.width=(max>0?(h.scrollTop/max*100):0)+"%";
+  }
+  addEventListener("scroll",upd,{passive:true});addEventListener("resize",upd);upd();
+
+  var wrap=document.getElementById("cw1"),tip=document.getElementById("tip1");
+  if(wrap&&tip){
+    wrap.querySelectorAll(".dot").forEach(function(g){
+      function show(e){
+        var r=wrap.getBoundingClientRect(),c=g.querySelector("circle").getBoundingClientRect();
+        tip.innerHTML=g.getAttribute("data-t").split("\n").join("<br>");
+        tip.style.left=(c.left+c.width/2-r.left)+"px";
+        tip.style.top=(c.top-r.top)+"px";
+        tip.style.opacity=1;
+      }
+      function hide(){tip.style.opacity=0;}
+      g.addEventListener("mouseenter",show);g.addEventListener("mouseleave",hide);
+      g.addEventListener("focus",show);g.addEventListener("blur",hide);
+      g.setAttribute("tabindex","0");
+    });
+  }
+})();
+</script>
